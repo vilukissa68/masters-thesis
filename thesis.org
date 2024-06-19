@@ -1,0 +1,55 @@
+#+title: Thesis
+* TODO Propose a topic for master's thesis
+** Implementing Software Stack for Deep Learning Accelerator in RISCV SoC
+** Virtual Prototyping of Deep Learning Accelerator Firmware
+** Building a Baremetal Driver for Custom Deep Learning Accelerator
+** Software Development for Multiply-Accumulate based Deep Learning Accelerator on RISCV
+** Integrating End-to-End Deep Learning Stack on RISCV SoC
+** Deploying Hardware Accelerated Neural Networks on RISCV SoC
+** End-to-End Software Support on Accelerated Neural Networks with RISCV
+** Headsail DLA: Building a DNN Stack From Zero
+
+
+* Proposed structure
+** Title page
+** Abstract
+** ToC
+** List of figure/tables/abbreviations
+** Introduction
+Motivate reason for building a DLA
+** Background on general DLA desigs
+*** What are DLAs and why build one
+Focus on rise of accelerators purpose built for CNNs in recent times. Mobile devices, laptop SoCs.
+*** Other similar projects
+** Methodology
+*** MAC-Array
+What is convolution, why is it important and why it's hard to calculate?
+*** DNN Training vs. Inference
+Why we only run inference. How to deploy a neural network on embedded.
+*** Quantization
+What is quantization and how does it affect inference accuracy
+*** Baremetal performance evaluation
+How to measure DLA performance based on the number of convolutions per time unit. Optimal vs Real-life
+*** Real-life use-case evaluation (TinyPerf/Custom application)
+Difficulties of AI performance evaluation -> TinyPerf is a common benchmark
+** Implementation
+*** Headsail SoC
+Basics of the system and restrictions it places for DLA -> Barely any existing software support
+*** Renode
+Advantages of using a emulator to develop software before hardware is taped out
+*** uTVM
+What is the function of an AI runtime, why micro-tvm suits this projects. Custom codegen.
+*** Pytorch / Onnx
+Why intermediate representation is needed (Onnx)
+*** Use cases / TinyPerf
+What uses cases we built and why
+** Results
+*** Functional verification of the DLA driver (on VP)
+Does the driver works and how do we know it works -> Run Conv2d calculations, run a CNN
+*** ASIC results (If obtrained)
+How does the performance on ASIC compare to ideal. How does our DLA compare to similar projects.
+*** Problems with the design
+** Conclusions
+*** Conclusion
+*** Future work
+Running ASIC benchmarks, optimizing the driver, linux driver, intergration with other frameworks
