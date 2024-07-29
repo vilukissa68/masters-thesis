@@ -15,4 +15,4 @@ render-no-biber:
 
 
 clean:
-	rm report.aux report.bbl report.bcf report.blg report.log report.out report.run.xml report.tex.bbl report.tex.blg report.toc texput.log
+	rm main.aux main.bbl main.bcf main.blg main.log main.out main.run.xml main.tex.bbl main.tex.blg main.toc texput.log

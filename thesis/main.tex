@@ -24,7 +24,7 @@
 % pages.  Availbale: http://tobi.oetiker.ch/lshort/lshort.pdf]
 
 \author{Forename Surname}
-\title{Thesis title} % primary title (for front page)
+\title{Zero to DLA: Building Software Support For Custom Hardware To Run Complex Neural Networks} % primary title (for front page)
 \thesistype{Master's thesis} % or Bachelor of Science, Laboratory Report... 
 
 % Put your thesis' main language last
@@ -35,9 +35,10 @@
 backend=biber,
 style=authoryear,
 citestyle=authoryear,
-autocite=inline
+autocite=footnote
 ]{biblatex}
 \usepackage{csquotes}
+\usepackage{svg}
 
 \addbibresource{thesis_refs.bib} %Imports bibliography file
 
@@ -156,8 +157,65 @@ In recent times there has been a growing need to also run neural networks in mob
 Headsail is the third Soc build by the SocHub research group. Headsail has two RISCV CPUs, one 32-bit meant for booting up the system called Sysctrl and one 64-bit on called HPC, meant for running the actual applications.
 Headsail includes a wide variety of different peripherals, one of which is a custom build the Deep Learning accelerator.
 
+\subsection{DLA}
+Headsail's DLA is a MAC array based accelerator, which provides the following operations: Conv2D, Bias, ReLU.
+
+Conv2D is the non-flipped convolution operation or cross-correlation defined as ~\parencite{DeepLearningBook}
+\begin{align}
+  Conv2D(I, K) = (K \star I)(i,j) = \sum_{m}\sum_{n}I(i+m,j+n)K(m, n)
+\end{align}
+as opposed to flipped convolution, headsail vp follows the TVM implementation of using non-flipped convolution instead of flipped convolution. Main purpose of convolution in DNNs is feature extection from inputs $(I)$ with different weight kernels $(K)$.
+
+Bias is defined as such
+\begin{align}
+  y = xA^{T} + b
+\end{align}
+where if $xA^{T}$ is the non-biased output of a particular channel in layer, $b$ is the bias applied to the whole channel as a constant value.
+In DNNs bias is used to determined importance between different channels i.e. extracted features when used in convolutional layers.
+
+Rectified linear unit is a common activation function in DNNs defined as
+\begin{align}
+ ReLU(x) =
+  \begin{cases}
+  0, & \text{for} \leq 0 \\
+    x, &  \text{otherwise}
+  \end{cases}
+\end{align}
+In DNNs, activation functions are used to determined if a particular input is interesting in terms of decisions making. Main benefit of ReLU in comparision to other activation fuctions, likea Sigmoid is that ReLU is computationally light operation.
+
+During one layer cycle the operations need to be executed in the following order due to the pipelined design of the DLA: Conv2d, Bias, ReLU. This is the most commonly found order in modern neural networks so it suits most use cases.
+\begin{align}
+  ReLU(Conv2D(I, K) + b)
+\end{align}
+Bias and ReLU can be skipped in the case either or both of the aren't needed in the given layer. In this case Conv2D output is used directly and is capped to fit the 8-bit width of the output.
+
+\section{TVM}
+TVM is a machine learning compiler framework by Apache. Among other features TVM includes, multiple runtimes, accelerator backends, optimizers, and a machine learning library for building and training models. The variety of features allows for TVM to be used to implement a complete machine learning workflow, or TVM can be used to implement part of the workflow with other tools.
+
+TVM has it's own graph representation for neural networks called Relay IR. Like the traditional graph representation Relay IR represents network layers as nodes in a abstract syntax tree, where the data flow of the networks is shown as the relationship between parent and child nodes, where parent nodes output is the input of the child node.
+
+TVM is able to be extended to support additional hardware accelerators by implementing a custom code generation module for the target hardware. In principle the developer defines external C symbols that provide the operation implementations which TVM then injects into the Relay IR models. During runtime TVM then calls these external symbols instead of the default operations provided by the TVM Relay library.
+
+It's possible to generate Relay IR models from other graph formats with TVM. For example common formats like Tensorflow, Torch and Onnx models are officially supported by TVM. This allows developers to build and train their models with tools they might prefer over TVM, and use TVM as a compiler/runtime.
+
+During model compilation TVM is able to optimize the graph and allocate accelerateable nodes to suitable acclerators.
+
+\subsection{TVM on baremetal}
+TVM also provides a tool to run TVM models on baremetal platforms called microTVM. MicroTVM is only dependant on the C standard library and thus can be used in any baremetal system that has a working C-toolchain.
+
+MicroTVM works by generating platform independent C-source code from Relay IR-models, which can then be integrated with the microTVM c-runtime to produce executable binaries to run the network.
+
+With custom codegeneration it's also possible to define baremetal compatible accelerator nodes, which the TVM runtime is able to assign layers for during the C source code generation.
+
+
 \chapter{Methodology}
 \label{ch:methodology}
+\begin{figure}
+  \centering
+  \label{fig:acrchitecture}
+  \includegraphics[width=\textwidth]{img/dla-architecture.pdf}
+  \caption{Architecture of accelerated DLA flow in Headsail with TVM runtime and a Pytorch model}
+\end{figure}
 
 \section{Renode}
 \label{sec:renode}
