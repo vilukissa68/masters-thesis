@@ -142,7 +142,7 @@ December 2024
 
 In recent years neural network based application have become more and more prominent in our everyday-life. The large driver for this has been the adoption of efficient accelerators in mobiled device, that have enabled running neural network applications of mobile devices, such as smart phones.
 
-The goal of this project was to build software support for the Deep-Learning Accelerator in the upcoming Headsail SoC from SocHub using a Renode based virtual prototype as the development board.
+The goal of this project was to build software support for the Deep-Learning Accelerator in the upcoming Headsail SoC from SocHub using a Renode based virtual prototype as the development board. To goal was to use this concurrent development apporoach to have software support ready before the chip had been manufactured.
 
 \chapter{Background}
 \label{ch:background}
@@ -207,6 +207,15 @@ MicroTVM works by generating platform independent C-source code from Relay IR-mo
 
 With custom codegeneration it's also possible to define baremetal compatible accelerator nodes, which the TVM runtime is able to assign layers for during the C source code generation.
 
+\section{Quantization}
+When training DNN models with high level tools like Pytorch, models are often build to use floating point operations, since the offer more granularity then intergers. In recent year big players like NVIDIA have started to utilize more and more quantized integer models. This is due to the fact that as the amount of paramters in models like GPT, has been growing exponentially, there is are significant performance gains available by reducing the granularity of the paramters. Standard floating point value has a width of 32-bits, where as int8 which is the most common integer type in DNNs has just the 8 bits. Thus when less granularity is acceptable similarly performant integer based accelerator can do 4 times the calculations when compared to a floating point accelerator.
+Some models reduce that amount of granularity even more and have layers using 4-bit or 2-bit integers. With 2-bit integers one can do 16-times as many calculation in comparison to floating points.
+
+There are two apporoaches to quantizising models. One can build quantized neural network from the start, by defininig all the layers in terms of integer operations of wanted bit width. Other option is to take a floating point model and convert it to a quantized model. The latter options is generally easier and allows for more flexibility, since one can quantize to any arbitrary bit width. On the other hand the former approach offers better accuracy since doing backpropagation from the beginning with the wanted format, allows for the model to generally to train to be more accurate.
+
+It's also possbile to have only parts of the model quantisized. For these cases it might be necessary to have additional conversion layers to go from floating point inputs to integers and backwards. This can be useful for the cases where the target platform is only able to accelerate quantized layers, but the developer want's to use well proven subnetwork to ensure accuracy while the rest of the network is hardware accelerated to improve performance.
+
+In the case of Headsail's DLA it supports 8-bit, 4-bit and 2-bit intergers, with 4-bit and 2-bit inputs using SIMD operations to linearly increase the amount of calculations per cycle.
 
 \chapter{Methodology}
 \label{ch:methodology}
