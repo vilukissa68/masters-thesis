@@ -1018,16 +1018,55 @@
   OPTannote = 	 {}
 }
 
+@manual{newlib,
+  title     = {Newlib: A C Library},
+  author    = {Red Hat, Inc. and Various Contributors},
+  year      = {2023},
+  note      = {\url{https://sourceware.org/newlib/}},
+  howpublished = {Online: \url{https://sourceware.org/newlib/}},
+  abstract  = {Newlib is a C library intended for use on embedded systems, providing ANSI C standard library functions.}
+}
+
 @Book{DeepLearningBook,
   Title                    = {Deep Learning},
   Author                   = {Ian J. Goodfellow and Yoshua Bengio and Aaron Courville},
   Publisher                = {MIT Press},
   Year                     = {2016},
-
   Address                  = {Cambridge, MA, USA},
   Note                     = {\url{http://www.deeplearningbook.org}}
 }
 
+@inproceedings{TVM,
+  author = {Chen, Tianqi and Moreau, Thierry and Jiang, Ziheng and Zheng, Lianmin and Yan, Eddie and Cowan, Meghan and Shen, Haichen and Wang, Leyuan and Hu, Yuwei and Ceze, Luis and Guestrin, Carlos and Krishnamurthy, Arvind},
+  title = {TVM: an automated end-to-end optimizing compiler for deep learning},
+  year = {2018},
+  isbn = {9781931971478},
+  publisher = {USENIX Association},
+  address = {USA},
+  abstract = {There is an increasing need to bring machine learning to a wide diversity of hardware devices. Current frameworks rely on vendor-specific operator libraries and optimize for a narrow range of server-class GPUs. Deploying workloads to new platforms - such as mobile phones, embedded devices, and accelerators (e.g., FPGAs, ASICs) - requires significant manual effort. We propose TVM, a compiler that exposes graph-level and operator-level optimizations to provide performance portability to deep learning workloads across diverse hardware back-ends. TVM solves optimization challenges specific to deep learning, such as high-level operator fusion, mapping to arbitrary hardware primitives, and memory latency hiding. It also automates optimization of low-level programs to hardware characteristics by employing a novel, learning-based cost modeling method for rapid exploration of code optimizations. Experimental results show that TVM delivers performance across hardware back-ends that are competitive with state-of-the-art, hand-tuned libraries for low-power CPU, mobile GPU, and server-class GPUs. We also demonstrate TVM's ability to target new accelerator back-ends, such as the FPGA-based generic deep learning accelerator. The system is open sourced and in production use inside several major companies.},
+  booktitle = {Proceedings of the 13th USENIX Conference on Operating Systems Design and Implementation},
+  pages = {579–594},
+  numpages = {16},
+  location = {Carlsbad, CA, USA},
+  series = {OSDI'18}
+}
+
+@inproceedings{Ballast,
+  author = {Rautakoura, A and Hamalainen, T and Kulmala, A and Lehtinen, Tero and Duman, Mehdi and Ibrahim, Mohamed},
+  copyright = {This publication is copyrighted. You may download, display and print it for Your own personal use. Commercial use is prohibited},
+  keywords = {113 Computer and information sciences},
+  language = {eng},
+  organization = {Fabelo, H},
+  title = {Ballast : Implementation of a Large MP-SoC on 22nm ASIC Technology},
+  year = {2022},
+}
+
+@article{tinyperf,
+  title={MLPerf Tiny Benchmark},
+  author={Banbury, Colby and Reddi, Vijay Janapa and Torelli, Peter and Holleman, Jeremy and Jeffries, Nat and Kiraly, Csaba and Montino, Pietro and Kanter, David and Ahmed, Sebastian and Pau, Danilo and others},
+  journal={Proceedings of the Neural Information Processing Systems Track on Datasets and Benchmarks},
+  year={2021}
+}
 @Article{wolf08,
   author = 	 {W. Wolf and A.A. Jerraya and G. Martin},
   title = 	 {Multiprocessor System-on-Chip{(MPSoC)} Technology},
@@ -1042,6 +1081,24 @@
   OPTannote = 	 {}
 }
 
+@techreport{bennett2010porting,
+  title        = {Howto: Porting Newlib: A Simple Guide},
+  author       = {Jeremy Bennett},
+  institution  = {Embecosm},
+  number       = {Application Note 9},
+  edition      = {Issue 1},
+  year         = {2010},
+  month        = {July},
+  note         = {Licensed under Creative Commons Attribution 2.0 UK: England \& Wales License},
+  url          = {https://www.embecosm.com/appnotes/ean9/html/index.html},
+}
+
+@manual{linux_times_man_page,
+  title        = {{Linux Man Pages: times(2)}},
+  organization = {Linux},
+  year         = {2024},
+  note         = {Available at \url{https://man7.org/linux/man-pages/man2/times.2.html}},
+}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%

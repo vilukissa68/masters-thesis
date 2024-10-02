@@ -1,5 +1,13 @@
 #+title: Thesis
-* TODO Propose a topic for master's thesis
+
+* Teesien Työkalut
+** TODO Hyvä tieteellinen käytäntö
+** TODO Opinnäytetyöseminaari
+** TODO Urasuunnittelu
+** TODO Ohjaussuunnitelma
+** TODO Tutkimusmenetelmät
+
+* DOING Propose a topic for master's thesis
 ** Implementing Software Stack for Deep Learning Accelerator in RISCV SoC
 ** Virtual Prototyping of Deep Learning Accelerator Firmware
 ** Building a Baremetal Driver for Custom Deep Learning Accelerator
@@ -20,6 +28,20 @@ Motivate reason for building a DLA
 ** Background on general DLA desigs
 *** What are DLAs and why build one
 Focus on rise of accelerators purpose built for CNNs in recent times. Mobile devices, laptop SoCs.
+*** What is Deep Learning?
+**** Convolution
+***** Weights
+***** Inputs
+***** Biases
+***** Dimensions
+***** Activations
+**** Layers
+***** Conv2d + Bias + Relu
+***** Fully connected
+***** Output dimensions
+**** Classification and other tasks
+***** Binary classifier
+***** N-class classifier
 *** Other similar projects
 ** Methodology
 *** MAC-Array
@@ -37,6 +59,7 @@ Difficulties of AI performance evaluation -> TinyPerf is a common benchmark
 Basics of the system and restrictions it places for DLA -> Barely any existing software support
 *** Renode
 Advantages of using a emulator to develop software before hardware is taped out
+**** Interfacing with renode from python module
 *** uTVM
 What is the function of an AI runtime, why micro-tvm suits this projects. Custom codegen.
 *** Pytorch / Onnx
@@ -46,10 +69,14 @@ What uses cases we built and why
 ** Results
 *** Functional verification of the DLA driver (on VP)
 Does the driver works and how do we know it works -> Run Conv2d calculations, run a CNN
-*** ASIC results (If obtrained)
+*** ASIC results (If obtained)
 How does the performance on ASIC compare to ideal. How does our DLA compare to similar projects.
 *** Problems with the design
+**** Limited output size and it's effect on accuracy
 ** Conclusions
 *** Conclusion
 *** Future work
 Running ASIC benchmarks, optimizing the driver, linux driver, intergration with other frameworks
+
+* TODOS
+** Find comparisons between FPU vs INT units to justify development for integer accelerators

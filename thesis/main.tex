@@ -23,8 +23,8 @@
 % Not So Short Introduction to LATEX2e, Version 5.03, April 2014, 171
 % pages.  Availbale: http://tobi.oetiker.ch/lshort/lshort.pdf]
 
-\author{Forename Surname}
-\title{Zero to DLA: Building Software Support For Custom Hardware To Run Complex Neural Networks} % primary title (for front page)
+\author{Väinö-Waltteri Granat}
+\title{Zero to DLA: Building Software Support For Custom RISCV SoC To Run Complex Neural Networks} % primary title (for front page)
 \thesistype{Master's thesis} % or Bachelor of Science, Laboratory Report... 
 
 % Put your thesis' main language last
@@ -38,9 +38,13 @@ citestyle=authoryear,
 autocite=footnote
 ]{biblatex}
 \usepackage{csquotes}
-\usepackage{svg}
+\usepackage{booktabs}
+\usepackage{adjustbox}
+\usepackage[withpage]{acronym}
+\usepackage{tikz}
 
 \addbibresource{thesis_refs.bib} %Imports bibliography file
+
 
 \definecolor{tunipurple}{RGB}{78, 0, 142}
 
@@ -117,9 +121,29 @@ December 2024
 \noindent The originality of this thesis has been checked using the Turnitin Originality Check service.
 
 
+\clearpage
+
+\section*{List of Abbreviations}
+\begin{acronym}
+  \acro{DLA}{Deep Learning Accelerator}
+  \acro{DLA-VP}{Headsail Deep Learning Accelerator Virtual Prototype}
+  \acro{SoC}{System on a chip}
+  \acro{ISA}{Instruction set architecture}
+  \acro{ML}{Machine Learning}
+  \acro{AI}{Artifical Intelligence}
+  \acro{DL}{Deep Learning}
+  \acro{MPL}{Multilayer Perceptron}
+  \acro{RGB}{Red Green Blue}
+  \acro{DNN}{Deep Neural Network}
+  \acro{CNN}{Convolutional Neural Network}
+  \acro{CHW}{Channel Height Width}
+  \acro{HWC}{Height Width Channel}
+\end{acronym}
+
+
+
 \setcounter{tocdepth}{3}              % How many header level are included
 \tableofcontents                      % Create TOC
-
 
 % The actual text begins here and page numbering changes to 1,2...
 % Leave the backside of title empty in twoside mode
@@ -140,39 +164,103 @@ December 2024
 \setcounter{page}{1} % Start numbering from zero because command
                      % 'chapter*' does page break
 
-In recent years neural network based application have become more and more prominent in our everyday-life. The large driver for this has been the adoption of efficient accelerators in mobiled device, that have enabled running neural network applications of mobile devices, such as smart phones.
+In recent years neural network based application have become more and more prominent in our everyday-life. The large driver for this has been the adoption of efficient accelerators in mobile device, that have enabled running neural network applications of mobile devices, such as smart phones. More often these companies integrate their accelerators into SoCs, which include CPUs, GPUs, memory and other accelerators and peripherals in one package. Apple and Qualcomm have proved with their SoCs that they can attain desktop like performance in a smaller package than was previously possible. The industry moving towards SoCs has generated new interest in developing open-source SoCs.
 
-The goal of this project was to build software support for the Deep-Learning Accelerator in the upcoming Headsail SoC from SocHub using a Renode based virtual prototype as the development board. To goal was to use this concurrent development apporoach to have software support ready before the chip had been manufactured.
+The goal of this project was to build software support for the Deep-Learning Accelerator in the upcoming Headsail SoC from SocHub using a Renode based virtual prototype as the development platform. The goal was to use this concurrent development apporoach to have software support ready before the chip had been manufactured.
 
 \chapter{Background}
 \label{ch:background}
+\section{Machine Learning and Deep Learning}
+Deep Learning is a subset of Machine Learning which focuses on multilayer perceptrons, neural networks with more than one hidden layer.
+The goal of each DNN is to approximate a particular function.
+In mathematics a function describes the relation between a domain $A$ and codomain $B$ where
+\begin{equation}
+  f \subseteq A \times B,
+\end{equation}
+meaning that for every element in the domain $A$ there is exactly one corresponding element in codomain $B$.
 
-\section{Deep-learning accelerators}
-\label{sec:dlas}
-In desktop applications and data center workloads neural networks have been accelerated with GPUs, due to their ability to perform linear-algebra operations like matrix multiplication with high amount of parallellity.
+Intuitively domain $A$ can be viewed as the input of a multilayer perceptron and codomain $B$ as the output of the network. For a binary classifier codomain $B$ would be defined as
+\begin{equation}
+  B = \{0, 1\},
+\end{equation}
 
-In recent times there has been a growing need to also run neural networks in mobile devices. Traditional GPUs are too power-hungry to efficiently accelerate these networks, so a need for more efficient accelerators for these workloads has been born. Companies such as Apple and Qualcomm now include multiple mobile DLA's in their SoCs to run applications like face recognition on their phones.
+and for 10 class classifier
+\begin{equation}
+  B = \{0, 1, 2 ..., 9\}.
+\end{equation}
+The domain of the network depends on the problem statement. For example for a image classifier the input can be viewed as a 3 dimensional array, where the second and third dimensions correspond to the height and width of the image and the first dimension as the channel in RGB color space as shown in figure~\ref{fig:rgb-array}, this commonly known as CHW layout.
 
-\section{Headsail}
-Headsail is the third Soc build by the SocHub research group. Headsail has two RISCV CPUs, one 32-bit meant for booting up the system called Sysctrl and one 64-bit on called HPC, meant for running the actual applications.
-Headsail includes a wide variety of different peripherals, one of which is a custom build the Deep Learning accelerator.
 
-\subsection{DLA}
-Headsail's DLA is a MAC array based accelerator, which provides the following operations: Conv2D, Bias, ReLU.
+\begin{figure}
+  \centering
+  \begin{tikzpicture}
+  \def\xs{-1.5} %shift in x direction
+  \def\ys{-0.75} %shift in y direction
+  \def\nm{3} % number of 2d matrices in the 3d matrix
+  \foreach \x in {3,2,1}
+  {
+      \pgfmathsetmacro\bgcolor{ifthenelse(\x==1,"red!30",ifthenelse(\x==2,"green!30","blue!30"))}
 
-Conv2D is the non-flipped convolution operation or cross-correlation defined as ~\parencite{DeepLearningBook}
+      \matrix [draw, % for the rectangle border
+              fill=\bgcolor, % different background colors
+              ampersand replacement=\&] % see explanation
+      (mm\x)% give the matrix a name
+      at(-\x * \xs, -\x * \ys) % shift the matrix
+      {
+          \node {(\x,1,1)}; \& \node {(\x,1,2)}; \& \node {(\x,1,3)};\\
+          \node {(\x,2,1)}; \& \node {(\x,2,2)}; \& \node {(\x,2,3)};\\
+          \node {(\x,3,1)}; \& \node {(\x,3,2)}; \& \node {(\x,3,3)};\\
+      };
+  }
+
+  \draw [dashed,gray](mm1.north west) -- (mm\nm.north west);
+  \draw [dashed,gray](mm1.north east) -- (mm\nm.north east);
+  \draw [dashed,gray](mm1.south east) -- (mm\nm.south east);
+  \end{tikzpicture}
+  \caption{RGB array}
+  \label{fig:rgb-array}
+\end{figure}
+
+The purpose of the neural networks is map the values of array to the codomain in such a manner that useful information can be acquired from the mapping.
+Now that we know the domain and the codomain of our DNN we need to discover a function that represents the relation between them.
+
+\subsection{Convolutional Neural Networks}
+Convolutional neural networks are a type of neural networks that heavily utilize convolution operations. Convolution is a useful operations used to extract features from data.
+
+
+\subsection{Convolution}
+Convolution is defined as
 \begin{align}
-  Conv2D(I, K) = (K \star I)(i,j) = \sum_{m}\sum_{n}I(i+m,j+n)K(m, n)
+  (f \ast g)(t) = \int_{-\infty}^{\infty}f(t-x)g(t)dx,
 \end{align}
-as opposed to flipped convolution, headsail vp follows the TVM implementation of using non-flipped convolution instead of flipped convolution. Main purpose of convolution in DNNs is feature extection from inputs $(I)$ with different weight kernels $(K)$.
+where $f$ and $g$ are functions to be convolved. For computer science the discrete convolution is often more interesting
+\begin{align}
+  (f \ast g)(i) = \sum_{m}I(i-m)K(m).
+\end{align}
+For DNNs we often think about convolution in terms of inputs($f$) and kernels($g$), where input is the useful data we want to extract features from and kernels are the specific selected values that can extract the wanted features from data.
 
-Bias is defined as such
+When working with images, for example in a neural network used for classifying objects in images, it  natural to use the two dimensional expansion of the convolution operation
+\begin{align}
+  Conv2D(i, j) = (K \star I)(i,j) = \sum_{m}\sum_{n}I(i-m,j-n)K(m, n)
+\end{align}
+where $I$ is the input and $K$ is one kernel, $m$ is the width of the kernel and $n$ is the height.
+
+In neural networks convolution is often implemented as cross-correlation but still called convolution, this is also what we have done in our implementation
+\begin{align}
+  Conv2D(i,j) = CrossCorrelation(I, K) = (K \star I)(i,j) = \sum_{m}\sum_{n}I(i+m,j+n)K(m, n)
+\end{align}
+To produce output of one layer one needs to calculate $Conv2D$ for all the positions in the resultant output matrix for all the kernels.
+
+\subsection{Bias}
+In addition to $Conv2d$ bias is another important concept in neural networks. Bias is a constant value applied to output channel of the preceding operation. In CNNs when applied after $Conv2d$ the purpose of bias is to signify the importance of each extracted feature. If bias is small or negative it means that the feature is non important for the particular class it's being applied. If bias is large or positive it means that the feature is important.
+
+In mathematic notation bias is defined as such
 \begin{align}
   y = xA^{T} + b
 \end{align}
 where if $xA^{T}$ is the non-biased output of a particular channel in layer, $b$ is the bias applied to the whole channel as a constant value.
-In DNNs bias is used to determined importance between different channels i.e. extracted features when used in convolutional layers.
 
+\subsection{Activation function}
 Rectified linear unit is a common activation function in DNNs defined as
 \begin{align}
  ReLU(x) =
@@ -181,12 +269,25 @@ Rectified linear unit is a common activation function in DNNs defined as
     x, &  \text{otherwise}
   \end{cases}
 \end{align}
-In DNNs, activation functions are used to determined if a particular input is interesting in terms of decisions making. Main benefit of ReLU in comparision to other activation fuctions, likea Sigmoid is that ReLU is computationally light operation.
+In DNNs, activation functions are used to determined if a particular input is interesting in terms of decisions making. Main benefit of ReLU in comparison to other activation functions, like Sigmoid is that ReLU is computationally light operation.
 
-During one layer cycle the operations need to be executed in the following order due to the pipelined design of the DLA: Conv2d, Bias, ReLU. This is the most commonly found order in modern neural networks so it suits most use cases.
 \begin{align}
   ReLU(Conv2D(I, K) + b)
 \end{align}
+
+
+\section{Deep-learning accelerators}
+\label{sec:dlas}
+In desktop applications and data center workloads neural networks have been accelerated with GPUs, due to their ability to perform linear-algebra operations like matrix multiplication with high amount of parallellity.
+
+In recent times there has been a growing need to also run neural networks in mobile devices. Traditional GPUs are too power-hungry for these small devices, so a need for more efficient accelerators for these workloads has been born. Companies such as Apple and Qualcomm now include multiple mobile DLA's in their SoCs to run applications like face recognition on phones using their chips.
+
+\section{Headsail}
+Headsail is the third Soc build by the SocHub research group~\parencite{Ballast}. Headsail has two RISCV CPUs, one 32-bit meant for booting up the system called Sysctrl and one 64-bit on called HPC, meant for running the actual applications.
+Headsail includes a wide variety of different peripherals, one of which is a custom build the Deep Learning accelerator.
+
+\subsection{DLA}
+Headsail's DLA is a MAC array based accelerator, which provides the following operations: Conv2D, Bias, ReLU. The operations are implemented as a pipeline, meaning that the order of operations is always the same. During one layer cycle the operations need to be executed in the following order: Conv2d, Bias, ReLU. This is the most commonly found order in modern neural networks so it suits most use cases. In addition to these operations DLA can perform bit shifting for results of the MAC array and the post-processing pipeline.
 Bias and ReLU can be skipped in the case either or both of the aren't needed in the given layer. In this case Conv2D output is used directly and is capped to fit the 8-bit width of the output.
 
 \section{TVM}
@@ -198,50 +299,132 @@ TVM is able to be extended to support additional hardware accelerators by implem
 
 It's possible to generate Relay IR models from other graph formats with TVM. For example common formats like Tensorflow, Torch and Onnx models are officially supported by TVM. This allows developers to build and train their models with tools they might prefer over TVM, and use TVM as a compiler/runtime.
 
-During model compilation TVM is able to optimize the graph and allocate accelerateable nodes to suitable acclerators.
+During model compilation TVM is able to optimize the graph and allocate acceleratable nodes to suitable accelerators.~\parencite{TVM}
 
 \subsection{TVM on baremetal}
 TVM also provides a tool to run TVM models on baremetal platforms called microTVM. MicroTVM is only dependant on the C standard library and thus can be used in any baremetal system that has a working C-toolchain.
 
 MicroTVM works by generating platform independent C-source code from Relay IR-models, which can then be integrated with the microTVM c-runtime to produce executable binaries to run the network.
 
-With custom codegeneration it's also possible to define baremetal compatible accelerator nodes, which the TVM runtime is able to assign layers for during the C source code generation.
+With custom codegeneration it's also possible to define baremetal compatible accelerator nodes, which the TVM runtime is able to assign layers for during the C source code generation.~\parencite{TVM}
 
 \section{Quantization}
-When training DNN models with high level tools like Pytorch, models are often build to use floating point operations, since the offer more granularity then intergers. In recent year big players like NVIDIA have started to utilize more and more quantized integer models. This is due to the fact that as the amount of paramters in models like GPT, has been growing exponentially, there is are significant performance gains available by reducing the granularity of the paramters. Standard floating point value has a width of 32-bits, where as int8 which is the most common integer type in DNNs has just the 8 bits. Thus when less granularity is acceptable similarly performant integer based accelerator can do 4 times the calculations when compared to a floating point accelerator.
+When training DNN models with high level tools like Pytorch, models are often build to use floating point operations, since the offer more granularity then intergers. In recent year big players like NVIDIA have started to utilize more and more quantized integer models. This is due to the fact that as the amount of paramters in models like GPT, has been growing exponentially, there is are significant performance gains available by reducing the granularity of the paramters. Standard floating point value has a width of 32-bits, where as int8 which is the most common integer type in DNNs has just the 8 bits. Thus when less granularity is acceptable similarly performing integer based accelerator can do 4 times the calculations when compared to a floating point accelerator.
 Some models reduce that amount of granularity even more and have layers using 4-bit or 2-bit integers. With 2-bit integers one can do 16-times as many calculation in comparison to floating points.
-
-There are two apporoaches to quantizising models. One can build quantized neural network from the start, by defininig all the layers in terms of integer operations of wanted bit width. Other option is to take a floating point model and convert it to a quantized model. The latter options is generally easier and allows for more flexibility, since one can quantize to any arbitrary bit width. On the other hand the former approach offers better accuracy since doing backpropagation from the beginning with the wanted format, allows for the model to generally to train to be more accurate.
 
 It's also possbile to have only parts of the model quantisized. For these cases it might be necessary to have additional conversion layers to go from floating point inputs to integers and backwards. This can be useful for the cases where the target platform is only able to accelerate quantized layers, but the developer want's to use well proven subnetwork to ensure accuracy while the rest of the network is hardware accelerated to improve performance.
 
-In the case of Headsail's DLA it supports 8-bit, 4-bit and 2-bit intergers, with 4-bit and 2-bit inputs using SIMD operations to linearly increase the amount of calculations per cycle.
+In the case of Headsail's DLA it supports 8-bit, 4-bit and 2-bit integers, with 4-bit and 2-bit inputs using SIMD operations to linearly increase the amount of calculations per cycle.
 
 \chapter{Methodology}
 \label{ch:methodology}
-\begin{figure}
-  \centering
-  \label{fig:acrchitecture}
-  \includegraphics[width=\textwidth]{img/dla-architecture.pdf}
-  \caption{Architecture of accelerated DLA flow in Headsail with TVM runtime and a Pytorch model}
-\end{figure}
-
 \section{Renode}
 \label{sec:renode}
 Renode is a software development framework, which enables developers to use principles of continuous integration when writing hardware dependent code. In essence Renode is a hardware emulator which allows the user to specify exactly which kind of hardware they want to target, down to the implementation of specific peripherals and memory addresses. This streamlines the process of HW/SW integration, since hardware and software can be developed in parallel, which in return reduces the total production time for products.
 
-Renode models a wide variety of different processors and peripherals, but it also expandable with custom components that are either baked directly into the binary (source code extensions in C\#) or with dynamicly loaded python peripherals. Python peripherals are more limited when compared to the C\# peripherals. This project implements the DLA hardware design as a dynamic python peripheral.
+Renode models a wide variety of different processors and peripherals, but it is also expandable with custom components that are either baked directly into the binary (source code extensions in C\#) or with dynamically loaded python peripherals. Python peripherals are more limited when compared to the C\# peripherals. This project implements the DLA hardware design as a dynamic python peripheral.
+
+While renode is a operation accurate emulator, the Python API isn't. When Renode makes a request to the Python API, it counts as one clock cycle even when realistically the Python API's corresponding hardware implementation would take more than one cycle. The consequence of this that we cannot accurately benchmark DLA in Renode. The benefit of the python API is in rapid development of hardware components.
+
+Since Renode python peripherals don't have a clock, the state of the peripheral can only be changed when a CPU reads or writes to an address that is registered for the peripheral. DLA-VP is designed to run a processing loop after each write to it's memory region. The processing loop checks if the state of DLA-VP is ready for operation execution and if yes performs the operation per configuration. Read accesses don't change the devices internal state, so the processing loop isn't executed on them. After the executing write call, the result of the operation can be read on the next clock cycle from the peripherals memory region.
 
 \chapter{Implementation}
 \label{ch:implementation}
 
 \section{Software support}
 \label{sec:software_support}
-Even though Headsail is the third SoCHub Soc, it had very little existing software support for C. Previous SoCs had only support for Riscv-rt in rust. So a major part of this project involved setting up a Headsail compatible C toolchain. Since Headsail uses includes RISCV CPUs we could use an already existing riscv-gnu-toolchain for the compiler, but we still had to set up a C standard library for the chip with custom version of newlib libgloss. Also due to specific memory addressing decisions in the hardware, we needed to use medany code model compatible compiler and standard library when targetting the 64-bit processor.
+Even though Headsail is the third SoCHub Soc, it had little existing software support for C. Previous SoCs had only support for Riscv-rt in rust. So a major part of this project involved setting up a Headsail compatible C toolchain. Since Headsail has RISCV CPUs we could use an already existing riscv-gnu-toolchain for the compiler, but we still had to set up a C standard library for the chip with custom version of newlib libgloss. Also due to specific memory addressing decisions in the hardware, we needed to use medany code model compatible compiler and standard library when targeting the 64-bit processor.
+
+We also developed a Board Support Package for Headsail, which provides drivers for the different peripherals in the SoC. Most importantly for this project, the driver for the DLA is included in the BSP.
+The DLA driver is implemented in two layers. First is the low level layer which implements functions that directly target the register interface in the DLA to drive the hardware. The second is the high level layer which abstracts the low level layer to provied simple calls for the 3 different DLA operations. The high level layer also provides the external symbols for DLA operations used by the TVM code generation.
+
+Headsail-BSP is written in Rust, so to use it with the C based TVM code we also needed to provide a Foreign Function Interface.
+
+
+\section{Porting Newlib}
+Newlib is an implementation of the C standard library meant for use in embedded devices~\cite{newlib}. We chose to use Newlib for our C standard library in Headsail since it's known to be relatively easy to port for new platforms. Newlib is separated into two different parts. First is the Newlib core which implements the actual standard library for different CPU ISA's. Since Newlib already has support for RISCV we didn't need to modify Newlib core in anyway. Second part of Newlib is called Libgloss, which implements the platform dependant features. Since Headsail is a custom platform we needed to implement most of the libgloss for it from scratch.
+
+Porting libgloss involves implementing 16 syscalls, CRT0 and a linker script. From the 16 syscalls only some are mandatory for us to implement, because we are targeting bare-metal applications. The table~\ref{tab:newlib_syscalls} shows all the libgloss syscalls with column 3 displaying if we implemented the call. The unimplemented calls still need to be defined in the libgloss source for linking purposes but they don't need do anything except return an error. For example the fork syscall duplicates a process, but since we don't support multithreading or any other form of process concurrency it will never be called, thus having it return error is correct.
+
+\begin{lstlisting}[language=C, caption={Minimal implmentation of the fork() syscall in Newlib Libgloss}]
+  int _fork() {
+      return -1;
+  }
+\end{lstlisting}
+
+The system calls can be implemented either in non-reentrant or reentrant way. Reentrant system calls are thread safe but require an additional argument, reentrancy structure, to be passed. Reentrancy strucutre holds local values specific for that instance of the function call, where as the non-reentrant version of the function refers to shared global variables. For single threaded applications on headsail implementing the non-reentrant systems calls was enough.~\cite{bennett2010porting}
+
+
+\begin{table}[htbp]
+\centering
+\begin{tabular}{|l|l|c|}
+\hline
+\textbf{Syscall}       & \textbf{Description}               & \textbf{Implemented (Bool)} \\ \hline
+\texttt{exit}         & Terminates the process             & Yes                       \\ \hline
+\texttt{close}         & Closes a file                      & No                       \\ \hline
+\texttt{fstat}         & Gets file status                   & Yes                       \\ \hline
+\texttt{getpid}        & Gets the process ID                & No                       \\ \hline
+\texttt{isatty}        & Tests if a file descriptor is a terminal & Yes                 \\ \hline
+\texttt{kill}          & Removes a process                    & No                       \\ \hline
+\texttt{link}          & Creates a hard link to a file      & No                       \\ \hline
+\texttt{lseek}         & Re-positions read/write file offset & No                       \\ \hline
+\texttt{open}          & Opens a file                       & No                       \\ \hline
+\texttt{read}          & Reads from a file                  & Yes                       \\ \hline
+\texttt{sbrk}          & Moves end of heap pointer          & Yes                       \\ \hline
+\texttt{stat}          & Retrieves file status              & No                       \\ \hline
+\texttt{times}         & Returns process times              & No                       \\ \hline
+\texttt{unlink}        & Deletes a name or a file           & No                       \\ \hline
+\texttt{wait}          & Waits for process to change state  & No                       \\ \hline
+\texttt{write}         & Writes to a file                   & Yes                       \\ \hline
+\end{tabular}
+\caption{Newlib Syscalls and Implementation Status}
+\label{tab:newlib_syscalls}
+\end{table}
+
+
+\section{DLA Software Architecture}
+The figure~\ref{fig:architecture} shows the high level software architecture of TVM annotated model deployment flow with Headsail DLA. First we use high level operations in DLA driver to provied external symbols for Conv2d, Bias and ReLU. These are referenced in the Headsail build of TVM dylib when build with the Headsail custom code generation option.
+
+In other branch we train and optimize a quantisized convolutional neural network with Pytorch and convert the produced model into a ONNX graph.
+We then use a python script to load in the Headsail TVM dylib which is used to generate C source code for the model from the annoteted ONNX graph. This code now includes calls to the DLA driver operations.
+
+Finally we produce an executable binary by combining the microTVM C runtime from the Headsail TVM build, generated C source code for the model, Headsail-bsp for the board functions, Headsail-newlib for the C standard library and finally the use case program.
+
+\begin{figure}
+  \centering
+  \includegraphics[width=\textwidth]{img/dla-architecture.pdf}
+  \caption{Architecture of accelerated DLA flow in Headsail with TVM runtime and a Pytorch model}
+  \label{fig:architecture}
+\end{figure}
+
+
+\section{Benchmarking}
+For the DLA there are two things we can benchmark. First is to look at the amount of convolution operations we can execute per time unit. This kind of throughput benchmarking fine but doesn't tell us much about the real-life CNN performance, since it doesn't take in to account what proportion of the CNN workloads is actually Conv2d and the proceeding Bias and ReLU operations.
+
+For this reason we need to also do benchmarks with actual CNNs. For this purpose we use MLPerf Tiny Benchmark from MLCommons, which is a benchmarking suite for benchmarking ML inference in low power targets, like MCUs with Deep Learning Accelerators.~\parencite{tinyperf}
+
+TinyPerf consits of four benchmarks meant to target different use cases shown in table~\ref{tab:tinyperf}. From these benchmarks the Anomaly Detection is unacceleratable with the Headsail DLA since it uses FC-AutoEncoder network, which is based on fully connected layers and thus has no operations which our accelerator can execute.
+
+\begin{table}[ht]
+\centering
+\caption{Tiny Performance Benchmarks, from~\parencite{tinyperf}}
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{lccc}
+    \toprule
+    \textbf{Benchmark} & \textbf{Dataset (Input Size)} & \textbf{Model (TFLite Model Size)} & \textbf{Quality Target (Metric)} \\
+    \midrule
+    Keyword Spotting & Speech Commands (49x10) & DS-CNN (52.5 KB) & 90\% (Top-1) \\
+    Visual Wake Words & VWW Dataset (96x96)  & MobileNetV1 (325 KB) & 80\% (Top-1) \\
+    Image Classification & CIFAR10 (32x32) & ResNet (96 KB) & 85\% (Top-1) \\
+    Anomaly Detection & ToyADMOS (5x128)  & FC-AutoEncoder (270 KB) & .85 (AUC) \\
+    \bottomrule
+\end{tabular}
+\end{adjustbox}
+\label{tab:tinyperf}
+\end{table}
 
 \chapter{Conclusions}
-\label{ch:conclusions}
-
+\label{ch:conclusions}©@
 %
 % The bibliography, i.e the list of references
 %
@@ -300,3 +483,5 @@ and so on.
 
 \end{document}
 
+
+% LocalWords:  quantizising
