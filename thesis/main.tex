@@ -33,18 +33,24 @@
 \usepackage[english]{babel}
 \usepackage[
 backend=biber,
-style=authoryear,
-citestyle=authoryear,
+style=numeric-comp,
+citestyle=numeric-comp,
 autocite=footnote
 ]{biblatex}
 \usepackage{csquotes}
 \usepackage{booktabs}
 \usepackage{adjustbox}
+\usepackage{subcaption}
 \usepackage[withpage]{acronym}
 \usepackage{tikz}
+\usetikzlibrary{arrows.meta, arrows}
+\usetikzlibrary{matrix}
+\usepackage{xcolor}
 
 \addbibresource{thesis_refs.bib} %Imports bibliography file
 
+% Fix this
+\newcommand{\fixthis}[1]{\textbf{\textit{\textcolor{red}{[#1]}}}}
 
 \definecolor{tunipurple}{RGB}{78, 0, 142}
 
@@ -76,7 +82,7 @@ autocite=footnote
 
 \noindent\Huge{\textsf{\textbf{\textcolor{tunipurple}{\@title}}}}
 \end{flushright}
-\vspace{13.7cm} % adjust to 12.7 this if thesis title needs two lines
+\vspace{10.7cm} % adjust to 12.7 this if thesis title needs two lines
 
 % Last some additional info to the bottom-right corner
 \begin{flushright}  
@@ -164,13 +170,24 @@ December 2024
 \setcounter{page}{1} % Start numbering from zero because command
                      % 'chapter*' does page break
 
-In recent years neural network based application have become more and more prominent in our everyday-life. The large driver for this has been the adoption of efficient accelerators in mobile device, that have enabled running neural network applications of mobile devices, such as smart phones. More often these companies integrate their accelerators into SoCs, which include CPUs, GPUs, memory and other accelerators and peripherals in one package. Apple and Qualcomm have proved with their SoCs that they can attain desktop like performance in a smaller package than was previously possible. The industry moving towards SoCs has generated new interest in developing open-source SoCs.
+In recent years neural network based application have become more and more prominent in our everyday-life. The large driver for this has been the adoption of efficient accelerators in mobile device, that have enabled running neural network applications of mobile devices, such as smart phones.
 
-The goal of this project was to build software support for the Deep-Learning Accelerator in the upcoming Headsail SoC from SocHub using a Renode based virtual prototype as the development platform. The goal was to use this concurrent development apporoach to have software support ready before the chip had been manufactured.
+This interest in neural networks has coincided with the industry's move to heterogenous System-on-chip solutions being used in consumer and professional devices, to imporove computational performance.
+More often these companies integrate their accelerators into SoCs, which include CPUs, GPUs, memory and other accelerators and peripherals in one package. Apple and Qualcomm have proved with their SoCs that they can attain desktop like performance in a smaller package than was previously possible. The industry moving towards SoCs has generated new interest in developing open-source SoCs.
+
+The goal of this project was to build software support for the Deep-Learning Accelerator in the upcoming Headsail SoC from SocHub using a Renode based virtual prototype as the development platform. The goal was to use this concurrent development approach to have software support ready before the chip had been manufactured.
 
 \chapter{Background}
+This section covers the necessary knowledge in topics in Deep Learning that are needed to understand the development of the DLA software.
 \label{ch:background}
 \section{Machine Learning and Deep Learning}
+Machine Learning is a field of computer science that researches algorithms to categorize data into distinct concepts so that yet unseen data can be categorized similarly. The central component of ML is always a model. Model is a function that distinguishes a concept from data.
+To build a model we first need training data. Training data is a set of data, often with known associated categories, that corresponds with the unseen data we want to categorize with the model. For example if training a model to count the number of people in image, we would have a training data consisting of images with different amount of people, with the wanted categorization (number of people present in the image) associated with each.
+Model is then trained by choosing a particular function and changing it's parameters so that it can categorize training data in a wanted manner. After training the performance can then be validated by feeding the model unseen data and seeing how well it can categorize it.
+Turns out that some problems are hard to describe mathematically, and therefore finding a good function for modeling a problem might be nearly impossible in some cases. For example going back to the counting people in a picture describe, how do you event tell a computer what a person looks like?
+
+It turns out that instead of carefully building a mathematical model it's easier to discover it. This is where artificial neural networks come in place. Neural networks are behind most bleeding edge advances in fields such as computer vision, image generation, AI chatbots and autonomous decision making systems.
+
 Deep Learning is a subset of Machine Learning which focuses on multilayer perceptrons, neural networks with more than one hidden layer.
 The goal of each DNN is to approximate a particular function.
 In mathematics a function describes the relation between a domain $A$ and codomain $B$ where
@@ -199,7 +216,7 @@ The domain of the network depends on the problem statement. For example for a im
   \def\nm{3} % number of 2d matrices in the 3d matrix
   \foreach \x in {3,2,1}
   {
-      \pgfmathsetmacro\bgcolor{ifthenelse(\x==1,"red!30",ifthenelse(\x==2,"green!30","blue!30"))}
+      \pgfmathsetmacro\bgcolor{ifthenelse(\x==1,"red!20",ifthenelse(\x==2,"green!20","blue!20"))}
 
       \matrix [draw, % for the rectangle border
               fill=\bgcolor, % different background colors
@@ -235,7 +252,7 @@ Convolution is defined as
 \end{align}
 where $f$ and $g$ are functions to be convolved. For computer science the discrete convolution is often more interesting
 \begin{align}
-  (f \ast g)(i) = \sum_{m}I(i-m)K(m).
+  (f \ast g)(i) = \sum_{m}f(i-m)g(m).
 \end{align}
 For DNNs we often think about convolution in terms of inputs($f$) and kernels($g$), where input is the useful data we want to extract features from and kernels are the specific selected values that can extract the wanted features from data.
 
@@ -261,20 +278,146 @@ In mathematic notation bias is defined as such
 where if $xA^{T}$ is the non-biased output of a particular channel in layer, $b$ is the bias applied to the whole channel as a constant value.
 
 \subsection{Activation function}
-Rectified linear unit is a common activation function in DNNs defined as
+The combination of convolution and bias form one example of an affine transformation, a linear transformation between two space.
+To enable neural networks to recognize non-linear features, we need to introduce non linear operations between the linear affine transformations. Traditionally we used sigmoid or tanh functions, which are defined as
+
+\begin{align}
+  \sigma(x) = \frac{1}{1+e^{-x}}
+\end{align}
+and,
+\begin{align}
+  tanh(x) = \frac{e^{x}-e^{-x}}{e^{x}-e^{-x}},
+\end{align}
+to introduce non-linearity. Both functions suffer from the fact that they are expensive to calculate and exhibit the vanishing gradient problem.~\parencite{DeepLearningBook}
+
+Because of these problems DNNs have largely moved to using Rectified linear units for layer activations.
+Rectified linear unit is a relatively simple operation, moving negative values to zero and doing nothing for positive values, defined as
 \begin{align}
  ReLU(x) =
   \begin{cases}
   0, & \text{for} \leq 0 \\
-    x, &  \text{otherwise}
+    x, &  \text{otherwise}.
   \end{cases}
 \end{align}
-In DNNs, activation functions are used to determined if a particular input is interesting in terms of decisions making. Main benefit of ReLU in comparison to other activation functions, like Sigmoid is that ReLU is computationally light operation.
 
+Figure~\ref{fig:activation-functions} shows how ReLU and sigmoid non-linearly scale values close to $x=0$.
+
+\begin{figure}[ht]
+  \centering
+  \begin{minipage}[t]{.45\textwidth}
+    \centering
+    \begin{tikzpicture}
+        % Axes
+        \draw[thick,->] (-1.5,0) -- (1.5,0) node[anchor=north] {$x$}; % x-axis
+        \draw[thick,->] (0,-1) -- (0,1.5) node[anchor=west] {$f(x)$}; % y-axis
+
+        % ReLU function
+        \draw[line width=2pt,black] (-1.5, 0) -- (0, 0); % f(x) = 0 for x < 0
+        \draw[line width=2pt,black] (0, 0) -- (1.5, 1.5); % f(x) = x for x >= 0
+    \end{tikzpicture}
+    \captionof{figure}{Rectified linear unit (ReLU)}
+  \end{minipage}
+  \begin{minipage}[t]{.45\textwidth}
+    \centering
+    \begin{tikzpicture}
+        % Axes
+        \draw[thick,->] (-1.5,0) -- (1.5,0) node[anchor=north] {$x$}; % x-axis
+        \draw[thick,->] (0,-0.5) -- (0,1.5) node[anchor=west] {$f(x)$}; % y-axis
+
+        % Sigmoid function plot
+        \draw[line width=2pt,black,domain=-1.5:1.5,samples=100,smooth] plot (\x, {1/(1 + exp(-\x))});
+
+        % Labels for Sigmoid
+        \node at (-1.5, 0.2) {$f(x) \to 0$}; % Description for x -> -∞
+        \node at (1.5, 1.2) {$f(x) \to 1$}; % Description for x -> +∞
+
+        % Horizontal lines for asymptotes
+        \draw[dashed] (-1.5,1) -- (1.5,1); % y = 1 asymptote
+        \draw[dashed] (-1.5,0) -- (1.5,0); % y = 0 asymptote
+    \end{tikzpicture}
+    \captionof{figure}{Sigmoid activation}
+  \end{minipage}
+  \caption{Comparison of ReLU and Sigmoid activation functions}
+  \label{fig:activation-functions}
+\end{figure}
+
+
+Combining 2 dimensional affine transformation and ReLU gives as the basic Conv2D layer found in most image classification network, like Resnet~\parencite{he2015deepresiduallearningimage} and MobileNet~\parencite{howard2017mobilenetsefficientconvolutionalneural}.
 \begin{align}
   ReLU(Conv2D(I, K) + b)
+  \label{eq:conv2d}
 \end{align}
 
+\section{Layer graphs}
+As mentioned, DNNs are neural networks with one or more hidden layers. Generally the amount of layers correlates to better prediction results, due to the increasing amount learnable parameters being able to capture more complex features.
+
+The relationships between layers are presented as graphs, where nodes are layers or fused layers and paths are the data flow directions. Figure~\ref{fig:conv2d-layer} displays the equation~\ref{eq:conv2d} as a simple graph were data flow is always from one layers output to next layers input.
+
+\begin{figure}[ht]
+  \centering
+  \begin{tikzpicture}
+    \node[draw, thick, rectangle, rounded corners, minimum width=2cm, minimum height=1cm, fill=blue!15] (A) at (0,0) {Conv2D};
+    \node[draw, thick, rectangle, rounded corners, minimum width=2cm, minimum height=1cm, fill=blue!15] (B) at (3,0) {Bias};
+    \node[draw, thick, rectangle, rounded corners, minimum width=2cm, minimum height=1cm, fill=blue!15] (C) at (6,0) {ReLU};
+
+    \path [-{Stealth[scale=2]}] (A) edge node[above] {} (B);
+    \path [-{Stealth[scale=2]}] (B) edge node[above] {} (C);
+  \end{tikzpicture}
+  \caption{Feed forward relationship between Conv2d, bias and ReLU layers.}
+  \label{fig:conv2d-layer}
+\end{figure}
+For clarity this combination of 2D convolution, bias and ReLU is usually fused into single layer node. Different neural network frameworks use slightly different terminology relating to the meaning of operation, layer and fused layer. For example Tensorflow~\cite{tensorflow2015-whitepaper}, a popular framework for training, considers Conv2D, bias and ReLU separate layers and the combination of the a fused layer, where as in Pytorch~\cite{pytorch} the combination of Conv2D, bias and ReLU is considered one layer. For the purposes of this work, we use Tensorflow naming scheme.
+
+The simplest kind of relation is a feedforward relationship where the output of layer A is the input of layer B as shown in the figure~\ref{fig:network-simple}.
+\begin{figure}
+  \centering
+  \begin{tikzpicture}
+    \node at (-3, 1.3) {Input};
+    \matrix [matrix of math nodes, left delimiter={[}, right delimiter={]}, % for the rectangle border
+              ampersand replacement=\&] % see explanation
+      (mm)
+      at(-3, 0)
+      {
+          \node {(1,1)}; \& \node {(1,2)}; \& \node {(1,3)};\\
+          \node {(2,1)}; \& \node {(2,2)}; \& \node {(2,3)};\\
+          \node {(3,1)}; \& \node {(3,2)}; \& \node {(3,3)};\\
+      };
+
+    % Box A (Layer 1) with sub-nodes Conv2d, Bias, ReLU
+    \node[draw, thick, rectangle, rounded corners, minimum width=3cm, minimum height=2cm, fill=blue!15] (A) at (2,0) {};
+    \node at (2,1.3) {Layer A}; % Title for Layer 1
+    \node at (2,0.6) {Conv2d};
+    \node at (2,0) {+ Bias};
+    \node at (2,-0.6) {+ ReLU};
+
+    % Box B (Layer 2) with sub-nodes Conv2d, Bias, ReLU
+    \node[draw, thick, rectangle, rounded corners, minimum width=3cm, minimum height=2cm, fill=blue!15] (B) at (6,0) {};
+    \node at (6,1.3) {Layer B}; % Title for Layer 2
+    \node at (6,0.6) {Conv2d};
+    \node at (6,0) {+ Bias};
+    \node at (6,-0.6) {+ ReLU};
+
+    \node at (9, 2) {Output};
+    \matrix [matrix of math nodes, left delimiter={[}, right delimiter={]}, % for the rectangle border
+              ampersand replacement=\&] % see explanation
+      (out)
+      at(9, 0)
+      {
+          \node {(1)}; \\
+          \node {(2)}; \\
+          \node {(3)}; \\
+          \node {...}; \\
+          \node {(10)}; \\
+      };
+
+    % Arrow from A to B
+    \path [-{Stealth[scale=2]}] (mm) edge node[above] {} (A);
+    \path [-{Stealth[scale=2]}] (A) edge node[above] {} (B);
+    \path [-{Stealth[scale=2]}] (B) edge node[above] {} (out);
+  \end{tikzpicture}
+  \caption{Simple feed forward network with two Conv2D with bias and ReLU activation layers.}
+  \label{fig:network-simple}
+\end{figure}
 
 \section{Deep-learning accelerators}
 \label{sec:dlas}
@@ -282,13 +425,39 @@ In desktop applications and data center workloads neural networks have been acce
 
 In recent times there has been a growing need to also run neural networks in mobile devices. Traditional GPUs are too power-hungry for these small devices, so a need for more efficient accelerators for these workloads has been born. Companies such as Apple and Qualcomm now include multiple mobile DLA's in their SoCs to run applications like face recognition on phones using their chips.
 
+\section{Quantization}
+When training DNN models with high level tools like Pytorch, models are built to use floating point operations In recent years big players like NVIDIA have started to utilize more and more quantized integer models. This is due to the fact that as the amount of paramters in models like GPT, has been growing exponentially, there is are significant performance gains available by reducing the granularity of the paramters. Standard floating point value has a width of 32-bits, where as int8 which is the most common integer type in DNNs has just the 8 bits. Thus when less granularity is acceptable similarly performing integer based accelerator can do 4 times the calculations when compared to a floating point accelerator.
+Some models reduce that amount of granularity even more and have layers using 4-bit or 2-bit integers. With 2-bit integers one can do 16-times as many calculations in comparison to floating points.
+
+It's also possbile to have only parts of the model quantisized. For these cases it might be necessary to have additional conversion layers to go from floating point inputs to integers and backwards. This can be useful for the cases where the target platform is only able to accelerate quantized layers, but the developer want's to use well proven subnetwork to ensure accuracy while the rest of the network is hardware accelerated to improve performance.
+
+In the case of Headsail's DLA it supports 8-bit, 4-bit and 2-bit integers, with 4-bit and 2-bit inputs using SIMD operations to linearly increase the amount of calculations per cycle.
+
+\section{System-on-chip}
+System-on-chips (SoCs) are a form of heterogenous computing, where multiple different computing elements and electronic systems are integrated into one circuit.
+SoCs generally include CPUs, memories, IO interfaces and specialized accelerators, but conceptually there is no set definition on what SoC needs to include.
+This essentially produces a single functional entity that can easily integrated into multitude of different general processing workloads.
+Interconnects between SoC components can be run on very high bitrates, greatly reducing latency.
+
+SoC are often used in mobile devices due to tight integration between components enabling small space footprints, in comparison to separately integrated components.
+\fixthis{Coherency means that different components can works on the same data.}
+In recent times SoC have also begun being seen more in consumer laptops, effectively handling desktop workloads as is the case with the Apple M-series of chips as well as the Qualcomm Snapdragon Elite X chip, Intel Lunar Lake.
+
+Nowadays SoCs are seen as a solution for the \fixthis{SILICONE APOCALYPSE}, which describes the lessening increase of advance in computational performance of traditional CPUs due to Moore's Law not applying anymore.
+
+\chapter{Methodology}
+This section goes over the technologies use to complete this project in detail. First we discuss the hardware used in the SocHub's Headsail SoC and the parts affecting the decision made in the software design in detail. After this we present the used software stack necessary to run neural networks on the described hardware. We will also discuss the virtual prototype on which the majority of the software development took place on, and how it differs from the hardware.
+\label{ch:methodology}
+
 \section{Headsail}
-Headsail is the third Soc build by the SocHub research group~\parencite{Ballast}. Headsail has two RISCV CPUs, one 32-bit meant for booting up the system called Sysctrl and one 64-bit on called HPC, meant for running the actual applications.
+Headsail is the third Soc build by the SocHub research group~\parencite{Ballast}. Headsail has two RISCV CPUs, one 32-bit meant for booting up the system called SysCtrl and one 64-bit on called HPC, meant for running the actual applications.
 Headsail includes a wide variety of different peripherals, one of which is a custom build the Deep Learning accelerator.
 
 \subsection{DLA}
 Headsail's DLA is a MAC array based accelerator, which provides the following operations: Conv2D, Bias, ReLU. The operations are implemented as a pipeline, meaning that the order of operations is always the same. During one layer cycle the operations need to be executed in the following order: Conv2d, Bias, ReLU. This is the most commonly found order in modern neural networks so it suits most use cases. In addition to these operations DLA can perform bit shifting for results of the MAC array and the post-processing pipeline.
 Bias and ReLU can be skipped in the case either or both of the aren't needed in the given layer. In this case Conv2D output is used directly and is capped to fit the 8-bit width of the output.
+The particular operations are configure from the register interface of the DLA.
+DLA has a simple 32 bit RISCV based controller CPU, that can be used to drive the DLA parallel to normal HPC execution, but it's also possible to control the DLA directly from the main CPUs.
 
 \section{TVM}
 TVM is a machine learning compiler framework by Apache. Among other features TVM includes, multiple runtimes, accelerator backends, optimizers, and a machine learning library for building and training models. The variety of features allows for TVM to be used to implement a complete machine learning workflow, or TVM can be used to implement part of the workflow with other tools.
@@ -308,16 +477,7 @@ MicroTVM works by generating platform independent C-source code from Relay IR-mo
 
 With custom codegeneration it's also possible to define baremetal compatible accelerator nodes, which the TVM runtime is able to assign layers for during the C source code generation.~\parencite{TVM}
 
-\section{Quantization}
-When training DNN models with high level tools like Pytorch, models are often build to use floating point operations, since the offer more granularity then intergers. In recent year big players like NVIDIA have started to utilize more and more quantized integer models. This is due to the fact that as the amount of paramters in models like GPT, has been growing exponentially, there is are significant performance gains available by reducing the granularity of the paramters. Standard floating point value has a width of 32-bits, where as int8 which is the most common integer type in DNNs has just the 8 bits. Thus when less granularity is acceptable similarly performing integer based accelerator can do 4 times the calculations when compared to a floating point accelerator.
-Some models reduce that amount of granularity even more and have layers using 4-bit or 2-bit integers. With 2-bit integers one can do 16-times as many calculation in comparison to floating points.
 
-It's also possbile to have only parts of the model quantisized. For these cases it might be necessary to have additional conversion layers to go from floating point inputs to integers and backwards. This can be useful for the cases where the target platform is only able to accelerate quantized layers, but the developer want's to use well proven subnetwork to ensure accuracy while the rest of the network is hardware accelerated to improve performance.
-
-In the case of Headsail's DLA it supports 8-bit, 4-bit and 2-bit integers, with 4-bit and 2-bit inputs using SIMD operations to linearly increase the amount of calculations per cycle.
-
-\chapter{Methodology}
-\label{ch:methodology}
 \section{Renode}
 \label{sec:renode}
 Renode is a software development framework, which enables developers to use principles of continuous integration when writing hardware dependent code. In essence Renode is a hardware emulator which allows the user to specify exactly which kind of hardware they want to target, down to the implementation of specific peripherals and memory addresses. This streamlines the process of HW/SW integration, since hardware and software can be developed in parallel, which in return reduces the total production time for products.
@@ -330,6 +490,7 @@ Since Renode python peripherals don't have a clock, the state of the peripheral 
 
 \chapter{Implementation}
 \label{ch:implementation}
+This section covers the actual implementation of the used software stack in detail and the specific use cases developed on top of the stack. As well as the TinyPerf benchmark used to evaluate the performnace of the DLA.
 
 \section{Software support}
 \label{sec:software_support}
@@ -342,7 +503,7 @@ Headsail-BSP is written in Rust, so to use it with the C based TVM code we also 
 
 
 \section{Porting Newlib}
-Newlib is an implementation of the C standard library meant for use in embedded devices~\cite{newlib}. We chose to use Newlib for our C standard library in Headsail since it's known to be relatively easy to port for new platforms. Newlib is separated into two different parts. First is the Newlib core which implements the actual standard library for different CPU ISA's. Since Newlib already has support for RISCV we didn't need to modify Newlib core in anyway. Second part of Newlib is called Libgloss, which implements the platform dependant features. Since Headsail is a custom platform we needed to implement most of the libgloss for it from scratch.
+Newlib is an implementation of the C standard library meant for use in embedded devices~\parencite{newlib}. We chose to use Newlib for our C standard library in Headsail since it's known to be relatively easy to port for new platforms. Newlib is separated into two different parts. First is the Newlib core which implements the actual standard library for different CPU ISA's. Since Newlib already has support for RISCV we didn't need to modify Newlib core in anyway. Second part of Newlib is called Libgloss, which implements the platform dependant features. Since Headsail is a custom platform we needed to implement most of the libgloss for it from scratch.
 
 Porting libgloss involves implementing 16 syscalls, CRT0 and a linker script. From the 16 syscalls only some are mandatory for us to implement, because we are targeting bare-metal applications. The table~\ref{tab:newlib_syscalls} shows all the libgloss syscalls with column 3 displaying if we implemented the call. The unimplemented calls still need to be defined in the libgloss source for linking purposes but they don't need do anything except return an error. For example the fork syscall duplicates a process, but since we don't support multithreading or any other form of process concurrency it will never be called, thus having it return error is correct.
 
@@ -352,7 +513,7 @@ Porting libgloss involves implementing 16 syscalls, CRT0 and a linker script. Fr
   }
 \end{lstlisting}
 
-The system calls can be implemented either in non-reentrant or reentrant way. Reentrant system calls are thread safe but require an additional argument, reentrancy structure, to be passed. Reentrancy strucutre holds local values specific for that instance of the function call, where as the non-reentrant version of the function refers to shared global variables. For single threaded applications on headsail implementing the non-reentrant systems calls was enough.~\cite{bennett2010porting}
+The system calls can be implemented either in non-reentrant or reentrant way. Reentrant system calls are thread safe but require an additional argument, reentrancy structure, to be passed. Reentrancy strucutre holds local values specific for that instance of the function call, where as the non-reentrant version of the function refers to shared global variables. For single threaded applications on headsail implementing the non-reentrant systems calls was enough.~\parencite{bennett2010porting}
 
 
 \begin{table}[htbp]
@@ -383,7 +544,7 @@ The system calls can be implemented either in non-reentrant or reentrant way. Re
 
 
 \section{DLA Software Architecture}
-The figure~\ref{fig:architecture} shows the high level software architecture of TVM annotated model deployment flow with Headsail DLA. First we use high level operations in DLA driver to provied external symbols for Conv2d, Bias and ReLU. These are referenced in the Headsail build of TVM dylib when build with the Headsail custom code generation option.
+The figure~\ref{fig:architecture} shows the high level software architecture of TVM annotated model deployment flow with Headsail DLA. First we use high level operations in DLA driver to provied external symbols for Conv2d, Bias and ReLU. These are referenced in the Headsail build of TVM dylib when built with the Headsail custom code generation option.
 
 In other branch we train and optimize a quantisized convolutional neural network with Pytorch and convert the produced model into a ONNX graph.
 We then use a python script to load in the Headsail TVM dylib which is used to generate C source code for the model from the annoteted ONNX graph. This code now includes calls to the DLA driver operations.
