@@ -369,6 +369,7 @@ The relationships between layers are presented as graphs, where nodes are layers
 For clarity this combination of 2D convolution, bias and ReLU is usually fused into single layer node. Different neural network frameworks use slightly different terminology relating to the meaning of operation, layer and fused layer. For example Tensorflow~\cite{tensorflow2015-whitepaper}, a popular framework for training, considers Conv2D, bias and ReLU separate layers and the combination of the a fused layer, where as in Pytorch~\cite{pytorch} the combination of Conv2D, bias and ReLU is considered one layer. For the purposes of this work, we use Tensorflow naming scheme.
 
 The simplest kind of relation is a feedforward relationship where the output of layer A is the input of layer B as shown in the figure~\ref{fig:network-simple}.
+Resnet~\cite{he2015deepresiduallearningimage} heavily utilizes what are called residual connections. With residual connection an input of a layer is used in multiple parts of a feed forward network. Figure~\ref{fig:network-residual} shows and example of a residual connection, where input of layer A is used again after concatenation as part of input for layer C.
 \begin{figure}
   \centering
   \begin{tikzpicture}
@@ -418,6 +419,57 @@ The simplest kind of relation is a feedforward relationship where the output of 
   \caption{Simple feed forward network with two Conv2D with bias and ReLU activation layers.}
   \label{fig:network-simple}
 \end{figure}
+
+\begin{figure}
+  \centering
+    \begin{tikzpicture}
+        % Box A (Layer 1) with sub-nodes Conv2d, Bias, ReLU
+        \node[draw, thick, rectangle, rounded corners, minimum width=3cm, minimum height=2cm, fill=blue!15] (A) at (0,0) {};
+        \node at (0,1.3) {Layer A}; % Title for Layer A
+        \node at (0,0.6) {Conv2d};
+        \node at (0,0) {+ Bias};
+        \node at (0,-0.6) {+ ReLU};
+
+        % Box B (Layer 2) with sub-nodes Conv2d, Bias
+        \node[draw, thick, rectangle, rounded corners, minimum width=3cm, minimum height=2cm, fill=blue!15] (B) at (4,0) {};
+        \node at (4,1.3) {Layer B}; % Title for Layer B
+        \node at (4,0.6) {Conv2d};
+        \node at (4,0) {+ Bias};
+        \node at (4,-0.6) {+ ReLU};
+
+        % Residual Connection (A to B addition node)
+        \node[circle, draw, thick, minimum size=0.6cm] (input) at (-3,0) {X};
+        \node[circle, draw, thick, minimum size=0.6cm] (add) at (7,0) {+};
+        \node (name1) at (7,0.75) {Concatenation};
+        \node (name2) at (2,-2.75) {Residual connection};
+        \node (name3) at (-3,0.75) {Input};
+
+        % Arrows from A to B and from B to addition
+        %
+        \path [-{Stealth[scale=2]}] (input) edge node[above] {} (A);
+        \path [-{Stealth[scale=2]}] (A) edge node[above] {} (B);
+        \path [-{Stealth[scale=2]}] (B) edge node[above] {} (add);
+
+        % Direct residual connection from A to addition node
+        \path [-{Stealth[scale=2]}] (A.east) -- ++(2.5,0) -- (add.west);
+        \path [-{Stealth[scale=2]}] (input) edge[bend right=50] node [left] {} (add);
+
+        % Box B (Layer 2) with sub-nodes Conv2d, Bias
+        \node[draw, thick, rectangle, rounded corners, minimum width=3cm, minimum height=2cm, fill=blue!15] (C) at (10,0) {};
+        \node at (10,1.3) {Layer C}; % Title for Layer B
+        \node at (10,0.6) {Conv2d};
+        \node at (10,0) {+ Bias};
+        \node at (10,-0.6) {+ ReLU};
+
+
+        \path [-{Stealth[scale=2]}] (add) edge node[above] {} (C);
+
+
+    \end{tikzpicture}
+  \caption{Residual feed forward network with fused layers.}
+  \label{fig:network-residual}
+\end{figure}
+
 
 \section{Deep-learning accelerators}
 \label{sec:dlas}
