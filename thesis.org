@@ -17,6 +17,8 @@
 ** End-to-End Software Support on Accelerated Neural Networks with RISCV
 ** Headsail DLA: Building a DNN Stack From Zero
 
+* Integrated vs federated
+
 
 * Proposed structure
 ** Title page
@@ -78,5 +80,6 @@ How does the performance on ASIC compare to ideal. How does our DLA compare to s
 *** Future work
 Running ASIC benchmarks, optimizing the driver, linux driver, intergration with other frameworks
 
-* TODOS
-** Find comparisons between FPU vs INT units to justify development for integer accelerators
+* TODOS :thesis:
+** TODO Find comparisons between FPU vs INT units to justify development for integer accelerators
+** TODO Write about depthwise conv2d

@@ -48,6 +48,7 @@ autocite=footnote
 \usepackage{xcolor}
 
 \addbibresource{thesis_refs.bib} %Imports bibliography file
+\addbibresource{zotero.bib} %Imports bibliography file
 
 % Fix this
 \newcommand{\fixthis}[1]{\textbf{\textit{\textcolor{red}{[#1]}}}}
@@ -144,6 +145,7 @@ December 2024
   \acro{CNN}{Convolutional Neural Network}
   \acro{CHW}{Channel Height Width}
   \acro{HWC}{Height Width Channel}
+  \acro{AOT}{Ahead-of-Time runtime}
 \end{acronym}
 
 
@@ -470,6 +472,7 @@ Resnet~\cite{he2015deepresiduallearningimage} heavily utilizes what are called r
   \label{fig:network-residual}
 \end{figure}
 
+\fixthis{Write about depthwise conv2d}
 
 \section{Deep-learning accelerators}
 \label{sec:dlas}
@@ -484,6 +487,9 @@ Some models reduce that amount of granularity even more and have layers using 4-
 It's also possbile to have only parts of the model quantisized. For these cases it might be necessary to have additional conversion layers to go from floating point inputs to integers and backwards. This can be useful for the cases where the target platform is only able to accelerate quantized layers, but the developer want's to use well proven subnetwork to ensure accuracy while the rest of the network is hardware accelerated to improve performance.
 
 In the case of Headsail's DLA it supports 8-bit, 4-bit and 2-bit integers, with 4-bit and 2-bit inputs using SIMD operations to linearly increase the amount of calculations per cycle.
+
+\section{DNN inference evaluation metrics}
+AOC
 
 \section{System-on-chip}
 System-on-chips (SoCs) are a form of heterogenous computing, where multiple different computing elements and electronic systems are integrated into one circuit.
@@ -520,14 +526,72 @@ TVM is able to be extended to support additional hardware accelerators by implem
 
 It's possible to generate Relay IR models from other graph formats with TVM. For example common formats like Tensorflow, Torch and Onnx models are officially supported by TVM. This allows developers to build and train their models with tools they might prefer over TVM, and use TVM as a compiler/runtime.
 
+TVM has the ability to take most of the common ML training graphs and convert them to TVM Relay graph. Figure~\ref{fig:tflite-to-tvm} shows the conversion of a quantisized Tensorflow Conv2d layer into corresponding relay graph. From the figure we can see that TVM separates nodes into smaller entities, where each node performs one options, instead of the fused approach of Tensorflow. This gives developers more control over which operations to assign for which hardware.
+
 During model compilation TVM is able to optimize the graph and allocate acceleratable nodes to suitable accelerators.~\parencite{TVM}
+
+\begin{figure}
+  \centering
+  \begin{tikzpicture}
+      \node[draw, thick, rectangle, rounded corners, minimum width=3cm, minimum height=2cm, fill=blue!15] (A) at (-3,-2.1) {};
+      \node at (-3,-0.8) {Tensorflow Fused Conv2D}; % Title for Layer A
+      \node at (-3,-1.5) {Conv2d};
+      \node at (-3,-2.1) {+ Bias};
+      \node at (-3,-2.7) {+ ReLU};
+
+      % Box for Qnn.conv2d
+      \node[draw, thick, rectangle, rounded corners, minimum width=3cm, minimum height=0.7cm, fill=blue!15] (Qnn) at (3,0) {};
+      \node at (3,0.0) {qnn.conv2d};
+
+      % Box for Bias
+      \node[draw, thick, rectangle, rounded corners, minimum width=3cm, minimum height=0.7cm, fill=blue!15] (Bias) at (3,-1.5) {};
+      \node at (3,-1.5) {Bias};
+
+      % Box for Qnn.requantize
+      \node[draw, thick, rectangle, rounded corners, minimum width=3cm, minimum height=0.7cm, fill=blue!15] (Requantize) at (3,-3) {};
+      \node at (3,-3) {qnn.requantize};
+
+      % Box for Clip
+      \node[draw, thick, rectangle, rounded corners, minimum width=3cm, minimum height=0.7cm, fill=blue!15] (Clip) at (3,-4.5) {};
+      \node at (3,-4.5) {Clip};
+
+      % Box for outline
+      \node at (3,1.0) {TVM Relay graph};
+      \draw[dashed] (1, 0.6) rectangle (5, -5.2);
+
+      % Arrows
+      \path [-{Stealth[scale=2]}] (Qnn) edge node[above] {} (Bias);
+      \path [-{Stealth[scale=2]}] (Bias) edge node[above] {} (Requantize);
+      \path [-{Stealth[scale=2]}] (Requantize) edge node[above] {} (Clip);
+      \path [-{Stealth[scale=4]}] (A) edge node[left] {} (1, -2.1);
+  \end{tikzpicture}
+  \caption{Tensorflow layer to TVM relay graph conversion}
+  \label{fig:tflite-to-tvm}
+\end{figure}
+
+\subsection{Runtimes}
+The function of a neural network runtime is to enable other parts of the program to make predictions using the neural network. To do this runtime needs to know when to apply which operation and with which parameters. TVM offers two different runtimes. First is the graph executor runtime. The graph executor takes the graph representing the neural network and traverses it in order to know which operations to execute. The graph executor also needs a separate data structure for the neural network parameters, which the graph has mappings for. During execution the executor fetches the necessary parameters for each operations based on the reference in a given node matching to the parameters.
+
+The other option for a runtime is the Ahead-of-Time runtime (AOT) which takes the same graph and parameters as with graph executor, but instead of dynamically fetching the operations and parameters during execution, the AOT runtime compiles the graph into executable C code or machine code. The AOT then produces a simple API with entry points for input data and execution call, for running predictions in a program. When the program calls for prediction the graph traversing is done by simple calling a next node in the graph as a function, where the execution of a specific operation is defined programmatically and the necessary parameters are set in place.
+
+The main difference between the runtimes is that graph executor is more dynamic. The executed network and parameters can be redefined during runtime. The AOT is more rigid. All the possible networks need to be embedded directly into the binary of the program. This rigidity comes with simplicity. The API of the AOT is really simple to use, consisting of only the data input and run call. Graph executor, requires more setup from the program, such as parsing the JSON to obtain the graph, and dynamically loading the parameters for each node. For the purposes of this project we settled on using the AOT, for it's simplicity.
+
+\subsection{Graph Parsing}
+To assign calculations for an accelerator the Relay graph of a network needs to be transformed. In addition to conversion from a different framework to relay, the relay graph needs to be legalized for a specific target and acceleratable patterns needs to be assigned for suitable hardware.
+
+First transformation pass is the legalization, where the graph is traversed and certain parameters are recalculated to fit the target. For example when executing a unsigned 8-bit quantisized network most models use a zero-point of $-128$ to mimic signed behaviour. If this network is run on a accelerator with support for signed intergers, this zero point needs to be changed to 0, since there is no need for the adjustment. If this network is run on a accelerator with support for signed intergers, this zero point needs to be changed to 0, since there is no need for the adjustment. This can be done in the legalization pass.
+
+The other transformation pass is the graph annotation. By default all the operation are assigned to the CPU. With graph annotation certain patterns of nodes can be annotated as to be executed with additional accelerators. The patterns are similar to regexes, where a sequence of nodes, for example Conv2D followed by a bias node can be fused together into single composite node.
+
+During code generation with the AOT runtime,
+
 
 \subsection{TVM on baremetal}
 TVM also provides a tool to run TVM models on baremetal platforms called microTVM. MicroTVM is only dependant on the C standard library and thus can be used in any baremetal system that has a working C-toolchain.
 
 MicroTVM works by generating platform independent C-source code from Relay IR-models, which can then be integrated with the microTVM c-runtime to produce executable binaries to run the network.
 
-With custom codegeneration it's also possible to define baremetal compatible accelerator nodes, which the TVM runtime is able to assign layers for during the C source code generation.~\parencite{TVM}
+With custom code generation it's also possible to define baremetal compatible accelerator nodes, which the TVM runtime is able to assign layers for during the C source code generation.~\parencite{TVM}
 
 
 \section{Renode}
@@ -539,6 +603,40 @@ Renode models a wide variety of different processors and peripherals, but it is 
 While renode is a operation accurate emulator, the Python API isn't. When Renode makes a request to the Python API, it counts as one clock cycle even when realistically the Python API's corresponding hardware implementation would take more than one cycle. The consequence of this that we cannot accurately benchmark DLA in Renode. The benefit of the python API is in rapid development of hardware components.
 
 Since Renode python peripherals don't have a clock, the state of the peripheral can only be changed when a CPU reads or writes to an address that is registered for the peripheral. DLA-VP is designed to run a processing loop after each write to it's memory region. The processing loop checks if the state of DLA-VP is ready for operation execution and if yes performs the operation per configuration. Read accesses don't change the devices internal state, so the processing loop isn't executed on them. After the executing write call, the result of the operation can be read on the next clock cycle from the peripherals memory region.
+
+
+\section{TinyPERF}
+MLPerf Tiny is a benchmarking suite for benchmarking ML inference in low power targets, like MCUs with Deep Learning Accelerators.~\parencite{tinyperf}
+TinyPerf consits of four benchmarks meant to target different use cases shown in table~\ref{tab:tinyperf}.
+
+\begin{table}[ht]
+\centering
+\caption{Tiny Performance Benchmarks, from~\parencite{tinyperf}}
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{lccc}
+    \toprule
+    \textbf{Benchmark} & \textbf{Dataset (Input Size)} & \textbf{Model (TFLite Model Size)} & \textbf{Quality Target (Metric)} \\
+    \midrule
+    Keyword Spotting & Speech Commands (49x10) & DS-CNN (52.5 KB) & 90\% (Top-1) \\
+    Visual Wake Words & VWW Dataset (96x96)  & MobileNetV1 (325 KB) & 80\% (Top-1) \\
+    Image Classification & CIFAR10 (32x32) & ResNet (96 KB) & 85\% (Top-1) \\
+    Anomaly Detection & ToyADMOS (5x128)  & FC-AutoEncoder (270 KB) & .85 (AUC) \\
+    \bottomrule
+\end{tabular}
+\end{adjustbox}
+\label{tab:tinyperf}
+\end{table}
+
+\subsection{Resnet}
+Resnet is an implementation of ImageNet, where between every pair of layers there is a residual connection added from the pair preceding the previous pair.
+The backbone architecture introduced in ImageNet uses multiple consecutive layers of 3x3 kernel size 2D convolutions
+Backbone of the network is built from multiple consecutive 3x3 convolution layers which are in addition to simple feed forward connections.
+Resnet architectures vary by the depth of the network, i.e. number of layers. For example Resnet-50 has 50 layers and Resnet-34 has 34. In TinyPerf benchmark image classification task we use custom ResNet-9, which lacks the downsampling pooling layers to compensate for the low resolution of CIFAR-10 dataset.
+
+\subsection{Mobilenet}
+\subsection{DS-CNN}
+DS-CNN is a convolutional based on depthwise separable convolutional layers.~\
+\subsection{FC-AutoEncoder}
 
 \chapter{Implementation}
 \label{ch:implementation}
@@ -605,36 +703,24 @@ Finally we produce an executable binary by combining the microTVM C runtime from
 
 \begin{figure}
   \centering
-  \includegraphics[width=\textwidth]{img/dla-architecture.pdf}
+  \includegraphics[width=\linewidth]{img/dla-internal.pdf}
+  \caption{Architecture of accelerated DLA flow in Headsail with TVM runtime and a Pytorch model}
+  \label{fig:dla_internal}
+\end{figure}
+
+
+\begin{figure}
+  \centering
+  \includegraphics[width=\linewidth]{img/dla-architecture.pdf}
   \caption{Architecture of accelerated DLA flow in Headsail with TVM runtime and a Pytorch model}
   \label{fig:architecture}
 \end{figure}
 
-
 \section{Benchmarking}
 For the DLA there are two things we can benchmark. First is to look at the amount of convolution operations we can execute per time unit. This kind of throughput benchmarking fine but doesn't tell us much about the real-life CNN performance, since it doesn't take in to account what proportion of the CNN workloads is actually Conv2d and the proceeding Bias and ReLU operations.
 
-For this reason we need to also do benchmarks with actual CNNs. For this purpose we use MLPerf Tiny Benchmark from MLCommons, which is a benchmarking suite for benchmarking ML inference in low power targets, like MCUs with Deep Learning Accelerators.~\parencite{tinyperf}
-
-TinyPerf consits of four benchmarks meant to target different use cases shown in table~\ref{tab:tinyperf}. From these benchmarks the Anomaly Detection is unacceleratable with the Headsail DLA since it uses FC-AutoEncoder network, which is based on fully connected layers and thus has no operations which our accelerator can execute.
-
-\begin{table}[ht]
-\centering
-\caption{Tiny Performance Benchmarks, from~\parencite{tinyperf}}
-\begin{adjustbox}{max width=\textwidth}
-\begin{tabular}{lccc}
-    \toprule
-    \textbf{Benchmark} & \textbf{Dataset (Input Size)} & \textbf{Model (TFLite Model Size)} & \textbf{Quality Target (Metric)} \\
-    \midrule
-    Keyword Spotting & Speech Commands (49x10) & DS-CNN (52.5 KB) & 90\% (Top-1) \\
-    Visual Wake Words & VWW Dataset (96x96)  & MobileNetV1 (325 KB) & 80\% (Top-1) \\
-    Image Classification & CIFAR10 (32x32) & ResNet (96 KB) & 85\% (Top-1) \\
-    Anomaly Detection & ToyADMOS (5x128)  & FC-AutoEncoder (270 KB) & .85 (AUC) \\
-    \bottomrule
-\end{tabular}
-\end{adjustbox}
-\label{tab:tinyperf}
-\end{table}
+For this reason we need to also do benchmarks with actual CNNs. For this purpose we use MLPerf Tiny Benchmark from MLCommons.
+From these benchmarks the Anomaly Detection is unacceleratable with the Headsail DLA since it uses FC-AutoEncoder network, which is based on fully connected layers and thus has no operations which our accelerator can execute.
 
 \chapter{Conclusions}
 \label{ch:conclusions}©@
