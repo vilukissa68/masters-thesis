@@ -58,6 +58,32 @@ autocite=footnote
 \newcommand\todo[1]{{\color{red}!!!TODO: #1}} % Remark text in braces appears in red
 \newcommand{\angs}{\textsl{\AA}}              % , e.g. slanted symbol for Ångstöm
 
+\lstdefinestyle{customc}{
+  belowcaptionskip=1\baselineskip,
+  breaklines=true,
+  frame=L,
+  xleftmargin=\parindent,
+  language=C,
+  showstringspaces=false,
+  basicstyle=\footnotesize\ttfamily,
+  keywordstyle=\bfseries\color{green!40!black},
+  commentstyle=\itshape\color{purple!40!black},
+  identifierstyle=\color{blue},
+  stringstyle=\color{orange},
+  postbreak=\mbox{\textcolor{red}{$\hookrightarrow$}\space},
+}
+
+\lstdefinestyle{customasm}{
+  belowcaptionskip=1\baselineskip,
+  frame=L,
+  xleftmargin=\parindent,
+  language=[x86masm]Assembler,
+  basicstyle=\footnotesize\ttfamily,
+  commentstyle=\itshape\color{purple!40!black},
+}
+
+\lstset{escapechar=@,style=customc}
+
 \pagenumbering{roman} % was: {Roman}
 \pagestyle{headings}
 \begin{document}
@@ -146,6 +172,7 @@ December 2024
   \acro{CHW}{Channel Height Width}
   \acro{HWC}{Height Width Channel}
   \acro{AOT}{Ahead-of-Time runtime}
+  \acro{BYOC}{Bring your own codegen}
 \end{acronym}
 
 
@@ -242,6 +269,9 @@ The domain of the network depends on the problem statement. For example for a im
 
 The purpose of the neural networks is map the values of array to the codomain in such a manner that useful information can be acquired from the mapping.
 Now that we know the domain and the codomain of our DNN we need to discover a function that represents the relation between them.
+
+\subsection{Fully connected layer}
+Fully connected layer or dense layer is a
 
 \subsection{Convolutional Neural Networks}
 Convolutional neural networks are a type of neural networks that heavily utilize convolution operations. Convolution is a useful operations used to extract features from data.
@@ -576,14 +606,21 @@ The other option for a runtime is the Ahead-of-Time runtime (AOT) which takes th
 
 The main difference between the runtimes is that graph executor is more dynamic. The executed network and parameters can be redefined during runtime. The AOT is more rigid. All the possible networks need to be embedded directly into the binary of the program. This rigidity comes with simplicity. The API of the AOT is really simple to use, consisting of only the data input and run call. Graph executor, requires more setup from the program, such as parsing the JSON to obtain the graph, and dynamically loading the parameters for each node. For the purposes of this project we settled on using the AOT, for it's simplicity.
 
-\subsection{Graph Parsing}
+\subsection{Graph Transformations}
 To assign calculations for an accelerator the Relay graph of a network needs to be transformed. In addition to conversion from a different framework to relay, the relay graph needs to be legalized for a specific target and acceleratable patterns needs to be assigned for suitable hardware.
 
 First transformation pass is the legalization, where the graph is traversed and certain parameters are recalculated to fit the target. For example when executing a unsigned 8-bit quantisized network most models use a zero-point of $-128$ to mimic signed behaviour. If this network is run on a accelerator with support for signed intergers, this zero point needs to be changed to 0, since there is no need for the adjustment. If this network is run on a accelerator with support for signed intergers, this zero point needs to be changed to 0, since there is no need for the adjustment. This can be done in the legalization pass.
 
 The other transformation pass is the graph annotation. By default all the operation are assigned to the CPU. With graph annotation certain patterns of nodes can be annotated as to be executed with additional accelerators. The patterns are similar to regexes, where a sequence of nodes, for example Conv2D followed by a bias node can be fused together into single composite node.
 
-During code generation with the AOT runtime,
+During code generation with the AOT runtime, TVM traverses the graph and generates code to execute each node. If the node or composite node is annotated to be executed for an accelerator TVM refers to the corresponding code generation backend to produce code for executing the operation. This exposes the way for developers for integrating new accelerators for TVM.
+
+\subsection{BYOC}
+Bring your own codegen or BYOC, is one of the offered APIs for integrating new devices into TVM. In the BYOC API developers define how they want the annotated patterns to be executed on their accelerator.
+
+In the case of the Headsail DLA we offer a high level calls Conv2d, Conv2d + Bias, Conv2d + ReLU and Conv2d + Bias + ReLU. BYOC for Headsail DLA then extracts the needed values from the relay graph and generates C code with the extracted values to call the high level API.
+
+In addition to the C++ backend for BYOC we define a python API for performing the necessary legalization and annotation for the graph.
 
 
 \subsection{TVM on baremetal}
@@ -592,6 +629,62 @@ TVM also provides a tool to run TVM models on baremetal platforms called microTV
 MicroTVM works by generating platform independent C-source code from Relay IR-models, which can then be integrated with the microTVM c-runtime to produce executable binaries to run the network.
 
 With custom code generation it's also possible to define baremetal compatible accelerator nodes, which the TVM runtime is able to assign layers for during the C source code generation.~\parencite{TVM}
+
+\begin{figure}
+  \centering
+  \begin{tikzpicture}
+      % Box for Qnn.conv2d
+      \node[draw, thick, rectangle, rounded corners, minimum width=3cm, minimum height=0.7cm, fill=blue!15] (Qnn) at (0,0) {};
+      \node at (0,0.0) {qnn.conv2d};
+
+      % Box for Bias
+      \node[draw, thick, rectangle, rounded corners, minimum width=3cm, minimum height=0.7cm, fill=blue!15] (Bias) at (0,-1.5) {};
+      \node at (0,-1.5) {Bias};
+
+      % Box for Qnn.requantize
+      \node[draw, thick, rectangle, rounded corners, minimum width=3cm, minimum height=0.7cm, fill=blue!15] (Requantize) at (0,-3) {};
+      \node at (0,-3) {qnn.requantize};
+
+      % Box for Clip
+      \node[draw, thick, rectangle, rounded corners, minimum width=3cm, minimum height=0.7cm, fill=blue!15] (Clip) at (0,-4.5) {};
+      \node at (0,-4.5) {Clip};
+
+      % Box for outline
+      \node at (0,1.0) {TVM Relay graph};
+      \draw[dashed] (-2, 0.6) rectangle (2, -5.2);
+
+      % Box for composite
+      \node[draw, thick, rectangle, rounded corners, minimum width=3.5cm, minimum height=2cm, fill=blue!15] (Composite) at (5,-0.6) {};
+      \node at (5,0.0) {qnn.conv2d};
+      \node at (5,-0.6) {+ Bias};
+      \node at (5,-1.2) {(Compiler=DLA)};
+
+      % Box for Qnn.requantize composite
+      \node[draw, thick, rectangle, rounded corners, minimum width=3cm, minimum height=0.7cm, fill=blue!15] (RequantizeComposite) at (5,-3) {};
+      \node at (5,-3) {qnn.requantize};
+
+      % Box for Clip composite
+      \node[draw, thick, rectangle, rounded corners, minimum width=3cm, minimum height=0.7cm, fill=blue!15] (ClipComposite) at (5,-4.5) {};
+      \node at (5,-4.5) {Clip};
+
+      % Box for outline
+      \node at (5,1.0) {Annotated Graph};
+      \draw[dashed] (3, 0.6) rectangle (7, -5.2);
+
+
+      % Arrows
+      \path [-{Stealth[scale=2]}] (Qnn) edge node[above] {} (Bias);
+      \path [-{Stealth[scale=2]}] (Bias) edge node[above] {} (Requantize);
+      \path [-{Stealth[scale=2]}] (Requantize) edge node[above] {} (Clip);
+      \path [-{Stealth[scale=2]}] (Composite) edge node[above] {} (RequantizeComposite);
+      \path [-{Stealth[scale=2]}] (RequantizeComposite) edge node[above] {} (ClipComposite);
+      \path [-{Stealth[scale=4]}] (2,-2.1) edge node[left] {} (3, -2.1);
+  \end{tikzpicture}
+  \caption{Tensorflow layer to TVM relay graph conversion}
+  \label{fig:tflite-to-tvm}
+\end{figure}
+
+
 
 
 \section{Renode}
@@ -603,7 +696,6 @@ Renode models a wide variety of different processors and peripherals, but it is 
 While renode is a operation accurate emulator, the Python API isn't. When Renode makes a request to the Python API, it counts as one clock cycle even when realistically the Python API's corresponding hardware implementation would take more than one cycle. The consequence of this that we cannot accurately benchmark DLA in Renode. The benefit of the python API is in rapid development of hardware components.
 
 Since Renode python peripherals don't have a clock, the state of the peripheral can only be changed when a CPU reads or writes to an address that is registered for the peripheral. DLA-VP is designed to run a processing loop after each write to it's memory region. The processing loop checks if the state of DLA-VP is ready for operation execution and if yes performs the operation per configuration. Read accesses don't change the devices internal state, so the processing loop isn't executed on them. After the executing write call, the result of the operation can be read on the next clock cycle from the peripherals memory region.
-
 
 \section{TinyPERF}
 MLPerf Tiny is a benchmarking suite for benchmarking ML inference in low power targets, like MCUs with Deep Learning Accelerators.~\parencite{tinyperf}
@@ -641,6 +733,12 @@ DS-CNN is a convolutional based on depthwise separable convolutional layers.~\
 \chapter{Implementation}
 \label{ch:implementation}
 This section covers the actual implementation of the used software stack in detail and the specific use cases developed on top of the stack. As well as the TinyPerf benchmark used to evaluate the performnace of the DLA.
+
+\section{Headsail-VP}
+To enable software development for Headsail before the arriving of the ASICs, we modeled the hardware as a Renode virtual platform, which we call Headsail-VP. With Headsail-VP we aimed to replicate the complete memory map of Headsail, with both processors and some of the peripherals.
+
+\subsection{DLA-VP}
+The virtual prototype of the DLA was implemented as a Renode python peripheral. The DLA-VP supports all the same operations as the corresponding ASIC implementation, with identical register interface and same data buffer architecture. This allowed us to develop the driver for the DLA completely on the VP first. After the ASICs where ready we could confirm that the DLA driver was indeed usable on both VP and ASIC.
 
 \section{Software support}
 \label{sec:software_support}
@@ -693,6 +791,7 @@ The system calls can be implemented either in non-reentrant or reentrant way. Re
 \end{table}
 
 
+
 \section{DLA Software Architecture}
 The figure~\ref{fig:architecture} shows the high level software architecture of TVM annotated model deployment flow with Headsail DLA. First we use high level operations in DLA driver to provied external symbols for Conv2d, Bias and ReLU. These are referenced in the Headsail build of TVM dylib when built with the Headsail custom code generation option.
 
@@ -722,8 +821,35 @@ For the DLA there are two things we can benchmark. First is to look at the amoun
 For this reason we need to also do benchmarks with actual CNNs. For this purpose we use MLPerf Tiny Benchmark from MLCommons.
 From these benchmarks the Anomaly Detection is unacceleratable with the Headsail DLA since it uses FC-AutoEncoder network, which is based on fully connected layers and thus has no operations which our accelerator can execute.
 
+\chapter{Result}
+\begin{table}[h]
+\centering
+\begin{tabular}{|c|c|c|}
+\hline
+\textbf{Task} & \textbf{HPC} & \textbf{HPC+DLA} \\ \hline
+Keyword Spotting & 100 &  30 \\ \hline
+Visual Wake Words & 150 & 50 \\ \hline
+Image Classification &  120 & 60  \\ \hline
+Anomaly Detection* & 100  & 100  \\ \hline
+\end{tabular}
+\caption{TinyPerf benchmark results for HPC and HPC with DLA.}
+\label{tab:benchmark-results}
+\end{table}
+
+The table~\ref{tab:benchmark-results} presents the results of the TinyPerf benchmarks, for HPC standalone and HPC with 2D convolutions assigned to the DLA. As noted previously the Anomaly Detection task is unacceleratable due to the lack of convolutions, and thus it has equal performance between the runs.
+
+
 \chapter{Conclusions}
-\label{ch:conclusions}©@
+\label{ch:conclusions}
+The goals for this project, were to:
+\begin{enumerate}
+  \item Create a virtual counter part of the DLA.
+  \item Experiment with developing Firmware with a virtual prototype.
+  \item Develop a use case to demonstrate the capabilities of the DLA and DLA-VP.
+  \item Benchmark the DLA ASIC.
+\end{enumerate}
+It's safe to say that we accomplished all these goals.
+
 %
 % The bibliography, i.e the list of references
 %
@@ -752,8 +878,53 @@ From these benchmarks the Anomaly Detection is unacceleratable with the Headsail
 \addcontentsline{toc}{chapter}{\appA}  % Include this in TOC
 % Note that \label does not work with unnumbered chapter
 
-Appendices are purely optional.  All appendices must be referred to in
-the body text
+\begin{lstlisting}[style=customc, basicstyle=\footnotesize, caption={Example call to DLA highlevel API}]
+void dla_conv2d(const int8_t *input_data,
+                const int8_t *kernel_data,
+                int8_t *output,
+                uintptr_t input_channels,
+                uintptr_t input_height,
+                uintptr_t input_width,
+                const char *input_order,
+                uintptr_t kernel_amount,
+                uintptr_t kernel_channels,
+                uintptr_t kernel_height,
+                uintptr_t kernel_width,
+                const char *kernel_order,
+                uint32_t pad_top,
+                uint32_t pad_right,
+                uint32_t pad_left,
+                uint32_t pad_bottom,
+                int32_t pad_value,
+                uint32_t stride_x,
+                uint32_t stride_y,
+                uint32_t mac_clip,
+                uint32_t pp_clip);
+\end{lstlisting}
+
+\begin{lstlisting}[style=customc, basicstyle=\footnotesize, caption={Code generated by BYOC backend for Headsail DLA to execute Conv2D with bias pattern.}]
+#include <stdint.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
+#include <tvm/runtime/c_runtime_api.h>
+#include <dlpack/dlpack.h>
+#include <dla_driver.h>
+
+//This was generated with headsail codegen
+int tvmgen_default_headsail_main_9(int8_t* headsail_9_i0, int8_t* headsail_9_i1, int* headsail_9_i2, int* out0) {
+  float tvmgen_default_headsail_main_9_const_1[1] = {1.000000, };
+  int tvmgen_default_headsail_main_9_const_0[1] = {0, };
+  int* buf_0 = (int*)malloc(32768);
+
+  conv2d_bias(headsail_9_i0, headsail_9_i1, headsail_9_i2, buf_0, tvmgen_default_headsail_main_9_const_0, tvmgen_default_headsail_main_9_const_1, 16, 32, 32, "HWC", 32, 16, 1, 1, "HWCK", 32, 0, 0, 0, 0, 0, 2, 2, 0, 0);
+  memcpy(out0, buf_0, 32768);
+  free(buf_0);
+  return 0;
+}
+\end{lstlisting}
+
+
 
 \def\appB{APPENDIX B. Something completely different} % Define another new command
 \chapter*{\appB}                       % As above, but use \appB instead of \appA
