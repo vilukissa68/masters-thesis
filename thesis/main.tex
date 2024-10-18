@@ -173,6 +173,7 @@ December 2024
   \acro{HWC}{Height Width Channel}
   \acro{AOT}{Ahead-of-Time runtime}
   \acro{BYOC}{Bring your own codegen}
+  \acro{AUC}{Area under the curve}
 \end{acronym}
 
 
@@ -267,17 +268,14 @@ The domain of the network depends on the problem statement. For example for a im
   \label{fig:rgb-array}
 \end{figure}
 
-The purpose of the neural networks is map the values of array to the codomain in such a manner that useful information can be acquired from the mapping.
+The purpose of the neural networks is map the values of array to the codomain in such a manner in which useful information can be acquired from the mapping.
 Now that we know the domain and the codomain of our DNN we need to discover a function that represents the relation between them.
 
 \subsection{Fully connected layer}
 Fully connected layer or dense layer is a
 
-\subsection{Convolutional Neural Networks}
+\subsection{Convolutional neural networks}
 Convolutional neural networks are a type of neural networks that heavily utilize convolution operations. Convolution is a useful operations used to extract features from data.
-
-
-\subsection{Convolution}
 Convolution is defined as
 \begin{align}
   (f \ast g)(t) = \int_{-\infty}^{\infty}f(t-x)g(t)dx,
@@ -518,8 +516,39 @@ It's also possbile to have only parts of the model quantisized. For these cases 
 
 In the case of Headsail's DLA it supports 8-bit, 4-bit and 2-bit integers, with 4-bit and 2-bit inputs using SIMD operations to linearly increase the amount of calculations per cycle.
 
-\section{DNN inference evaluation metrics}
-AOC
+\section{Validation and DNN inference evaluation metrics}
+Model validation is a practice of evaluating the quality of predictions of a neural network. Validation can be done during model training, as well as after training has finished. The purpose of training validation is to detect overfitting, by testing the so far trained model between training loops with data it has not been trained on. The idea is to emulate inference, so that the performs equally well for unseen data as it does with training data. The point of validating after training is to ensure that the trained model still performs in a new platform or environment. For example after a model has been trained on a high level framework and moved on to a different run time on a another platform, it should be validated to confirm that the new stack works as expected. Different runtime have different implementations of operation and thus the conversion between models, might need additional work from the developer to ensure compatibiliy.
+
+To evaluate the accuracy of a neural networks we measure the amount of correct predictions relative to incorrect predictions. The suitable metric depends on the used codomain's dimensionality and the problem definition. A metric suitable for 100-class classifier might not suit binary classifier.
+
+A single prediction from a binary classifier can have four possible results. Prediction is true positive (TP) when ground truth is positive and the classifier correctly predicted it to be positive. Prediction is true negative when the ground truth class is negative and the classifier predicts it as negative. False positive (FP) and false negative (FN) predictions happen when the classifier fails to correctly classify the input.
+
+\subsection{Top-1}
+Top-1 is the most straightforward evaluation metric for multi-class classifiers. In top-1 we simply take the highest classified class and compare that to ground truth. If the predicted class is the same as the ground truth the predictions is counted as correct. This is repeated for all inputs in the validation set, and the final accuracy is determined by the relation of correct predictions to the total number of predictions done.
+\begin{equation}
+\text{Top-1 Accuracy} = \frac{1}{N} \sum_{i=1}^{N} \delta(\hat{y}_i, \text{argmax}(f(x_i)))
+\end{equation}
+where $N$ is the total number of inputs in the evaluation, $\delta$ is the Kronecker delta function, $\hat{y}$ is the correct classification of the input, $x_i$ is the input to the classifier and $f()$ is the classifier.
+
+\subsection{AUC}
+Area under the curve (AUC) is a metric for evaluating binary classifiers. It compares the relative amount true positive predictions to false positive predictions.
+The main benefit of AUC over simple accuracy is that it balances uneven datasets. For binary anomaly detection it's common that the amount of non-anomalous samples is magnitude larger than the amount of anomalous samples.
+Most ML libraries approximate the AUC with a discrete AUC using the Trapezoidal Rule~\cite{paszke_pytorch_2019}
+\begin{equation}
+\text{TPR} =  \frac{\text{TP}}{\text{TP} + \text{FN}}
+\end{equation}
+
+\begin{equation}
+\text{FPR} = \frac{\text{FP}}{\text{FP} + \text{TN}}
+\end{equation}
+
+\begin{align}
+  \text{AUC} & = \int_{\text{FPR}=0}^{\text{FPR}=1} \text{TPR}(\text{FPR}) \, d(\text{FPR}) \\
+  & \approx \sum_{i=1}^{n-1} \frac{(\text{FPR}_{i+1} - \text{FPR}_i) \cdot (\text{TPR}_{i+1} + \text{TPR}_i)}{2},
+\end{align}
+where TPR is the true positive rate, the relative amount of correct positive predictions from all the positive inputs, and FPR is the false positive rate, relative amount of false positive predictions to all negative inputs.
+
+
 
 \section{System-on-chip}
 System-on-chips (SoCs) are a form of heterogenous computing, where multiple different computing elements and electronic systems are integrated into one circuit.
@@ -534,7 +563,7 @@ In recent times SoC have also begun being seen more in consumer laptops, effecti
 Nowadays SoCs are seen as a solution for the \fixthis{SILICONE APOCALYPSE}, which describes the lessening increase of advance in computational performance of traditional CPUs due to Moore's Law not applying anymore.
 
 \chapter{Methodology}
-This section goes over the technologies use to complete this project in detail. First we discuss the hardware used in the SocHub's Headsail SoC and the parts affecting the decision made in the software design in detail. After this we present the used software stack necessary to run neural networks on the described hardware. We will also discuss the virtual prototype on which the majority of the software development took place on, and how it differs from the hardware.
+This section goes over the technologies use to complete this project in detail. First we discuss the hardware used in the SocHub's Headsail SoC and the parts affecting the decision made in the software design in detail. After this we present the used software stack necessary to run neural networks on the described hardware. We will also discuss the virtual prototype on which the majority of the software development took place on, and how it differs from the hardware.   1
 \label{ch:methodology}
 
 \section{Headsail}
@@ -622,14 +651,6 @@ In the case of the Headsail DLA we offer a high level calls Conv2d, Conv2d + Bia
 
 In addition to the C++ backend for BYOC we define a python API for performing the necessary legalization and annotation for the graph.
 
-
-\subsection{TVM on baremetal}
-TVM also provides a tool to run TVM models on baremetal platforms called microTVM. MicroTVM is only dependant on the C standard library and thus can be used in any baremetal system that has a working C-toolchain.
-
-MicroTVM works by generating platform independent C-source code from Relay IR-models, which can then be integrated with the microTVM c-runtime to produce executable binaries to run the network.
-
-With custom code generation it's also possible to define baremetal compatible accelerator nodes, which the TVM runtime is able to assign layers for during the C source code generation.~\parencite{TVM}
-
 \begin{figure}
   \centering
   \begin{tikzpicture}
@@ -680,11 +701,17 @@ With custom code generation it's also possible to define baremetal compatible ac
       \path [-{Stealth[scale=2]}] (RequantizeComposite) edge node[above] {} (ClipComposite);
       \path [-{Stealth[scale=4]}] (2,-2.1) edge node[left] {} (3, -2.1);
   \end{tikzpicture}
-  \caption{Tensorflow layer to TVM relay graph conversion}
-  \label{fig:tflite-to-tvm}
+  \caption{Graph transformation for DLA-VP}
+  \label{fig:tvm-graph-annotation}
 \end{figure}
 
 
+\subsection{TVM on baremetal}
+TVM also provides a tool to run TVM models on baremetal platforms called microTVM. MicroTVM is only dependant on the C standard library and thus can be used in any baremetal system that has a working C-toolchain.
+
+MicroTVM works by generating platform independent C-source code from Relay IR-models, which can then be integrated with the microTVM c-runtime to produce executable binaries to run the network.
+
+With custom code generation it's also possible to define baremetal compatible accelerator nodes, which the TVM runtime is able to assign layers for during the C source code generation.~\parencite{TVM}
 
 
 \section{Renode}
@@ -695,7 +722,6 @@ Renode models a wide variety of different processors and peripherals, but it is 
 
 While renode is a operation accurate emulator, the Python API isn't. When Renode makes a request to the Python API, it counts as one clock cycle even when realistically the Python API's corresponding hardware implementation would take more than one cycle. The consequence of this that we cannot accurately benchmark DLA in Renode. The benefit of the python API is in rapid development of hardware components.
 
-Since Renode python peripherals don't have a clock, the state of the peripheral can only be changed when a CPU reads or writes to an address that is registered for the peripheral. DLA-VP is designed to run a processing loop after each write to it's memory region. The processing loop checks if the state of DLA-VP is ready for operation execution and if yes performs the operation per configuration. Read accesses don't change the devices internal state, so the processing loop isn't executed on them. After the executing write call, the result of the operation can be read on the next clock cycle from the peripherals memory region.
 
 \section{TinyPERF}
 MLPerf Tiny is a benchmarking suite for benchmarking ML inference in low power targets, like MCUs with Deep Learning Accelerators.~\parencite{tinyperf}
@@ -739,6 +765,10 @@ To enable software development for Headsail before the arriving of the ASICs, we
 
 \subsection{DLA-VP}
 The virtual prototype of the DLA was implemented as a Renode python peripheral. The DLA-VP supports all the same operations as the corresponding ASIC implementation, with identical register interface and same data buffer architecture. This allowed us to develop the driver for the DLA completely on the VP first. After the ASICs where ready we could confirm that the DLA driver was indeed usable on both VP and ASIC.
+
+DLA-VP implements the register interface as a list, with the same length. Since numbers in python can be infinite length we had to carefully sanitize all the transactions to the registers so that no accesses of 8-bit values happened.
+
+Since Renode python peripherals don't have a clock, the state of the peripheral can only be changed when a CPU reads or writes to an address that is registered for the peripheral. DLA-VP is designed to run a processing loop after each write to it's memory region. The processing loop checks if the state of DLA-VP is ready for operation execution and if yes performs the operation per configuration. Read accesses don't change the devices internal state, so the processing loop isn't executed on them. After the executing write call, the result of the operation can be read on the next clock cycle from the peripherals memory region.
 
 \section{Software support}
 \label{sec:software_support}
