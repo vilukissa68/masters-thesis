@@ -639,7 +639,9 @@ To tune the weights of a particular layer we need to define an additional term, 
   W_{k} = W_{K} - \eta \frac{\partial L}{\partial W_{K}}.
 \end{equation}
 
-Essentially what
+Model training is computationally expensive process and in the case of some of the largest models can take months to train. For this reason it's common to have separate hardware for training and for inference. Training is generally done on GPUs or NNAs with some high-level training network. Where as inference can be done on different kinds of hardware configurations from serverfarms to micro-controllers, since the inference is less computationally expensive.
+
+Most training frameworks use 32-bit floating point values to represent rational numbers.~\cite{paszke_pytorch_2019}\cite{tensorflow2015-whitepaper}. This allows for the best accuracy in the training. After training the weights and biases can be moved to the target device for inference. Even in the cases where the target model is to be quantisized, the network is first trained with high accuracy floating points and quantisized afterwards, to represent the rational values with integers to ensure high model accuracy.
 
 \section{Deep-learning accelerators}
 \label{sec:dlas}
