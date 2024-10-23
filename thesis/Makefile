@@ -13,6 +13,5 @@ render-pdflatex:
 render-no-biber:
 	xelatex main.tex
 
-
 clean:
-	rm main.aux main.bbl main.bcf main.blg main.log main.out main.run.xml main.tex.bbl main.tex.blg main.toc texput.log
+	rm main.aux main.bbl main.bcf main.blg main.log main.out main.run.xml main.tex.bbl main.tex.blg main.toc texput.log q.log main.ist main.glo main.glsdefs

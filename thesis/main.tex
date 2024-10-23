@@ -44,8 +44,10 @@ autocite=footnote
 \usepackage[withpage]{acronym}
 \usepackage{tikz}
 \usetikzlibrary{arrows.meta, arrows}
-\usetikzlibrary{matrix}
+\usetikzlibrary{matrix, positioning}
 \usepackage{xcolor}
+\usepackage{listings, listings-rust}
+%\usepackage{inconsolata}
 
 \addbibresource{thesis_refs.bib} %Imports bibliography file
 \addbibresource{zotero.bib} %Imports bibliography file
@@ -160,6 +162,7 @@ December 2024
 \begin{acronym}
   \acro{DLA}{Deep Learning Accelerator}
   \acro{DLA-VP}{Headsail Deep Learning Accelerator Virtual Prototype}
+  \acro{FFI}{Foreign Function Interface}
   \acro{SoC}{System on a chip}
   \acro{ISA}{Instruction set architecture}
   \acro{ML}{Machine Learning}
@@ -174,6 +177,12 @@ December 2024
   \acro{AOT}{Ahead-of-Time runtime}
   \acro{BYOC}{Bring your own codegen}
   \acro{AUC}{Area under the curve}
+  \acro{IC}{Image Classification}
+  \acro{VWW}{Visual Wake Words}
+  \acro{KWS}{Keyword Spotting}
+  \acro{AD}{Anomaly Detection}
+  \acro{LSB}{Least Significant Bit}
+  \acro{MSB}{Most Significant Bit}
 \end{acronym}
 
 
@@ -211,33 +220,6 @@ The goal of this project was to build software support for the Deep-Learning Acc
 This section covers the necessary knowledge in topics in Deep Learning that are needed to understand the development of the DLA software.
 \label{ch:background}
 \section{Machine Learning and Deep Learning}
-Machine Learning is a field of computer science that researches algorithms to categorize data into distinct concepts so that yet unseen data can be categorized similarly. The central component of ML is always a model. Model is a function that distinguishes a concept from data.
-To build a model we first need training data. Training data is a set of data, often with known associated categories, that corresponds with the unseen data we want to categorize with the model. For example if training a model to count the number of people in image, we would have a training data consisting of images with different amount of people, with the wanted categorization (number of people present in the image) associated with each.
-Model is then trained by choosing a particular function and changing it's parameters so that it can categorize training data in a wanted manner. After training the performance can then be validated by feeding the model unseen data and seeing how well it can categorize it.
-Turns out that some problems are hard to describe mathematically, and therefore finding a good function for modeling a problem might be nearly impossible in some cases. For example going back to the counting people in a picture describe, how do you event tell a computer what a person looks like?
-
-It turns out that instead of carefully building a mathematical model it's easier to discover it. This is where artificial neural networks come in place. Neural networks are behind most bleeding edge advances in fields such as computer vision, image generation, AI chatbots and autonomous decision making systems.
-
-Deep Learning is a subset of Machine Learning which focuses on multilayer perceptrons, neural networks with more than one hidden layer.
-The goal of each DNN is to approximate a particular function.
-In mathematics a function describes the relation between a domain $A$ and codomain $B$ where
-\begin{equation}
-  f \subseteq A \times B,
-\end{equation}
-meaning that for every element in the domain $A$ there is exactly one corresponding element in codomain $B$.
-
-Intuitively domain $A$ can be viewed as the input of a multilayer perceptron and codomain $B$ as the output of the network. For a binary classifier codomain $B$ would be defined as
-\begin{equation}
-  B = \{0, 1\},
-\end{equation}
-
-and for 10 class classifier
-\begin{equation}
-  B = \{0, 1, 2 ..., 9\}.
-\end{equation}
-The domain of the network depends on the problem statement. For example for a image classifier the input can be viewed as a 3 dimensional array, where the second and third dimensions correspond to the height and width of the image and the first dimension as the channel in RGB color space as shown in figure~\ref{fig:rgb-array}, this commonly known as CHW layout.
-
-
 \begin{figure}
   \centering
   \begin{tikzpicture}
@@ -268,13 +250,139 @@ The domain of the network depends on the problem statement. For example for a im
   \label{fig:rgb-array}
 \end{figure}
 
+Machine Learning is a field of computer science that researches algorithms to categorize data into distinct concepts so that yet unseen data can be categorized similarly. The central component of ML is always a model. Model is a function that distinguishes a concept from data.
+To build a model we first need training data. Training data is a set of data, often with known associated categories, that corresponds with the unseen data we want to categorize with the model. For example if training a model to count the number of people in image, we would have a training data consisting of images with different amount of people, with the wanted categorization (number of people present in the image) associated with each.
+Model is then trained by choosing a particular function and changing it's parameters so that it can categorize training data in a wanted manner. After training the performance can then be validated by feeding the model unseen data and seeing how well it can categorize it.
+Turns out that some problems are hard to describe mathematically, and therefore finding a good function for modeling a problem might be nearly impossible in some cases. For example going back to the counting people in a picture describe, how do you event tell a computer what a person looks like?
+
+It turns out that instead of carefully building a mathematical model it's easier to discover it. This is where artificial neural networks come in place. Neural networks are behind most bleeding edge advances in fields such as computer vision, image generation, AI chatbots and autonomous decision making systems.
+
+Deep Learning is a subset of Machine Learning which focuses on multilayer perceptrons, neural networks with more than one hidden layer.
+The goal of each DNN is to approximate a particular function.
+In mathematics a function describes the relation between a domain $A$ and codomain $B$ where
+\begin{equation}
+  f \subseteq A \times B,
+\end{equation}
+meaning that for every element in the domain $A$ there is exactly one corresponding element in codomain $B$.
+
+Intuitively domain $A$ can be viewed as the input of a multilayer perceptron and codomain $B$ as the output of the network. For a binary classifier codomain $B$ would be defined as
+\begin{equation}
+  B = \{0, 1\},
+\end{equation}
+
+and for 10 class classifier
+\begin{equation}
+  B = \{0, 1, 2 ..., 9\}.
+\end{equation}
+The domain of the network depends on the problem statement. For example for a image classifier the input can be viewed as a 3 dimensional array, where the second and third dimensions correspond to the height and width of the image and the first dimension as the channel in RGB color space as shown in figure~\ref{fig:rgb-array}, this commonly known as CHW layout.
+
 The purpose of the neural networks is map the values of array to the codomain in such a manner in which useful information can be acquired from the mapping.
 Now that we know the domain and the codomain of our DNN we need to discover a function that represents the relation between them.
 
 \subsection{Fully connected layer}
-Fully connected layer or dense layer is a
+
+\begin{figure}
+  \centering
+\begin{tikzpicture}
+  % Input nodes
+  \node at (0, 1.3) {Input};
+  \foreach \i in {0, 1, 2, 3} {
+    \node[draw, circle, minimum size=0.7cm, fill=blue!20] (input\i) at (0, -\i+0.5) {$x_{\i}$};
+  }
+
+  % Hidden layer nodes
+  \node at (3, 1.3) {Hidden Layer};
+  \foreach \i in {0, 1, 2} {
+    \node[draw, circle, minimum size=0.7cm, fill=blue!20] (hidden\i) at (3, -\i) {$h_{\i}$};
+  }
+
+  % Output node
+  \node at (6, 1.3) {Output};
+  \node[draw, circle, minimum size=0.7cm, fill=red!20] (output) at (6, -1) {$y$};
+
+  % Arrows from input to hidden layer
+  \foreach \i in {0, 1, 2, 3} {
+    \foreach \j in {0, 1, 2} {
+      \draw[->] (input\i) -- (hidden\j);
+    }
+  }
+
+  % Arrows from hidden layer to output
+  \foreach \i in {0, 1, 2} {
+    \draw[->] (hidden\i) -- (output);
+  }
+\end{tikzpicture}
+\caption{Simple fully connected neural network with two layers.}
+\label{fig:fc-layer}
+\end{figure}
+
+Fully connected layer or dense layer is a common operation in neural networks. It maps each input element to each output element with and associated weight between each connection, where the weight represents the strength of the connection. Essentially this means that if an input value is high and the weight is high, the output is also higher.
+Fully connected layer is implemented as a matrix multiplication between layer's weights and layer's input,
+\begin{equation}
+y = x^{T} W
+\end{equation}
+where $y$ is the output of the layer, $W$ is the weight matrix for that layer and $x$ is the input.
+
+Figure~\ref{fig:fc-layer} shows a simple fully connected network. In the figure each node is a element in one layer's input $x$ and the vertices are the weights that connect each input to each output element. The second layer in the figure is a hidden layer, since it doesn't have input or output nodes from the network.
+
+Many classifier networks use a fully connected layer to do the final step in classification to squash the prediction dimensions to correspond with the expected codomain dimensions. This allows for a network to be used for different sized codomains. In such a case the last FC-layer is known as classifier and preceding layer is called a backbone. If for example we have a network architecture is good at classifying images, and we have two different problem definitions. From which first is to classify cars images from 20 different manufacturers and second is to classify animal images to ruminants and monogastrics. We can just modify the FC classifier to have 20 outputs for the first problem and two for the second and train with different datasets.
 
 \subsection{Convolutional neural networks}
+\begin{figure}
+  \centering
+\begin{tikzpicture}[
+    2d-arr/.style={matrix of nodes, row sep=-\pgflinewidth, column sep=-\pgflinewidth, nodes={draw}}
+  ]
+
+  \matrix (mtr) [2d-arr] {
+  0 & 1 & 1 & |[fill=blue!20]| 1 & |[fill=blue!20]| 0 & |[fill=blue!20]| 0 & 0\\
+  0 & 0 & 1 & |[fill=blue!20]| 1 & |[fill=blue!20]| 1 & |[fill=blue!20]| 0 & 0\\
+  0 & 0 & 0 & |[fill=blue!20]| 1 & |[fill=blue!20]| 1 & |[fill=blue!20]| 1 & 0\\
+  0 & 0 & 0 & 1 & 1 & 0 & 0\\
+  0 & 0 & 1 & 1 & 0 & 0 & 0\\
+  0 & 1 & 1 & 0 & 0 & 0 & 0\\
+  1 & 1 & 0 & 0 & 0 & 0 & 0\\
+  };
+
+  \node at (0,2.5) {$\mathbf I$};
+
+  \node[right=0.2em of mtr] (str) {$*$};
+
+  \matrix (K) [2d-arr, right=0.2em of str, nodes={draw, fill=blue!20}] {
+    1 & 0 & 1 \\
+    0 & 1 & 0 \\
+    1 & 0 & 1 \\
+  };
+  \node at (3.5,2.5) {$\mathbf K$};
+
+  \node[right=0.2em of K] (eq) {$=$};
+
+
+  \matrix (ret) [2d-arr, right=0.2em of eq] {
+  1 & 4 & 3 & |[fill=red!20]| 4 & 1\\
+  1 & 2 & 4 & 3 & 3\\
+  1 & 2 & 3 & 4 & 1\\
+  1 & 3 & 3 & 1 & 1\\
+  3 & 3 & 1 & 1 & 0\\
+  };
+  \node at (6.5,2.5) {$\mathbf{I * K}$};
+
+  \draw[dashed, teal] (mtr-1-6.north east) -- (K-1-1.north west);
+  \draw[dashed, teal] (mtr-3-6.south east) -- (K-3-1.south west);
+
+  \draw[dashed, blue!80!black] (K-1-3.north east) -- (ret-1-4.north west);
+  \draw[dashed, blue!80!black] (K-3-3.south east) -- (ret-1-4.south west);
+
+  \foreach \i in {1,2,3} {
+      \foreach \j in {4,5,6} {
+          \node[font=\tiny, scale=0.6, shift={(-1.2ex,-2ex)}] at (mtr-\i-\j) {$\times \pgfmathparse{int(mod(\i+\j,2))}\pgfmathresult$};
+        }
+    }
+\end{tikzpicture}
+\label{fig:conv2d-example}
+\caption{Visualization of 2D convolution being done for 7x7 input with 3x3 kernel. Adapted from~\cite{riebesell_tikz_2020}.}
+\end{figure}
+
 Convolutional neural networks are a type of neural networks that heavily utilize convolution operations. Convolution is a useful operations used to extract features from data.
 Convolution is defined as
 \begin{align}
@@ -303,7 +411,7 @@ In addition to $Conv2d$ bias is another important concept in neural networks. Bi
 
 In mathematic notation bias is defined as such
 \begin{align}
-  y = xA^{T} + b
+  y = x^{T}W + b
 \end{align}
 where if $xA^{T}$ is the non-biased output of a particular channel in layer, $b$ is the bias applied to the whole channel as a constant value.
 
@@ -396,10 +504,11 @@ The relationships between layers are presented as graphs, where nodes are layers
   \caption{Feed forward relationship between Conv2d, bias and ReLU layers.}
   \label{fig:conv2d-layer}
 \end{figure}
-For clarity this combination of 2D convolution, bias and ReLU is usually fused into single layer node. Different neural network frameworks use slightly different terminology relating to the meaning of operation, layer and fused layer. For example Tensorflow~\cite{tensorflow2015-whitepaper}, a popular framework for training, considers Conv2D, bias and ReLU separate layers and the combination of the a fused layer, where as in Pytorch~\cite{pytorch} the combination of Conv2D, bias and ReLU is considered one layer. For the purposes of this work, we use Tensorflow naming scheme.
+For clarity this combination of 2D convolution, bias and ReLU is usually fused into single layer node. Different neural network frameworks use slightly different terminology relating to the meaning of operation, layer and fused layer. For example Tensorflow~\parencite{tensorflow2015-whitepaper}, a popular framework for training, considers Conv2D, bias and ReLU separate layers and the combination of the a fused layer, where as in Pytorch~\cite{pytorch} the combination of Conv2D, bias and ReLU is considered one layer. For the purposes of this work, we use Tensorflow naming scheme.
 
 The simplest kind of relation is a feedforward relationship where the output of layer A is the input of layer B as shown in the figure~\ref{fig:network-simple}.
-Resnet~\cite{he2015deepresiduallearningimage} heavily utilizes what are called residual connections. With residual connection an input of a layer is used in multiple parts of a feed forward network. Figure~\ref{fig:network-residual} shows and example of a residual connection, where input of layer A is used again after concatenation as part of input for layer C.
+
+Connection can also branch, and the same layer output can be used as input for multiple nodes. Resnet~\cite{he2015deepresiduallearningimage} heavily utilizes what are called residual connections. With residual connection an input of a layer is used in multiple parts of a feed forward network. Figure~\ref{fig:network-residual} shows and example of a residual connection, where input of layer A is used again after concatenation as part of input for layer C.
 \begin{figure}
   \centering
   \begin{tikzpicture}
@@ -502,11 +611,47 @@ Resnet~\cite{he2015deepresiduallearningimage} heavily utilizes what are called r
 
 \fixthis{Write about depthwise conv2d}
 
+\section{Neural Model Training}
+To perform a given task all neural networks need to be trained. This means that the network parameters (weights and biases) are tuned in such a way that the network approximates a function performant in the task. This same concept apply to most model based ML-methods but with neural network this training is most often done with the backpropagation algorithm. The first step of backpropagation is the forward pass. Forward pass is essentially inference, where the network is given inputs from a known set of inputs with associated ground truth labels for which the network performs predictions. The predictions are then compared with the ground truth with a loss function to calculate current network error. The choice of loss function is critical and poor choice can heavily effect the models potential to discover a suitable parameters. Some common loss functions are mean squared error, cross entropy loss and L1 loss.
+
+After forward pass comes the backwards pass, where the parameters of the network are adjusted to minimize the loss function for the given inputs. The tuning is done layer by layer starting from the output layer and working towards the input layer, hence the name backpropagation. To tune the parameters in a way that maximally improves the prediction results, we need to minimize the value of the loss function. To accomplish the we calculate the gradient decent of the network. Essentially gradient descent describe derivative of the n-dimensional space housing the function approximation of the network. Each parameter introduces it's own dimension and thus adding a parameter to the derivative.
+
+\begin{equation}
+  g_{K} = \nabla L (\hat{y}, z_{K}) = \frac{\partial L}{\partial a_{K}} \cdot \frac{\partial a_{K}}{\partial z_{K}},
+\end{equation}
+where $g$ is the gradient of the last layer's activation in relation to the expected activation as signified by $K$, $L$ is the loss function, $\hat{y}$ is the ground truth or expected prediction, $a_{K}$ is the activation of the output layer or the prediction and $z_{K}$ is the input of the layer.
+To find the gradient for the next layer we apply the same chain rule, since we know that the activation of the last layer is dependant on the activation of the previous layer
+\begin{align}
+  g_{K-1}& = \nabla L(\hat{y}, z_{k-1}) = g_{K} \cdot \nabla L(z_{K}, z_{K-1}) \\
+  & = \frac{\partial L}{\partial a_{K}} \cdot \frac{\partial a_{K}}{\partial z_{K}} \cdot \frac{\partial z_{K}}{\partial a_{K-1}} \cdot \frac{\partial a_{K-1}}{\partial z_{K-1}}.
+\end{align}
+This same chain rule is applied for the whole graph to produce the complete gradiant of the network with final activation in relation to the input $x$
+\begin{align}
+  \nabla L(\hat{y}, x).
+\end{align}
+Since it's known that the activation of a layer is the affine transformation we know that
+\begin{align}
+  z_{K} = a_{K-1}W_{K} + b_{K} \Rightarrow \frac{\partial L}{\partial W_{K}} = \frac{\partial L}{\partial z_{K}} \cdot a_{K-1}
+\end{align}
+where $W_{K}$ is the vector of weights for layer $K$.
+To tune the weights of a particular layer we need to define an additional term, a learning $\eta$ which describe the amount of movement towards the minimum value of the loss function. We can then use the following equation to calculate new weights for all the layers
+\begin{equation}
+  W_{k} = W_{K} - \eta \frac{\partial L}{\partial W_{K}}.
+\end{equation}
+
+Essentially what
+
 \section{Deep-learning accelerators}
 \label{sec:dlas}
+Deep Learning Accelerators (DLAs) or sometimes called Neural Processing Units (NPUs) are hardware accelerators, that accelerate common neural network operations. In many networks, this means accelerating convolution and dense layers by parallellisize the calculation of output elements.
+In low power devices DLAs mainly accelerate inference workloads.
+
 In desktop applications and data center workloads neural networks have been accelerated with GPUs, due to their ability to perform linear-algebra operations like matrix multiplication with high amount of parallellity.
 
 In recent times there has been a growing need to also run neural networks in mobile devices. Traditional GPUs are too power-hungry for these small devices, so a need for more efficient accelerators for these workloads has been born. Companies such as Apple and Qualcomm now include multiple mobile DLA's in their SoCs to run applications like face recognition on phones using their chips.
+
+
+Eyeriss~\cite{chen_eyeriss_2017}, Neurocube~\cite{noauthor_neurocube_nodate}, Flexflow~\cite{lu_flexflow_2017}
 
 \section{Quantization}
 When training DNN models with high level tools like Pytorch, models are built to use floating point operations In recent years big players like NVIDIA have started to utilize more and more quantized integer models. This is due to the fact that as the amount of paramters in models like GPT, has been growing exponentially, there is are significant performance gains available by reducing the granularity of the paramters. Standard floating point value has a width of 32-bits, where as int8 which is the most common integer type in DNNs has just the 8 bits. Thus when less granularity is acceptable similarly performing integer based accelerator can do 4 times the calculations when compared to a floating point accelerator.
@@ -725,7 +870,7 @@ While renode is a operation accurate emulator, the Python API isn't. When Renode
 
 \section{TinyPERF}
 MLPerf Tiny is a benchmarking suite for benchmarking ML inference in low power targets, like MCUs with Deep Learning Accelerators.~\parencite{tinyperf}
-TinyPerf consits of four benchmarks meant to target different use cases shown in table~\ref{tab:tinyperf}.
+TinyPerf consists of four benchmarks meant to target different use cases shown in table~\ref{tab:tinyperf}.
 
 \begin{table}[ht]
 \centering
@@ -744,21 +889,42 @@ TinyPerf consits of four benchmarks meant to target different use cases shown in
 \end{adjustbox}
 \label{tab:tinyperf}
 \end{table}
+Each of the four tasks uses a different model, dataset and problem definition, to ensure testing of wide amount of workloads. Each of the tasks has a minimum quality requirement to be considered acceptable for the benchmark. For the three multi-class classifiers the used metric is top-1 and for anomaly detection the metric is AUC.
 
-\subsection{Resnet}
-Resnet is an implementation of ImageNet, where between every pair of layers there is a residual connection added from the pair preceding the previous pair.
+Since TinyPERF aims to suit most kinds of targets, they give the users lots of freedom in the implementation of the models. In the benchmarks the only performance metric is the actual inference times, as long as the quality requirement is fulfilled. This allows for devices with limited IO capabilities a fair comparison against more capable devices. There is no limitation on the model's data type so TinyPERF can be used to compare between signed and unsigned integer accelerators, as well as with FP8 and FP32 accelerators.
+
+\subsection{Image Classification}
+The image classification task aims to classify images from the CIFAR-10 dataset~\cite{Cifar10Krizhevsky09learningmultiple}. CIFAR-10 includes 32x32 RGB color images, each belonging to one class. The 10 classes of CIFAR-10 are labeld as, airplane, automobile, bird, cat, deer, dog, frog, horse, ship and truck.
+
+To do this classification TinyPERF uses Resnet. Resnet is an implementation of ImageNet, where between every pair of layers there is a residual connection added from the pair preceding the previous pair.
 The backbone architecture introduced in ImageNet uses multiple consecutive layers of 3x3 kernel size 2D convolutions
 Backbone of the network is built from multiple consecutive 3x3 convolution layers which are in addition to simple feed forward connections.
-Resnet architectures vary by the depth of the network, i.e. number of layers. For example Resnet-50 has 50 layers and Resnet-34 has 34. In TinyPerf benchmark image classification task we use custom ResNet-9, which lacks the downsampling pooling layers to compensate for the low resolution of CIFAR-10 dataset.
+Resnet architectures vary by the depth of the network, i.e. number of layers. For example Resnet-50 has 50 layers and Resnet-34 has 34. The image classification task uses custom ResNet-9, which lacks the downsampling pooling layers to compensate for the low resolution of CIFAR-10 dataset.
 
-\subsection{Mobilenet}
-\subsection{DS-CNN}
-DS-CNN is a convolutional based on depthwise separable convolutional layers.~\
-\subsection{FC-AutoEncoder}
+\subsection{Visual Wake Words}
+In the Visual Wake Words (VWW) task, the goal is to identify if at least on person is present in an image from the MSCOCO 2014 dataset~\cite{lin_microsoft_2015}.
+The training dataset consists of RGB images preprocessed to 96x96 pixels, featuring at least one person. The testing set, which the benchmark uses features images of the same size, but some have people and some do not.
+
+The model chosen for the VWW is MobileNetV1~\cite{howard2017mobilenetsefficientconvolutionalneural}
+Backbone of MobileNet consists of 13 depthwise 2 dimensional convolution layers each followed by a $K=1x1$ 2D convolution. After backbone there is a simple average pooling layer followed by binary classifier.
+
+\subsection{Keyword Spotting}
+The keyword spotting task is an audio processing task where the goal is to identify spoken keyword from multiple sound sources. Data used dataset is the Speech Commands V2 dataset~\cite{warden_speech_2018}, consists of short clips where one of 30 words possible words are pronounced. From these words ten are used as keywords alongside background noise and rest of the words as unknown, to produce 12 labels.
+
+TinyPERF uses model called DS-CNN for the KWS task.
+DS-CNN is very similar to MobileNet, in that it heavily utilized depthwise convolutional layers for the backbone.~\cite{shaheed_ds-cnn_2022}
+Where MobileNet used 13-layers DS-CNN only has four depthwise 2D convolution layers each followed by a pointwise convolution layer. Which makes it the smallest model in the benchmark, both by the number of layers and parameters.
+Similarly to MobileNet DS-CNN uses FC-layer for classifier.
+
+\subsection{Anomaly Detection}
+The dataset for this task is the DCASE2020 dataset~\cite{koizumi_description_2020}. DCASE2020 consists of sound samples from the following labels: slide rails, fans, pumps, valves, toy-cars, toy-conveyors, from which the AD task only detects anomalies from the toy-cars.
+
+For the model AD task uses a custom FC-AutoEncoder~\cite{FC-Auto}. The model consists of 10 FC-layers with ReLU activations, from which
+AutoEncoder consists of three parts. First is the encoder which encoder the input and downsamples it to latent space. Second part is the latent space which holds the useful high level features of the input. Last is the decoder which decodes the latent features and upsamples these features back to original dimensionality of the input.
 
 \chapter{Implementation}
 \label{ch:implementation}
-This section covers the actual implementation of the used software stack in detail and the specific use cases developed on top of the stack. As well as the TinyPerf benchmark used to evaluate the performnace of the DLA.
+This section covers the actual implementation of the used software stack in detail and the specific use cases developed on top of the stack. As well as the TinyPerf benchmark used to evaluate the performance of the DLA.
 
 \section{Headsail-VP}
 To enable software development for Headsail before the arriving of the ASICs, we modeled the hardware as a Renode virtual platform, which we call Headsail-VP. With Headsail-VP we aimed to replicate the complete memory map of Headsail, with both processors and some of the peripherals.
@@ -776,8 +942,6 @@ Even though Headsail is the third SoCHub Soc, it had little existing software su
 
 We also developed a Board Support Package for Headsail, which provides drivers for the different peripherals in the SoC. Most importantly for this project, the driver for the DLA is included in the BSP.
 The DLA driver is implemented in two layers. First is the low level layer which implements functions that directly target the register interface in the DLA to drive the hardware. The second is the high level layer which abstracts the low level layer to provied simple calls for the 3 different DLA operations. The high level layer also provides the external symbols for DLA operations used by the TVM code generation.
-
-Headsail-BSP is written in Rust, so to use it with the C based TVM code we also needed to provide a Foreign Function Interface.
 
 
 \section{Porting Newlib}
@@ -821,7 +985,6 @@ The system calls can be implemented either in non-reentrant or reentrant way. Re
 \end{table}
 
 
-
 \section{DLA Software Architecture}
 The figure~\ref{fig:architecture} shows the high level software architecture of TVM annotated model deployment flow with Headsail DLA. First we use high level operations in DLA driver to provied external symbols for Conv2d, Bias and ReLU. These are referenced in the Headsail build of TVM dylib when built with the Headsail custom code generation option.
 
@@ -844,6 +1007,104 @@ Finally we produce an executable binary by combining the microTVM C runtime from
   \caption{Architecture of accelerated DLA flow in Headsail with TVM runtime and a Pytorch model}
   \label{fig:architecture}
 \end{figure}
+
+\section{DLA Driver}
+The driver for the DLA is divided into two parts. First is the lower level API that handles the register level interfacing with the DLA. Second is the high-level API which implements a user facing interface for the main operations of the DLA.
+
+\subsection{Layer struct}
+The layer configuration struct is the central component of the DLA driver. It defines all the necessary information needed to run a single layer on the DLA and is passed for the \texttt{init\_layer} method in the low level API to run the specified layer. The DLA doesn't wait for a particular run command, rather after setting \texttt{READ\_A\_VALID} and \texttt{READ\_A\_VALID} bits in the \texttt{BUF\_CTRL} register to signal all input and kernel data has been set, the DLA starts immediately executing the current configuration.
+
+\begin{lstlisting}[language=Rust, basicstyle=\footnotesize, caption={Example call to DLA highlevel API}, label={lst:layerstruct}]
+pub struct LayerConfig {
+    pub input_bank: Option<MemoryBank>,
+    pub kernel_bank: Option<MemoryBank>,
+    pub output_bank: Option<MemoryBank>,
+    pub bias_addr: Option<u32>,
+    pub pp_enabled: bool,
+    pub relu_enabled: bool,
+    pub bias_enabled: bool,
+    pub input_size: Option<InputSize>,
+    pub kernel_size: Option<KernelSize>,
+    pub padding: Option<Padding>,
+    pub stride: Option<Stride>,
+    pub mac_clip: Option<u32>,
+    pub pp_clip: Option<u32>,
+    pub simd_mode: Option<SimdBitMode>,
+}
+\end{lstlisting}
+
+Program~\ref{lst:layerstruct} shows the design of the struct. The first three fields control the data locations with the DLA memory banks. It should be noted that the driver nor the DLA don't enforce any kind of overlapping for the data, and it's left at the responsibility of the user to make sure these areas don't overlap. To make this easier the driver offers a method to calculate suitable memory bank assignments. Bias is handled differently from the other data locations since DLA view it as FIFO where every channels takes the next element.
+
+The \texttt{pp\_enabled}, \texttt{relu\_enabled}, \texttt{bias\_enabled} fields control the use of the post-processing unit. The first enables the unit, and the following ones choose which of the two post-processing operations are executed for the layer. For example when calculating basic Resnet layer with both operations all the three fields need to be enabled.
+
+The \texttt{input\_size}, \texttt{kernel\_size}, \texttt{padding} and \texttt{stride} fields control the dimensions of the 2D convolution. \texttt{input\_size} and \texttt{kernel\_size}, define the height and width of the inputs and weights as well as the channels counts. Number of input channels for input and number of output channels for the kernel. \texttt{padding} fields allows for settings the amount of padding for all directions separately as well as the values used as the padding. \texttt{stride} tell the amount of space between samples in the input in vertical and horizontal direction separately. The default stride of 1 means that every input element is sampled, where as stride of 2 means that after a sample, we move two spaces to the particular direction etc.
+
+\begin{figure}
+  \centering
+\begin{tikzpicture}[scale=0.7]
+
+% Stride 1x1
+\foreach \x in {0, 1, 2, 3} {
+    \foreach \y in {0, 1, 2, 3} {
+        \draw[black, thick] (\x,\y) rectangle (\x+1,\y+1);
+        \fill[blue!20] (\x,\y) rectangle (\x+1,\y+1);
+    }
+}
+\node[below] at (1.5, -0.5) {Stride 1x1};
+
+% Stride 1x2
+\begin{scope}[shift={(6, 0)}]
+    \foreach \x in {0, 1, 2, 3} {
+        \foreach \y in {0, 1, 2, 3} {
+            \draw[black, thick] (\x,\y) rectangle (\x+1,\y+1);
+        }
+    }
+    \foreach \x in {0, 1, 2, 3} {
+        \foreach \y in {0, 2} {
+            \fill[blue!20] (\x,\y) rectangle (\x+1,\y+1);
+        }
+    }
+    \node[below] at (1.5, -0.5) {Stride 1x2};
+\end{scope}
+
+% Stride 2x2
+\begin{scope}[shift={(12, 0)}]
+    \foreach \x in {0, 1, 2, 3} {
+        \foreach \y in {0, 1, 2, 3} {
+            \draw[black, thick] (\x,\y) rectangle (\x+1,\y+1);
+        }
+    }
+    \foreach \x in {0, 2} {
+        \foreach \y in {0, 2} {
+            \fill[blue!20] (\x,\y) rectangle (\x+1,\y+1);
+        }
+    }
+    \node[below] at (1.5, -0.5) {Stride 2x2};
+\end{scope}
+\end{tikzpicture}
+\caption{Effect of stride to sampling}
+\label{fig:stride}
+\end{figure}
+
+\subsection{Output}
+To get input from the DLA we first need to define it's input address. Theoretically this address can be any memory address visible to the control processors, but in the driver we have limited the number of possible output addresses only to the DLAs internal memory banks. For setting the output bank for the given layer the driver writes to \texttt{DLA\_PP\_AXI\_WRITE\_ADDRESS} register the wanted output address.
+
+To read the output from the DLA we need to know how many elements the output has for any given operation. This information can be derived from the following equation
+
+\begin{align}
+W_{\text{out}} &= \frac{W_{\text{in}} + P_{\text{left}} + P_{\text{right}} - K_x + 1}{S_x} \\
+H_{\text{out}} &= \frac{H_{\text{in}} + P_{\text{top}} + P_{\text{bottom}} - K_y + 1}{S_y} \\
+\text{No. output elements} &= W_{\text{out}} \times H_{\text{out}} \times Channels_{out},
+\end{align}
+where $W$ is width, $H$ is height, $P$ is padding to either left, right, bottom or top, $K$ is the shape of the kernel and $S$ is the stride in horizontal or vertical direction.
+Multiplying the shape of a single output channel with the total number of output channels gives use the total amount of output elements. Since DLA can only output 8-bit values we know that the number of bites to read per layer is equal to the amount of output elements.
+
+Since the output of the DLA is limited to the signed 8 bit range (from $-128$ to $127$) but the convolution is calculated in signed 16-bit range (from $-32768$ to $32767$) the DLA needs to clip half of the bits away. Using the \texttt{mac\_clip} and \texttt{pp\_clip} fields we can control which of the consecutive 8-bits we want to use as the result. By default DLA stores the 8 most significant bits, but by increasing the clipping values we can move the extraction window towards the less significant bits. By moving towards LSB we essentially gain granularity between the values at the cost of losing range in the high values. This is desired when the absolute maximum value of a layer is small. In most cases the optimal extraction window is somewhere between MSB and LSB, thus making it difficult to predict which exact clipping value to use. When the results of a layer are read from the DLA the driver shifts the read values back by the same amount as they were clipped in the accelerator to match the magnitude of the calculations.
+
+\subsection{C-Interface}
+To enable TVM BYOC to call the DLA drivers high-level interface we needed to great C wrappers for the function calls. This was done by implementing a Foreign Function Interface (FFI) for the Rust function calls with the Cbindgen library~\cite{cbindgen}. Cbindgen generates C headers from the Rust code that enables C programs to call Rust functions when linked with the proper static library. For the static library we build the headsail-bsp that implements the high-level operation calls which the FFI interface uses.
+
+In the FFI we also define a entry point specifically for the TVM. As previously mentioned we always allocate qnn.conv2d + add pattern for the DLA to execute. The code generation backend extract all the necessary information from the Relay nodes of this pattern and generates a function call to call \texttt{dla\_tvm\_qnn\_conv2d\_bias} function from the FFI. In addition to just calling the wanted Conv2D + bias operation from the BSP, the FFI function slices the data buffers to Rust slices and performs certain value conversions, like clipping the 32-bit bias values to 16-bit values. After the operation has been done and the result rest the FFI implementations shifts the values left by the same amount as was clipped in the DLA. These values are then copied to the buffer defined by the TVM codegen.
 
 \section{Benchmarking}
 For the DLA there are two things we can benchmark. First is to look at the amount of convolution operations we can execute per time unit. This kind of throughput benchmarking fine but doesn't tell us much about the real-life CNN performance, since it doesn't take in to account what proportion of the CNN workloads is actually Conv2d and the proceeding Bias and ReLU operations.
