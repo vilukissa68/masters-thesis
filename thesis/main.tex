@@ -217,7 +217,7 @@ More often these companies integrate their accelerators into SoCs, which include
 The goal of this project was to build software support for the Deep-Learning Accelerator in the upcoming Headsail SoC from SocHub using a Renode based virtual prototype as the development platform. The goal was to use this concurrent development approach to have software support ready before the chip had been manufactured.
 
 \chapter{Background}
-This section covers the necessary knowledge in topics in Deep Learning that are needed to understand the development of the DLA software.
+This section covers the topics in Deep Learning that relate to the implementation of the project, with focus on performing inference on deep neural networks. In addition to this we discuss hardware approaches for building tightly integrated single chip systems with SoCs and for accelerating inference workloads with dedicated deep learning accelerators.
 \label{ch:background}
 \section{Machine Learning and Deep Learning}
 \begin{figure}
@@ -639,32 +639,51 @@ To tune the weights of a particular layer we need to define an additional term, 
   W_{k} = W_{K} - \eta \frac{\partial L}{\partial W_{K}}.
 \end{equation}
 
+Biases are also update with a similar equation
+\begin{equation}
+  b_{k} = b_{K} - \eta \frac{\partial L}{\partial b_{K}}.
+\end{equation}
+
+
 Model training is computationally expensive process and in the case of some of the largest models can take months to train. For this reason it's common to have separate hardware for training and for inference. Training is generally done on GPUs or NNAs with some high-level training network. Where as inference can be done on different kinds of hardware configurations from serverfarms to micro-controllers, since the inference is less computationally expensive.
 
 Most training frameworks use 32-bit floating point values to represent rational numbers.~\cite{paszke_pytorch_2019}\cite{tensorflow2015-whitepaper}. This allows for the best accuracy in the training. After training the weights and biases can be moved to the target device for inference. Even in the cases where the target model is to be quantisized, the network is first trained with high accuracy floating points and quantisized afterwards, to represent the rational values with integers to ensure high model accuracy.
 
-\section{Deep-learning accelerators}
-\label{sec:dlas}
-Deep Learning Accelerators (DLAs) or sometimes called Neural Processing Units (NPUs) are hardware accelerators, that accelerate common neural network operations. In many networks, this means accelerating convolution and dense layers by parallellisize the calculation of output elements.
-In low power devices DLAs mainly accelerate inference workloads.
-
-In desktop applications and data center workloads neural networks have been accelerated with GPUs, due to their ability to perform linear-algebra operations like matrix multiplication with high amount of parallellity.
-
-In recent times there has been a growing need to also run neural networks in mobile devices. Traditional GPUs are too power-hungry for these small devices, so a need for more efficient accelerators for these workloads has been born. Companies such as Apple and Qualcomm now include multiple mobile DLA's in their SoCs to run applications like face recognition on phones using their chips.
-
-
-Eyeriss~\cite{chen_eyeriss_2017}, Neurocube~\cite{noauthor_neurocube_nodate}, Flexflow~\cite{lu_flexflow_2017}
-
 \section{Quantization}
-When training DNN models with high level tools like Pytorch, models are built to use floating point operations In recent years big players like NVIDIA have started to utilize more and more quantized integer models. This is due to the fact that as the amount of paramters in models like GPT, has been growing exponentially, there is are significant performance gains available by reducing the granularity of the paramters. Standard floating point value has a width of 32-bits, where as int8 which is the most common integer type in DNNs has just the 8 bits. Thus when less granularity is acceptable similarly performing integer based accelerator can do 4 times the calculations when compared to a floating point accelerator.
+When training DNN models with high level tools like Pytorch, models are built to use floating point operations In recent years big players like NVIDIA have started to utilize more and more quantized integer models. This is due to the fact that as the amount of parameters in models like GPT, has been growing exponentially. Often there are significant performance gains available by reducing the granularity of the parameters without a major loss in model accuracy~\cite{krishnamoorthi_quantizing_2018}. Standard floating point value has a width of 32-bits, where as int8 which is the most common integer type in DNNs has just the 8 bits. Thus when less granularity is acceptable similarly performing integer based accelerator can do 4 times the calculations when compared to a floating point accelerator.
 Some models reduce that amount of granularity even more and have layers using 4-bit or 2-bit integers. With 2-bit integers one can do 16-times as many calculations in comparison to floating points.
 
-It's also possbile to have only parts of the model quantisized. For these cases it might be necessary to have additional conversion layers to go from floating point inputs to integers and backwards. This can be useful for the cases where the target platform is only able to accelerate quantized layers, but the developer want's to use well proven subnetwork to ensure accuracy while the rest of the network is hardware accelerated to improve performance.
+It's also possible to have only parts of the model quantisized. For these cases it might be necessary to have additional conversion layers to go from floating point inputs to integers and backwards. This can be useful for the cases where the target platform is only able to accelerate quantized layers, but the developer want's to use well proven subnetwork to ensure accuracy while the rest of the network is hardware accelerated to improve performance.
 
-In the case of Headsail's DLA it supports 8-bit, 4-bit and 2-bit integers, with 4-bit and 2-bit inputs using SIMD operations to linearly increase the amount of calculations per cycle.
+There are multiple approaches to performing post training quantization, but it essentially always involves representing particular floating point range of a values in layer inputs or outputs with integers fixed to a certain zero-point. Tensorflow uses the affine quantization to quantisize the floating point parameteres to integers
+\begin{equation}
+  x_{Q} = clamp(0, 255, round(\frac{x_{float}}{\Delta}) + z)
+\end{equation}
+where $x_{float}$ is the original parameter values, $x_{Q}$ is the quantisized parameter value, $z$ is the zero-point and $\Delta$ is the scaling factor discovered during quantization.
+The clamp operation limits the input to a given range as such
+\begin{align}
+  clamp(a, b, x) & = a \qquad \text{if} \; x \leq a  \\
+                 & = x \qquad \text{if} \; a < x < b  \\
+                 & = b \qquad \text{if} \; x \geq b
+\end{align}
+To convert quantisized parameters back to the orignal paramter values affine quantization uses the following operation
+\begin{equation}
+  x_{float} = (x_{Q}-z)\Delta.
+\end{equation}
+This back conversion has no need for the clamping operation or rounding, since the floating point range is larger then the 8-bit integer range.
+
+Another choice for quantization is the uniform symmetric which is similar to the affine quantization, but the zero-point is always set as 0. This ensures that the negative and positive sides of the equal, which is desired of signed integer based accelerators. The equation for quantizising a parameter with the uniform symmetric quantization is as follow
+\begin{equation}
+  x_{Q} = clamp(-128, 127, round(\frac{x_{float}}{\Delta})).
+\end{equation}
+From the equation we can see that when compared to the affine quantization the zero-point term has been removed and the range has been shifted by $-128$. Converting back to the original parameter is as simple as applying the scaling factor
+\begin{equation}
+  x_{float} = x_{Q}\Delta.
+\end{equation}
+Some integer accelerators might support performing the quatizations in hardware, but generally it's done in software.
 
 \section{Validation and DNN inference evaluation metrics}
-Model validation is a practice of evaluating the quality of predictions of a neural network. Validation can be done during model training, as well as after training has finished. The purpose of training validation is to detect overfitting, by testing the so far trained model between training loops with data it has not been trained on. The idea is to emulate inference, so that the performs equally well for unseen data as it does with training data. The point of validating after training is to ensure that the trained model still performs in a new platform or environment. For example after a model has been trained on a high level framework and moved on to a different run time on a another platform, it should be validated to confirm that the new stack works as expected. Different runtime have different implementations of operation and thus the conversion between models, might need additional work from the developer to ensure compatibiliy.
+Model validation is a practice of evaluating the quality of predictions of a neural network. Validation can be done during model training, as well as after training has finished. The purpose of training validation is to detect overfitting, by testing the so far trained model between training loops with data it has not been trained on. The idea is to emulate inference, so that the performs equally well for unseen data as it does with training data. The point of validating after training is to ensure that the trained model still performs in a new platform or environment. For example after a model has been trained on a high level framework and moved on to a different run time on a another platform, it should be validated to confirm that the new stack works as expected. Different runtime have different implementations of operation and thus the conversion between models, might need additional work from the developer to ensure compatibility.
 
 To evaluate the accuracy of a neural networks we measure the amount of correct predictions relative to incorrect predictions. The suitable metric depends on the used codomain's dimensionality and the problem definition. A metric suitable for 100-class classifier might not suit binary classifier.
 
@@ -695,8 +714,6 @@ Most ML libraries approximate the AUC with a discrete AUC using the Trapezoidal 
 \end{align}
 where TPR is the true positive rate, the relative amount of correct positive predictions from all the positive inputs, and FPR is the false positive rate, relative amount of false positive predictions to all negative inputs.
 
-
-
 \section{System-on-chip}
 System-on-chips (SoCs) are a form of heterogenous computing, where multiple different computing elements and electronic systems are integrated into one circuit.
 SoCs generally include CPUs, memories, IO interfaces and specialized accelerators, but conceptually there is no set definition on what SoC needs to include.
@@ -709,13 +726,29 @@ In recent times SoC have also begun being seen more in consumer laptops, effecti
 
 Nowadays SoCs are seen as a solution for the \fixthis{SILICONE APOCALYPSE}, which describes the lessening increase of advance in computational performance of traditional CPUs due to Moore's Law not applying anymore.
 
+\section{Deep-learning accelerators}
+\label{sec:dlas}
+Deep Learning Accelerators (DLAs) or sometimes called Neural Processing Units (NPUs) are hardware accelerators, that accelerate common neural network operations. In many networks, this means accelerating convolution and dense layers by parallellize the calculation of output elements.
+In low power devices DLAs mainly accelerate inference workloads.
+
+In desktop applications and data center workloads neural networks have been accelerated with GPUs, due to their ability to perform linear-algebra operations like matrix multiplication with high amount of parallellity.
+
+In recent times there has been a growing need to also run neural networks in mobile devices. Traditional GPUs are too power-hungry for these small devices, so a need for more efficient accelerators for these workloads has been born. Companies such as Apple and Qualcomm now include multiple mobile DLA's in their SoCs to run applications like face recognition on phones using their chips.
+
+
+Eyeriss~\cite{chen_eyeriss_2017} is an early example of a MAC array based DLA for accelerating convolution networks. MAC or Multiply-Accumulate operation is a \fixthis{Explain how MAC array works.}
+Neurocube~\cite{noauthor_neurocube_nodate}, Flexflow~\cite{lu_flexflow_2017} Google Edge TPU~\cite{EdgeTPU},
+
+
 \chapter{Methodology}
 This section goes over the technologies use to complete this project in detail. First we discuss the hardware used in the SocHub's Headsail SoC and the parts affecting the decision made in the software design in detail. After this we present the used software stack necessary to run neural networks on the described hardware. We will also discuss the virtual prototype on which the majority of the software development took place on, and how it differs from the hardware.   1
 \label{ch:methodology}
 
 \section{Headsail}
-Headsail is the third Soc build by the SocHub research group~\parencite{Ballast}. Headsail has two RISCV CPUs, one 32-bit meant for booting up the system called SysCtrl and one 64-bit on called HPC, meant for running the actual applications.
+Headsail is the third Soc build by the SocHub research group~\parencite{Ballast}. Headsail has two RISCV CPUs, one 32-bit meant for booting up the system called SysCtrl and one 64-bit 4-core CPU called HPC, meant for running the actual applications, based on the CVA6~\cite{zaruba2019costCVA6}.
 Headsail includes a wide variety of different peripherals, one of which is a custom build the Deep Learning accelerator.
+For I/O headsail  has UART, SPI and I2C connectivity.
+In addition CPU bootrams, Headsail features 256 megabytes of SDRAM and 128 kilobytes of shared SRAM. This abundance of memory gives lots of space for
 
 \subsection{DLA}
 Headsail's DLA is a MAC array based accelerator, which provides the following operations: Conv2D, Bias, ReLU. The operations are implemented as a pipeline, meaning that the order of operations is always the same. During one layer cycle the operations need to be executed in the following order: Conv2d, Bias, ReLU. This is the most commonly found order in modern neural networks so it suits most use cases. In addition to these operations DLA can perform bit shifting for results of the MAC array and the post-processing pipeline.
@@ -860,6 +893,14 @@ MicroTVM works by generating platform independent C-source code from Relay IR-mo
 
 With custom code generation it's also possible to define baremetal compatible accelerator nodes, which the TVM runtime is able to assign layers for during the C source code generation.~\parencite{TVM}
 
+\subsection{TVM quantization}
+TVM implements quantization with it's own QNN-dialect~\cite{jain_efficient_2020}. The QNN-dialect separates quantized and non-quantized operations from each other by categorizing the quantized operations under the \texttt{qnn.op} class. The QNN operation have additional arguments in to indicate scaling factor and zero-point for inputs and outputs
+ In addition to having quantizised version of the DL operations the QNN dialect introduces operations for moving data across from non-quantisized domain to quantisized and back. This is done with the \texttt{qnn.quantize}, \texttt{qnn.dequantize} and \texttt{qnn.requantize} operations. \texttt{qnn.quantize} performs affine quantization to a floating point tensor to produce a corresponding quantisized integer tensor, where as \texttt{qnn.dequantize} reverse the affine quantization. \texttt{qnn.requantize} converts a quantizised tensor to another quantisized tensor corresponding with a different scale than the original.
+
+TVM enables compatibility of quantisized networks with other major DNN frameworks like tensorflow with QNN-dialect aware graph parsing. When model from a another framework, the framework specific quantization operations get converted to QNN nodes. The resulting graph is then passed trough canonicalization and legalization passes to produce relay graph that can be annotated for a target.
+Canonicalization pass converts the QNN nodes into relay operations. For example \texttt{qnn.Conv2d} gets broken into, dequantization, floating point convolution, bias, requantization to int8 and clipping operations.
+In legalization pass the canonicalized relay graph is transformed into relay graph that is compatible with the target hardware. For example this might include rewriting zero-points in requantization nodes, or recasting inputs to fit the target device.
+After legalization the graph can be annotated and acceleratable patterns can be assigned for the targets.
 
 \section{Renode}
 \label{sec:renode}
@@ -930,8 +971,19 @@ This section covers the actual implementation of the used software stack in deta
 
 \section{Headsail-VP}
 To enable software development for Headsail before the arriving of the ASICs, we modeled the hardware as a Renode virtual platform, which we call Headsail-VP. With Headsail-VP we aimed to replicate the complete memory map of Headsail, with both processors and some of the peripherals.
+The benefit of developing a virtual versions of Headsail was that we hoped it would enable faster software development, due to the limited accessibility of the ASIC as well as the possibility to modify the design in the case hardware bugs.
+Additionally this knowledge in developing virtual prototypes of chip could allows us the better define the hardware specs based on the software demonstrators we develop.
 
 \subsection{DLA-VP}
+
+\begin{figure}
+  \centering
+  \includegraphics[width=\linewidth]{img/dla-internal.pdf}
+  \caption{Architecture of accelerated DLA flow in Headsail with TVM runtime and a Pytorch model}
+  \label{fig:dla_internal}
+\end{figure}
+
+
 The virtual prototype of the DLA was implemented as a Renode python peripheral. The DLA-VP supports all the same operations as the corresponding ASIC implementation, with identical register interface and same data buffer architecture. This allowed us to develop the driver for the DLA completely on the VP first. After the ASICs where ready we could confirm that the DLA driver was indeed usable on both VP and ASIC.
 
 DLA-VP implements the register interface as a list, with the same length. Since numbers in python can be infinite length we had to carefully sanitize all the transactions to the registers so that no accesses of 8-bit values happened.
@@ -949,7 +1001,7 @@ The DLA driver is implemented in two layers. First is the low level layer which 
 \section{Porting Newlib}
 Newlib is an implementation of the C standard library meant for use in embedded devices~\parencite{newlib}. We chose to use Newlib for our C standard library in Headsail since it's known to be relatively easy to port for new platforms. Newlib is separated into two different parts. First is the Newlib core which implements the actual standard library for different CPU ISA's. Since Newlib already has support for RISCV we didn't need to modify Newlib core in anyway. Second part of Newlib is called Libgloss, which implements the platform dependant features. Since Headsail is a custom platform we needed to implement most of the libgloss for it from scratch.
 
-Porting libgloss involves implementing 16 syscalls, CRT0 and a linker script. From the 16 syscalls only some are mandatory for us to implement, because we are targeting bare-metal applications. The table~\ref{tab:newlib_syscalls} shows all the libgloss syscalls with column 3 displaying if we implemented the call. The unimplemented calls still need to be defined in the libgloss source for linking purposes but they don't need do anything except return an error. For example the fork syscall duplicates a process, but since we don't support multithreading or any other form of process concurrency it will never be called, thus having it return error is correct.
+Porting libgloss involves implementing 16 syscalls, crt0 and a linker script. From the 16 syscalls only some are mandatory for us to implement, because we are targeting only bare-metal applications. The table~\ref{tab:newlib_syscalls} shows all the libgloss syscalls with column 3 displaying if we implemented the call. The unimplemented calls still need to be defined in the libgloss source for linking purposes but they don't need do anything except return an error. For example the fork syscall duplicates a process, but since we don't support multithreading or any other form of process concurrency it will never be called, thus having it return error is correct.
 
 \begin{lstlisting}[language=C, caption={Minimal implmentation of the fork() syscall in Newlib Libgloss}]
   int _fork() {
@@ -986,6 +1038,39 @@ The system calls can be implemented either in non-reentrant or reentrant way. Re
 \label{tab:newlib_syscalls}
 \end{table}
 
+In addition to the syscalls libgloss needs to have a crt0, which is a small program that includes a \texttt{\_start} symbol, call to \texttt{main} function and some global definitions and optionally hardware initalizations. The \texttt{\_start} symbol signifies the beginning of a C program and is used by the linker to place the program to start from the correct memory address. After declaring the \texttt{\_start} symbol out crt0 clears the bss segment, registers the \texttt{exit} function, initializes the UART and finally calls the \texttt{main} function.
+
+The linker script tells the linker how to link the object files produced by the compiler. Our linker script maps the whole SDRAM on headsail as it's total available memory region, which it then sections to the text section, data and read-only data sections and various different initialization sections. Additionally the linker reserves space for the stack and heap data structures according to the linker script definitions. Figure~\ref{fig:sdram-memory-layout} shows an example of how a binary is placed in to the Headsail's SDRAM according to the defined linker script. We always place the \texttt{\_start} start symbol at the beginning of the SDRAM, followed by data sections. By default the linker allocates 4 megabytes to the stack and rest is allocated to the heap.
+The allocations are controlled by specific flags defined in the linker script, that are visible to program.
+
+\begin{figure}
+  \centering
+\begin{tikzpicture}[scale=0.5]
+  \draw (0, 0) rectangle (5, 3) node[midway] {.text};
+  \draw (0, 3) rectangle (5, 5) node[midway] {.data};
+  \draw (0, 5) rectangle (5, 6) node[midway] {.rodata};
+  \draw (0, 6) rectangle (5, 8) node[midway] {.bss};
+  \draw (0, 8) rectangle (5, 15);
+  \node at (2.5, 14.5) {unallocated};
+  \node at (2.5, 13.5) {space};
+  \node[scale=2] at (2.5, 11) {.};
+  \node[scale=2] at (2.5, 11.4) {.};
+  \node[scale=2] at (2.5, 10.6) {.};
+  \node at (10, 0.5) {origin=0x100000000};
+  \node at (10, 15.5) {end=0x170000000};
+  \node at (-4, 15.5) {stack top};
+  \node at (-4, 12) {stack bottom};
+  \node at (-4, 8.5) {heap start};
+
+  \draw[->] (9.5, 0) -- (5.5,0);
+  \draw[->] (9.5, 15) -- (5.5,15);
+  \draw[->] (-4, 11.5) -- (-0.5, 11.5);
+  \draw[->] (-4, 15) -- (-0.5, 15);
+  \draw[->] (-4, 8) -- (-0.5, 8);
+\end{tikzpicture}
+\caption{Example configuration of linked program in memory}
+\label{fig:sdram-memory-layout}
+\end{figure}
 
 \section{DLA Software Architecture}
 The figure~\ref{fig:architecture} shows the high level software architecture of TVM annotated model deployment flow with Headsail DLA. First we use high level operations in DLA driver to provied external symbols for Conv2d, Bias and ReLU. These are referenced in the Headsail build of TVM dylib when built with the Headsail custom code generation option.
@@ -994,14 +1079,6 @@ In other branch we train and optimize a quantisized convolutional neural network
 We then use a python script to load in the Headsail TVM dylib which is used to generate C source code for the model from the annoteted ONNX graph. This code now includes calls to the DLA driver operations.
 
 Finally we produce an executable binary by combining the microTVM C runtime from the Headsail TVM build, generated C source code for the model, Headsail-bsp for the board functions, Headsail-newlib for the C standard library and finally the use case program.
-
-\begin{figure}
-  \centering
-  \includegraphics[width=\linewidth]{img/dla-internal.pdf}
-  \caption{Architecture of accelerated DLA flow in Headsail with TVM runtime and a Pytorch model}
-  \label{fig:dla_internal}
-\end{figure}
-
 
 \begin{figure}
   \centering
@@ -1045,7 +1122,7 @@ The \texttt{input\_size}, \texttt{kernel\_size}, \texttt{padding} and \texttt{st
   \centering
 \begin{tikzpicture}[scale=0.7]
 
-% Stride 1x1
+%d Stride 1x1
 \foreach \x in {0, 1, 2, 3} {
     \foreach \y in {0, 1, 2, 3} {
         \draw[black, thick] (\x,\y) rectangle (\x+1,\y+1);
@@ -1093,11 +1170,15 @@ To get input from the DLA we first need to define it's input address. Theoretica
 
 To read the output from the DLA we need to know how many elements the output has for any given operation. This information can be derived from the following equation
 
-\begin{align}
-W_{\text{out}} &= \frac{W_{\text{in}} + P_{\text{left}} + P_{\text{right}} - K_x + 1}{S_x} \\
-H_{\text{out}} &= \frac{H_{\text{in}} + P_{\text{top}} + P_{\text{bottom}} - K_y + 1}{S_y} \\
-\text{No. output elements} &= W_{\text{out}} \times H_{\text{out}} \times Channels_{out},
-\end{align}
+\begin{equation}
+W_{\text{out}} = \frac{W_{\text{in}} + P_{\text{left}} + P_{\text{right}} - K_x + 1}{S_x}
+\end{equation}
+\begin{equation}
+H_{\text{out}} = \frac{H_{\text{in}} + P_{\text{top}} + P_{\text{bottom}} - K_y + 1}{S_y}
+\end{equation}
+\begin{equation}
+\text{No. output elements} = W_{\text{out}} \times H_{\text{out}} \times Channels_{out},
+\end{equation}
 where $W$ is width, $H$ is height, $P$ is padding to either left, right, bottom or top, $K$ is the shape of the kernel and $S$ is the stride in horizontal or vertical direction.
 Multiplying the shape of a single output channel with the total number of output channels gives use the total amount of output elements. Since DLA can only output 8-bit values we know that the number of bites to read per layer is equal to the amount of output elements.
 
