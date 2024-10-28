@@ -46,6 +46,7 @@ autocite=footnote
 \usetikzlibrary{arrows.meta, arrows}
 \usetikzlibrary{matrix, positioning}
 \usepackage{xcolor}
+\usepackage{amsfonts}
 \usepackage{listings, listings-rust}
 %\usepackage{inconsolata}
 
@@ -219,7 +220,7 @@ The goal of this project was to build software support for the Deep-Learning Acc
 \chapter{Background}
 This section covers the topics in Deep Learning that relate to the implementation of the project, with focus on performing inference on deep neural networks. In addition to this we discuss hardware approaches for building tightly integrated single chip systems with SoCs and for accelerating inference workloads with dedicated deep learning accelerators.
 \label{ch:background}
-\section{Machine Learning and Deep Learning}
+\section{Machine Learning}
 \begin{figure}
   \centering
   \begin{tikzpicture}
@@ -250,36 +251,45 @@ This section covers the topics in Deep Learning that relate to the implementatio
   \label{fig:rgb-array}
 \end{figure}
 
-Machine Learning is a field of computer science that researches algorithms to categorize data into distinct concepts so that yet unseen data can be categorized similarly. The central component of ML is always a model. Model is a function that distinguishes a concept from data.
-To build a model we first need training data. Training data is a set of data, often with known associated categories, that corresponds with the unseen data we want to categorize with the model. For example if training a model to count the number of people in image, we would have a training data consisting of images with different amount of people, with the wanted categorization (number of people present in the image) associated with each.
-Model is then trained by choosing a particular function and changing it's parameters so that it can categorize training data in a wanted manner. After training the performance can then be validated by feeding the model unseen data and seeing how well it can categorize it.
-Turns out that some problems are hard to describe mathematically, and therefore finding a good function for modeling a problem might be nearly impossible in some cases. For example going back to the counting people in a picture describe, how do you event tell a computer what a person looks like?
+Machine Learning is a field of computer science that researches algorithms to categorize data into distinct concepts so that yet unseen data can be categorized similarly. The central component of machine learning is the model, which is a function that distinguishes a concept from data.
 
-It turns out that instead of carefully building a mathematical model it's easier to discover it. This is where artificial neural networks come in place. Neural networks are behind most bleeding edge advances in fields such as computer vision, image generation, AI chatbots and autonomous decision making systems.
+To build a model we first need training data. Training data is a set of data, often with known associated categories, that corresponds with the unseen data we want to categorize with the model. For example if training a model to count the number of people in image, we would have a training data consisting of images with different amount of people, with the wanted categorization (number of people present in the image) associated with each. Model is then trained by choosing a particular function and changing it's parameters so that it can categorize training data in a wanted manner. After training the performance can then be validated by feeding the model unseen data and seeing how well it can categorize it.
 
-Deep Learning is a subset of Machine Learning which focuses on multilayer perceptrons, neural networks with more than one hidden layer.
-The goal of each DNN is to approximate a particular function.
-In mathematics a function describes the relation between a domain $A$ and codomain $B$ where
+A particular models domain and codomain are defined by the given problem statement. For example, inputs of a image classifier are 3 dimensional arrays, where the second and third dimensions correspond to the height and width of the image and the first dimension as the channel in RGB color space as shown in figure~\ref{fig:rgb-array}, this commonly known as CHW layout.
+The output of this model would be one or more labels from the codomain.
+
+
+\subsection{Function and Model}
+In mathematics a function describes the relation between a domain $X$ and codomain $Y$ where
 \begin{equation}
-  f \subseteq A \times B,
+  f \subseteq X \times Y,
 \end{equation}
-meaning that for every element in the domain $A$ there is exactly one corresponding element in codomain $B$.
-
-Intuitively domain $A$ can be viewed as the input of a multilayer perceptron and codomain $B$ as the output of the network. For a binary classifier codomain $B$ would be defined as
+meaning that for every element in the domain $X$ there is exactly one corresponding element in codomain $Y$. Using arrow syntax this same mapping is expressed as $f : X \mapsto Y$. If we consider the discovered model as a function, we can view the domain $X$ as the input of a model and codomain $Y$ as the prediction space of the model. For a 10 class classifier codomain $Y$ would be defined as
 \begin{equation}
-  B = \{0, 1\},
+  Y = \{0, 1, 2 ..., 9\}.
 \end{equation}
 
-and for 10 class classifier
+The purpose of a model then, is to map it's input to the codomain in such a manner in which useful information can be acquired from the mapping.
+The domain of the network depends on the problem statement. For a image binay classifier $f$ using RGB images as input the formal definition would be the following
 \begin{equation}
-  B = \{0, 1, 2 ..., 9\}.
+  f: X \in \mathbb{Z}^{C \times H \times W} \mapsto \{0, 1\}.
 \end{equation}
-The domain of the network depends on the problem statement. For example for a image classifier the input can be viewed as a 3 dimensional array, where the second and third dimensions correspond to the height and width of the image and the first dimension as the channel in RGB color space as shown in figure~\ref{fig:rgb-array}, this commonly known as CHW layout.
+Depending on the problem statement we give the elements in the codomain descriptive labels. For example if the goal of the model was to tell if an image has a person, 0 might be labeled ``\emph{No}'' and 1 labeled as ``\emph{Yes}''. The previous equation abstracts the model into singular function but developers tend to think models as a series of multiple functions. By dividing the function into multiple consecutive domains and codomains we can get a better understanding what's happening in the model. One model might consists for to consecutive operations $g$ and $h$
+\begin{equation}
+  h: X \in \mathbb{Z}^{C \times H \times W} \xrightarrow{g}
+  \begin{bmatrix} v_1 \\ v_2 \\ \vdots \\ v_8 \end{bmatrix}
+  \in \mathbb{Z}^8 \xrightarrow{f} \{0, 1\}
+\end{equation}
+where $g$ maps RGB image domain to a codomain of length 8 is acts as the domain for function $h$ which then maps it to domain of the overall function.
 
-The purpose of the neural networks is map the values of array to the codomain in such a manner in which useful information can be acquired from the mapping.
-Now that we know the domain and the codomain of our DNN we need to discover a function that represents the relation between them.
 
-\subsection{Fully connected layer}
+\section{Deep Learning}
+Deep learning is a subcategory of machine learning that focuses on using deep neural networks as the model. Deep neural networks are a specific case of multilayer perceptrons where there is at least one hidden layer between input and output layer to introduce non-linearity. DNNs try to solve the problem of choosing a good model for a problem statement, by allowing the developers to discover a suitable function using a training algorithm.
+
+DNN model is weighted graph where nodes are grouped into mostly sequential layers and vertices connect nodes of consecutive layers with simple operations. The vertices hold weights and biases signifying the amount of association between nodes. Essentially what the graph models is a N-dimensional which the non-linear function inhabits, where each of the vertices introduces it's own dimension.
+This means that increasing the amount of parameters in a model allows it to approximate more complex function, generally increasing the ability to perform more complex tasks.~\cite{sze_efficient_2017}
+
+DNNs differ from other ML methods by their adaptable general architecture that can facilitate problems magnitudes more difficult than traditional methods allow. This ability to solve increasingly more difficult problems come with a cost of needing large amount of computing resource and training data.
 
 \begin{figure}
   \centering
@@ -316,6 +326,7 @@ Now that we know the domain and the codomain of our DNN we need to discover a fu
 \label{fig:fc-layer}
 \end{figure}
 
+\subsection{Fully connected layer}
 Fully connected layer or dense layer is a common operation in neural networks. It maps each input element to each output element with and associated weight between each connection, where the weight represents the strength of the connection. Essentially this means that if an input value is high and the weight is high, the output is also higher.
 Fully connected layer is implemented as a matrix multiplication between layer's weights and layer's input,
 \begin{equation}
@@ -405,6 +416,9 @@ In neural networks convolution is often implemented as cross-correlation but sti
   Conv2D(i,j) = CrossCorrelation(I, K) = (K \star I)(i,j) = \sum_{m}\sum_{n}I(i+m,j+n)K(m, n)
 \end{align}
 To produce output of one layer one needs to calculate $Conv2D$ for all the positions in the resultant output matrix for all the kernels.
+
+The choice of kernel size determines what kind of features are extracted. Large kernels capture broad features, where small kernels capture finer details.
+The specific weights are found during training and that defines which features are to be extracted. Producing good feature maps is thus critical to the performance of the trained CNN.
 
 \subsection{Bias}
 In addition to $Conv2d$ bias is another important concept in neural networks. Bias is a constant value applied to output channel of the preceding operation. In CNNs when applied after $Conv2d$ the purpose of bias is to signify the importance of each extracted feature. If bias is small or negative it means that the feature is non important for the particular class it's being applied. If bias is large or positive it means that the feature is important.
@@ -715,16 +729,18 @@ Most ML libraries approximate the AUC with a discrete AUC using the Trapezoidal 
 where TPR is the true positive rate, the relative amount of correct positive predictions from all the positive inputs, and FPR is the false positive rate, relative amount of false positive predictions to all negative inputs.
 
 \section{System-on-chip}
+The limited growth in single-core performance due to limitations of Dennard scaling~\cite{esmaeilzadeh_dark_2011}, has shifted the focus of CPU designers towards homogeneous multi-core architectures.
+To overcome Moore's law chip makers have been moving towards heterogenous architectures. Heterogeneous architectures consists of conventional von Neumann CPUs and unconventional computing elements working together to perform calculations. Unconventional computing elements, might include GPGPUs, FPGAs and custom logic units.~\cite{chung_single-chip_2010}
+
 System-on-chips (SoCs) are a form of heterogenous computing, where multiple different computing elements and electronic systems are integrated into one circuit.
 SoCs generally include CPUs, memories, IO interfaces and specialized accelerators, but conceptually there is no set definition on what SoC needs to include.
 This essentially produces a single functional entity that can easily integrated into multitude of different general processing workloads.
-Interconnects between SoC components can be run on very high bitrates, greatly reducing latency.
 
-SoC are often used in mobile devices due to tight integration between components enabling small space footprints, in comparison to separately integrated components.
-\fixthis{Coherency means that different components can works on the same data.}
+What separates SoCs from other heterogenous architectures is it's level of integration between computing elements. Interconnects that connect the chips computing elements can be run on very high bitrates, greatly reducing latency. Unified memory architectures and DMAs enable different components to use the same data without needing to rely on the main computing units for access, improving the systems coherency. The single chip design of SoCs give them a noticeable advantage in terms of physical size and energy consumption, when compared to traditional heterogenous architectures. This has made SoC a popular option for mobile and edge devices, where the physical size and the decreased energy consumption has significantly been able to improve performance.
+
 In recent times SoC have also begun being seen more in consumer laptops, effectively handling desktop workloads as is the case with the Apple M-series of chips as well as the Qualcomm Snapdragon Elite X chip, Intel Lunar Lake.
 
-Nowadays SoCs are seen as a solution for the \fixthis{SILICONE APOCALYPSE}, which describes the lessening increase of advance in computational performance of traditional CPUs due to Moore's Law not applying anymore.
+\cite{di_natale_moving_2010}
 
 \section{Deep-learning accelerators}
 \label{sec:dlas}
@@ -1089,6 +1105,7 @@ Finally we produce an executable binary by combining the microTVM C runtime from
 
 \section{DLA Driver}
 The driver for the DLA is divided into two parts. First is the lower level API that handles the register level interfacing with the DLA. Second is the high-level API which implements a user facing interface for the main operations of the DLA.
+The driver is implemented as Rust module separate from the rest of the BSP.
 
 \subsection{Layer struct}
 The layer configuration struct is the central component of the DLA driver. It defines all the necessary information needed to run a single layer on the DLA and is passed for the \texttt{init\_layer} method in the low level API to run the specified layer. The DLA doesn't wait for a particular run command, rather after setting \texttt{READ\_A\_VALID} and \texttt{READ\_A\_VALID} bits in the \texttt{BUF\_CTRL} register to signal all input and kernel data has been set, the DLA starts immediately executing the current configuration.
