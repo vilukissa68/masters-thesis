@@ -664,7 +664,7 @@ Model training is computationally expensive process and in the case of some of t
 Most training frameworks use 32-bit floating point values to represent rational numbers.~\cite{paszke_pytorch_2019}\cite{tensorflow2015-whitepaper}. This allows for the best accuracy in the training. After training the weights and biases can be moved to the target device for inference. Even in the cases where the target model is to be quantisized, the network is first trained with high accuracy floating points and quantisized afterwards, to represent the rational values with integers to ensure high model accuracy.
 
 \section{Quantization}
-When training DNN models with high level tools like Pytorch, models are built to use floating point operations In recent years big players like NVIDIA have started to utilize more and more quantized integer models. This is due to the fact that as the amount of parameters in models like GPT, has been growing exponentially. Often there are significant performance gains available by reducing the granularity of the parameters without a major loss in model accuracy~\cite{krishnamoorthi_quantizing_2018}. Standard floating point value has a width of 32-bits, where as int8 which is the most common integer type in DNNs has just the 8 bits. Thus when less granularity is acceptable similarly performing integer based accelerator can do 4 times the calculations when compared to a floating point accelerator.
+When training DNN models with high level tools like Pytorch, models are built to use floating point operations In recent years big players like NVIDIA have started to utilize more and more quantized integer models. This is due to the fact that as the amount of parameters in models like GPT, has been growing exponentially. Often there are significant performance gains available by reducing the granularity of the parameters without a major loss in model accuracy~\cite{krishnamoorthi_quantizing_2018,draghici_capabilities_2002}. Standard floating point value has a width of 32-bits, where as int8 which is the most common integer type in DNNs has just the 8 bits. Thus when less granularity is acceptable similarly performing integer based accelerator can do 4 times the calculations when compared to a floating point accelerator.
 Some models reduce that amount of granularity even more and have layers using 4-bit or 2-bit integers. With 2-bit integers one can do 16-times as many calculations in comparison to floating points.
 
 It's also possible to have only parts of the model quantisized. For these cases it might be necessary to have additional conversion layers to go from floating point inputs to integers and backwards. This can be useful for the cases where the target platform is only able to accelerate quantized layers, but the developer want's to use well proven subnetwork to ensure accuracy while the rest of the network is hardware accelerated to improve performance.
@@ -732,7 +732,7 @@ where TPR is the true positive rate, the relative amount of correct positive pre
 The limited growth in single-core performance due to limitations of Dennard scaling~\cite{esmaeilzadeh_dark_2011}, has shifted the focus of CPU designers towards homogeneous multi-core architectures.
 To overcome Moore's law chip makers have been moving towards heterogenous architectures. Heterogeneous architectures consists of conventional von Neumann CPUs and unconventional computing elements working together to perform calculations. Unconventional computing elements, might include GPGPUs, FPGAs and custom logic units.~\cite{chung_single-chip_2010}
 
-System-on-chips (SoCs) are a form of heterogenous computing, where multiple different computing elements and electronic systems are integrated into one circuit.
+System-on-chips (SoCs) are a form of heterogenous computing, where multiple different computing elements and electronic systems are integrated into one circuit.~\cite{Greaves2021}
 SoCs generally include CPUs, memories, IO interfaces and specialized accelerators, but conceptually there is no set definition on what SoC needs to include.
 This essentially produces a single functional entity that can easily integrated into multitude of different general processing workloads.
 
@@ -742,17 +742,19 @@ In recent times SoC have also begun being seen more in consumer laptops, effecti
 
 \cite{di_natale_moving_2010}
 
-\section{Deep-learning accelerators}
+\section{Deep Learning Accelerators}
 \label{sec:dlas}
-Deep Learning Accelerators (DLAs) or sometimes called Neural Processing Units (NPUs) are hardware accelerators, that accelerate common neural network operations. In many networks, this means accelerating convolution and dense layers by parallellize the calculation of output elements.
-In low power devices DLAs mainly accelerate inference workloads.
+Deep Learning Accelerators (DLAs) or sometimes called Neural Processing Units (NPUs) are hardware accelerators, that accelerate common neural network operations. In many networks, this means accelerating convolution and dense layers by parallellizing the calculation of output elements. Due to the size of DNNs an accelerator cannot usually fit the whole model in to it's memory. This necessitates a need for off-chip memory to store the model, which the accelerator accesses for new data between layers. The consecutive nature of most DNN models also makes it impossible to have a pipelined execution of layers, next layer computation generally cannot begin before the prvious finished. For this reason DLAs usually feature just one central computing element.
 
-In desktop applications and data center workloads neural networks have been accelerated with GPUs, due to their ability to perform linear-algebra operations like matrix multiplication with high amount of parallellity.
+In desktop applications and data center workloads neural networks have been accelerated with GPUs, due to their ability to perform linear-algebra operations like matrix multiplication with high amount of parallellity. To improve power efficiency, it's becoming more common for mobile devices to have dedicated DLAs instead of GPUs. Companies such as Apple and Qualcomm now include multiple mobile DLA's in their SoCs to run applications like face recognition on phones using their chips.
 
-In recent times there has been a growing need to also run neural networks in mobile devices. Traditional GPUs are too power-hungry for these small devices, so a need for more efficient accelerators for these workloads has been born. Companies such as Apple and Qualcomm now include multiple mobile DLA's in their SoCs to run applications like face recognition on phones using their chips.
+DianNao is one of the first ASIC accelerators targeting convolutional deep neural networks~\cite{chen_diannao_2014}. It's based on a pipelined NFU, where the multiply and accumulation operations are implemented as a pipeline along side bias and sigmoid activations. This is unlike more modern designs where the main computational element is an computational array.
 
+Eyeriss~\cite{chen_eyeriss_2017} is an early example of a MAC array based DLA for accelerating convolution networks, focused on high energy efficiency and performance, by minimizing the amount of data transfers. Eyeriss implements convolution 2d operation with bias and ReLU, and it uses 16-bit floating points. Convolutions are executed in a 12 x 14 PE-array, where each PE performs the multiply-accumulate operation for one input feature element at a time. Eyeriss loads current layers parameters from the off-chip dram into it's 108KB global buffer, from which the operation parameter are scattered for the PE-array. PEs heavily utilize scratch pads to improve data access times, by enabling data reuse of the kernels.
 
-Eyeriss~\cite{chen_eyeriss_2017} is an early example of a MAC array based DLA for accelerating convolution networks. MAC or Multiply-Accumulate operation is a \fixthis{Explain how MAC array works.}
+TPUs are an evolution of the
+
+MAC or Multiply-Accumulate operation is a \fixthis{Explain how MAC array works.}
 Neurocube~\cite{noauthor_neurocube_nodate}, Flexflow~\cite{lu_flexflow_2017} Google Edge TPU~\cite{EdgeTPU},
 
 
