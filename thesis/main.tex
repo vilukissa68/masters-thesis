@@ -1008,6 +1008,8 @@ DLA-VP implements the register interface as a list, with the same length. Since 
 
 Since Renode python peripherals don't have a clock, the state of the peripheral can only be changed when a CPU reads or writes to an address that is registered for the peripheral. DLA-VP is designed to run a processing loop after each write to it's memory region. The processing loop checks if the state of DLA-VP is ready for operation execution and if yes performs the operation per configuration. Read accesses don't change the devices internal state, so the processing loop isn't executed on them. After the executing write call, the result of the operation can be read on the next clock cycle from the peripherals memory region.
 
+\fixthis{Write about CI/CD and the DLA verification}
+
 \section{Software support}
 \label{sec:software_support}
 Even though Headsail is the third SoCHub Soc, it had little existing software support for C. Previous SoCs had only support for Riscv-rt in rust. So a major part of this project involved setting up a Headsail compatible C toolchain. Since Headsail has RISCV CPUs we could use an already existing riscv-gnu-toolchain for the compiler, but we still had to set up a C standard library for the chip with custom version of newlib libgloss. Also due to specific memory addressing decisions in the hardware, we needed to use medany code model compatible compiler and standard library when targeting the 64-bit processor.
@@ -1209,10 +1211,20 @@ To enable TVM BYOC to call the DLA drivers high-level interface we needed to gre
 In the FFI we also define a entry point specifically for the TVM. As previously mentioned we always allocate qnn.conv2d + add pattern for the DLA to execute. The code generation backend extract all the necessary information from the Relay nodes of this pattern and generates a function call to call \texttt{dla\_tvm\_qnn\_conv2d\_bias} function from the FFI. In addition to just calling the wanted Conv2D + bias operation from the BSP, the FFI function slices the data buffers to Rust slices and performs certain value conversions, like clipping the 32-bit bias values to 16-bit values. After the operation has been done and the result rest the FFI implementations shifts the values left by the same amount as was clipped in the DLA. These values are then copied to the buffer defined by the TVM codegen.
 
 \section{Benchmarking}
+\begin{figure}
+  \centering
+  \includegraphics[width=\linewidth]{img/benchmark-sequence.pdf}
+  \caption{Sequence diagram for TinyPerf benchmarking on Headsail.}
+  \label{fig:dla_internal}
+\end{figure}
+
+
 For the DLA there are two things we can benchmark. First is to look at the amount of convolution operations we can execute per time unit. This kind of throughput benchmarking fine but doesn't tell us much about the real-life CNN performance, since it doesn't take in to account what proportion of the CNN workloads is actually Conv2d and the proceeding Bias and ReLU operations.
 
 For this reason we need to also do benchmarks with actual CNNs. For this purpose we use MLPerf Tiny Benchmark from MLCommons.
 From these benchmarks the Anomaly Detection is unacceleratable with the Headsail DLA since it uses FC-AutoEncoder network, which is based on fully connected layers and thus has no operations which our accelerator can execute.
+
+Figure~\ref{fig:dla_internal} shows the sequence of running the TinyPerf benchmark on Headsail. We use a simple Python program running on a host PC as the runner, which reads the benchmark samples from the dataset and send them to Headsail over UART. Since TinyPerf only measures the performance of actual inference, we decided to use the relatively slow UART over SPI or I2C for the simplicity. HPC on Headsail runs a simple C-program to receive the data over UART and to set that data as input for the TVM AOT runtime. After setting the input and output the program calls the AOT runtime API to run inference for the given sample. AOT runtime then sequentially executes the model graph with the annotated graph patterns allocated for the DLA. Result of the inference is then transmitted over UART to the host PC, where the Python program recieves it, performs \texttt{argmax} for the vector to find the prediction and updates the evaluation metric.
 
 \chapter{Result}
 \begin{table}[h]
@@ -1229,7 +1241,10 @@ Anomaly Detection* & 100  & 100  \\ \hline
 \label{tab:benchmark-results}
 \end{table}
 
+As mentioned previously renode isn't fitting for performance evaluation and thus it isn't feasible to benchmark DLA-VP with TinyPerf. We can however run the TinyPerf tasks to see if the DLA reaches the required accuracy requirements of the benchmark. This essentially verifies the complete software stack and was especially useful during the development of DLA graph legalization pass.
+
 The table~\ref{tab:benchmark-results} presents the results of the TinyPerf benchmarks, for HPC standalone and HPC with 2D convolutions assigned to the DLA. As noted previously the Anomaly Detection task is unacceleratable due to the lack of convolutions, and thus it has equal performance between the runs.
+
 
 
 \chapter{Conclusions}
@@ -1242,6 +1257,17 @@ The goals for this project, were to:
   \item Benchmark the DLA ASIC.
 \end{enumerate}
 It's safe to say that we accomplished all these goals.
+
+\section{Future Work}
+As the accuracy results show there is space for improving the inference accuracy with the software stack. Different graph transformations should be considered to counter act the resolution limitations caused by the result clipping in the DLA. We also know that the driver is less the optimal when it comes down to moving data trough the different software layers, and this should be addressed by carefully examining the driver implementation and the TVM facing interface.
+
+As we have seen from other deep learning accelerators, the main bottle neck in these device is generally the data transferring. Reducing or parallelizing data transfers can provide us with noticeable performance increases. One way to introduce parallellity would to introduce preemptive weight buffering to the driver. Weight buffering
+
+From hardware point of view this project has highlighted many limitations regarding the DLA when considering actual use-cases for it. To enable the use of better data locality principles the next iteration of the Headsail could include a FIFO-based scaler unit in between Bias and ReLU steps. This would allow allocating the \text{qnn.requantize} operations to the accelerator, which would reduce the amount data transfers between the TVM runtime and the driver, possible improving performance while also fixing the issue caused by result clipping the original design, while keeping the output width as 8-bits.
+
+As discussed earlier in this work, fully connected layers are still widely used as major component in auto-encoders and classifiers layers in many networks, and thus accelerating them can introduce significant performance increases for some networks. To enable accelerating all the tasks in TinyPerf we should consider if the next iteration of the MAC array could be modified to support fully connected layer without greatly increasing the area in the chip.
+
+In addition to deep learning applications the DLA could be used in other workloads. Kernel based image processing applications can benefit from similar acceleration as the DNN applications we have showcased in this work. For example Gaussian filters for blurring and edge detection can be implemented with similar windowing approach as 2 dimensional convolution is implemented in the accelerator.
 
 %
 % The bibliography, i.e the list of references
