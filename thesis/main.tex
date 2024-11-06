@@ -184,6 +184,7 @@ December 2024
   \acro{AD}{Anomaly Detection}
   \acro{LSB}{Least Significant Bit}
   \acro{MSB}{Most Significant Bit}
+  \acro{RTL}{Register Level Transfer}
 \end{acronym}
 
 
@@ -420,8 +421,23 @@ To produce output of one layer one needs to calculate $Conv2D$ for all the posit
 The choice of kernel size determines what kind of features are extracted. Large kernels capture broad features, where small kernels capture finer details.
 The specific weights are found during training and that defines which features are to be extracted. Producing good feature maps is thus critical to the performance of the trained CNN.
 
+\subsection{Depthwise Separable Convolution}
+As seen in the previous section, convolution is a costly operation to calculate, when the size of inputs and amount of features grows. This is especially difficult for low power hardware that can't parallellize convolution and has to process the operation sequentially. One common solution for this problem use in CNNs is the grouped convolution. In grouped convolution we separate the input channels and filters into $G$ groups so that the convolution is only performed among inputs and filters belonging to the same group. The groups essentially behave as completely independent convolution layers from in respect to the other groups.  In the end after each input channels has been processed the resulting features get concatenated back into one tensor which has the equal size as the output of same convolution without groups with less calculation.~\cite{howard2017mobilenetsefficientconvolutionalneural, tan_efficientnet_2020}
+
+The computational cost of standard convolution is
+\begin{equation}
+  K_{x} \cdot K_{y} \cdot I_{x} \cdot I_{y} \cdot C_{in} \cdot C_{out}
+\end{equation}
+where $K_{x}$, $K_{y}$, $I_{x}$, $I_{y}$ are the dimensions for single kernel and input channels, $C_{in}$ is the number of input features and $C_{out}$ is the number of output features. Where as the computational complexity of grouped convolution is
+\begin{equation}
+  K_{x} \cdot K_{y} \cdot I_{x} \cdot I_{y} \cdot \frac{C_{in} \cdot C_{out}}{G}
+\end{equation}
+where $G$ is the number of groups. By setting the number of grouped to $G = C_{in}$ we arrive at the special case of grouped convolution called depthwise convolution. In depthwise convolution each input channel only interacts with it's corresponding set of feature kernels giving us a computational complexity which is not dependant on the number of input channels. This effectively removes any interaction across channels, which can limit the amount of features that a CNN can express. To introduce intra-channel interaction to depthwise convolution, we often follow depthwise layer with a pointwise convolution layer. Pointwise convolution is just standard 2D convolution with a filter of size $1 \times 1$, this ensures that output and input have same sized channels. Depthwise followed by pointwise is so common combination that it has it's own name, depthwise separable convolution.
+As shown by~\cite{tan_efficientnet_2020} depthwise separable convolutions can greatly reduce the amount of network parameters and thus reduce the total number of operations during inference without having a noticeable effect on the model accuracy.
+
+
 \subsection{Bias}
-In addition to $Conv2d$ bias is another important concept in neural networks. Bias is a constant value applied to output channel of the preceding operation. In CNNs when applied after $Conv2d$ the purpose of bias is to signify the importance of each extracted feature. If bias is small or negative it means that the feature is non important for the particular class it's being applied. If bias is large or positive it means that the feature is important.
+In addition to $Conv2d$ bias is another important concept in neural networks. Bias is a constant value applied to output channel of the preceding operation. In CNNs when applied after $Conv2d$ the purpose of bias is to signify the importance of each extracted feature. If bias is small or negative it means that the feature is non important for the particular class it's being applied. If bias is large or positive it means that the feature is important.~\cite{DeepLearningBook}
 
 In mathematic notation bias is defined as such
 \begin{align}
@@ -429,7 +445,7 @@ In mathematic notation bias is defined as such
 \end{align}
 where if $xA^{T}$ is the non-biased output of a particular channel in layer, $b$ is the bias applied to the whole channel as a constant value.
 
-\subsection{Activation function}
+\subsection{Activation functions}
 The combination of convolution and bias form one example of an affine transformation, a linear transformation between two space.
 To enable neural networks to recognize non-linear features, we need to introduce non linear operations between the linear affine transformations. Traditionally we used sigmoid or tanh functions, which are defined as
 
@@ -623,7 +639,6 @@ Connection can also branch, and the same layer output can be used as input for m
   \label{fig:network-residual}
 \end{figure}
 
-\fixthis{Write about depthwise conv2d}
 
 \section{Neural Model Training}
 To perform a given task all neural networks need to be trained. This means that the network parameters (weights and biases) are tuned in such a way that the network approximates a function performant in the task. This same concept apply to most model based ML-methods but with neural network this training is most often done with the backpropagation algorithm. The first step of backpropagation is the forward pass. Forward pass is essentially inference, where the network is given inputs from a known set of inputs with associated ground truth labels for which the network performs predictions. The predictions are then compared with the ground truth with a loss function to calculate current network error. The choice of loss function is critical and poor choice can heavily effect the models potential to discover a suitable parameters. Some common loss functions are mean squared error, cross entropy loss and L1 loss.
@@ -928,6 +943,7 @@ Renode models a wide variety of different processors and peripherals, but it is 
 
 While renode is a operation accurate emulator, the Python API isn't. When Renode makes a request to the Python API, it counts as one clock cycle even when realistically the Python API's corresponding hardware implementation would take more than one cycle. The consequence of this that we cannot accurately benchmark DLA in Renode. The benefit of the python API is in rapid development of hardware components.
 
+Renode integrates with the Robot testing framework~\cite{robotframework} to enable automated testing of Renode devices. This makes it possible to use principles of continuous integration and continuous delivery for Renode projects and hardware dependant software.
 
 \section{TinyPERF}
 MLPerf Tiny is a benchmarking suite for benchmarking ML inference in low power targets, like MCUs with Deep Learning Accelerators.~\parencite{tinyperf}
@@ -980,8 +996,8 @@ Similarly to MobileNet DS-CNN uses FC-layer for classifier.
 \subsection{Anomaly Detection}
 The dataset for this task is the DCASE2020 dataset~\cite{koizumi_description_2020}. DCASE2020 consists of sound samples from the following labels: slide rails, fans, pumps, valves, toy-cars, toy-conveyors, from which the AD task only detects anomalies from the toy-cars.
 
-For the model AD task uses a custom FC-AutoEncoder~\cite{FC-Auto}. The model consists of 10 FC-layers with ReLU activations, from which
-AutoEncoder consists of three parts. First is the encoder which encoder the input and downsamples it to latent space. Second part is the latent space which holds the useful high level features of the input. Last is the decoder which decodes the latent features and upsamples these features back to original dimensionality of the input.
+For the model AD task uses a custom FC-AutoEncoder~\cite{banbury_mlperf_2021}. The model consists of 10 FC-layers with ReLU activations, from which
+Originally proposed by~\cite{rumelhart_learning_1987}, AutoEncoder consists of three parts. First is the encoder which encoder the input and downsamples it to latent space. Second part is the latent space which holds the useful high level features of the input. Last is the decoder which decodes the latent features and upsamples these features back to original dimensionality of the input.~\cite{chen_auto-encoders_2023}
 
 \chapter{Implementation}
 \label{ch:implementation}
@@ -1007,6 +1023,10 @@ The virtual prototype of the DLA was implemented as a Renode python peripheral. 
 DLA-VP implements the register interface as a list, with the same length. Since numbers in python can be infinite length we had to carefully sanitize all the transactions to the registers so that no accesses of 8-bit values happened.
 
 Since Renode python peripherals don't have a clock, the state of the peripheral can only be changed when a CPU reads or writes to an address that is registered for the peripheral. DLA-VP is designed to run a processing loop after each write to it's memory region. The processing loop checks if the state of DLA-VP is ready for operation execution and if yes performs the operation per configuration. Read accesses don't change the devices internal state, so the processing loop isn't executed on them. After the executing write call, the result of the operation can be read on the next clock cycle from the peripherals memory region.
+
+To verify that the DLA-VP functionally behaved like the hardware implementation of the DLA, we implemented some of the verification test done by the hardware team with our software stack. Using the same inputs as the RTL tests with DLA-VP we expect the results to be identical. We implemented same tests for the low-level driver as well as the high-level driver to ensure that the DLA-VP as well as the complementing software stack correspond with the behaviour of the hardware implementation. This included reimplementing the bugs and design oversights that reduce the accuracy and possibly performance.
+
+
 
 \fixthis{Write about CI/CD and the DLA verification}
 
