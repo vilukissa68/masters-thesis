@@ -278,8 +278,8 @@ The domain of the network depends on the problem statement. For a image binay cl
 Depending on the problem statement we give the elements in the codomain descriptive labels. For example if the goal of the model was to tell if an image has a person, 0 might be labeled ``\emph{No}'' and 1 labeled as ``\emph{Yes}''. The previous equation abstracts the model into singular function but developers tend to think models as a series of multiple functions. By dividing the function into multiple consecutive domains and codomains we can get a better understanding what's happening in the model. One model might consists for to consecutive operations $g$ and $h$
 \begin{equation}
   h: X \in \mathbb{Z}^{C \times H \times W} \xrightarrow{g}
-  \begin{bmatrix} v_1 \\ v_2 \\ \vdots \\ v_8 \end{bmatrix}
-  \in \mathbb{Z}^8 \xrightarrow{f} \{0, 1\}
+\begin{bmatrix} v_1 \\ v_2 \\ \vdots \\ v_8 \end{bmatrix}
+\in \mathbb{Z}^8 \xrightarrow{f} \{0, 1\}
 \end{equation}
 where $g$ maps RGB image domain to a codomain of length 8 is acts as the domain for function $h$ which then maps it to domain of the overall function.
 
@@ -293,35 +293,35 @@ This means that increasing the amount of parameters in a model allows it to appr
 DNNs differ from other ML methods by their adaptable general architecture that can facilitate problems magnitudes more difficult than traditional methods allow. This ability to solve increasingly more difficult problems come with a cost of needing large amount of computing resource and training data.
 
 \begin{figure}
-  \centering
+\centering
 \begin{tikzpicture}
-  % Input nodes
-  \node at (0, 1.3) {Input};
-  \foreach \i in {0, 1, 2, 3} {
-    \node[draw, circle, minimum size=0.7cm, fill=blue!20] (input\i) at (0, -\i+0.5) {$x_{\i}$};
-  }
+% Input nodes
+\node at (0, 1.3) {Input};
+\foreach \i in {0, 1, 2, 3} {
+  \node[draw, circle, minimum size=0.7cm, fill=blue!20] (input\i) at (0, -\i+0.5) {$x_{\i}$};
+}
 
-  % Hidden layer nodes
-  \node at (3, 1.3) {Hidden Layer};
-  \foreach \i in {0, 1, 2} {
-    \node[draw, circle, minimum size=0.7cm, fill=blue!20] (hidden\i) at (3, -\i) {$h_{\i}$};
-  }
+% Hidden layer nodes
+\node at (3, 1.3) {Hidden Layer};
+\foreach \i in {0, 1, 2} {
+  \node[draw, circle, minimum size=0.7cm, fill=blue!20] (hidden\i) at (3, -\i) {$h_{\i}$};
+}
 
-  % Output node
-  \node at (6, 1.3) {Output};
-  \node[draw, circle, minimum size=0.7cm, fill=red!20] (output) at (6, -1) {$y$};
+% Output node
+\node at (6, 1.3) {Output};
+\node[draw, circle, minimum size=0.7cm, fill=red!20] (output) at (6, -1) {$y$};
 
-  % Arrows from input to hidden layer
-  \foreach \i in {0, 1, 2, 3} {
-    \foreach \j in {0, 1, 2} {
-      \draw[->] (input\i) -- (hidden\j);
-    }
+% Arrows from input to hidden layer
+\foreach \i in {0, 1, 2, 3} {
+  \foreach \j in {0, 1, 2} {
+    \draw[->] (input\i) -- (hidden\j);
   }
+}
 
-  % Arrows from hidden layer to output
-  \foreach \i in {0, 1, 2} {
-    \draw[->] (hidden\i) -- (output);
-  }
+% Arrows from hidden layer to output
+\foreach \i in {0, 1, 2} {
+  \draw[->] (hidden\i) -- (output);
+}
 \end{tikzpicture}
 \caption{Simple fully connected neural network with two layers.}
 \label{fig:fc-layer}
@@ -341,55 +341,55 @@ Many classifier networks use a fully connected layer to do the final step in cla
 
 \subsection{Convolutional neural networks}
 \begin{figure}
-  \centering
+\centering
 \begin{tikzpicture}[
-    2d-arr/.style={matrix of nodes, row sep=-\pgflinewidth, column sep=-\pgflinewidth, nodes={draw}}
-  ]
+  2d-arr/.style={matrix of nodes, row sep=-\pgflinewidth, column sep=-\pgflinewidth, nodes={draw}}
+]
 
-  \matrix (mtr) [2d-arr] {
-  0 & 1 & 1 & |[fill=blue!20]| 1 & |[fill=blue!20]| 0 & |[fill=blue!20]| 0 & 0\\
-  0 & 0 & 1 & |[fill=blue!20]| 1 & |[fill=blue!20]| 1 & |[fill=blue!20]| 0 & 0\\
-  0 & 0 & 0 & |[fill=blue!20]| 1 & |[fill=blue!20]| 1 & |[fill=blue!20]| 1 & 0\\
-  0 & 0 & 0 & 1 & 1 & 0 & 0\\
-  0 & 0 & 1 & 1 & 0 & 0 & 0\\
-  0 & 1 & 1 & 0 & 0 & 0 & 0\\
-  1 & 1 & 0 & 0 & 0 & 0 & 0\\
-  };
+\matrix (mtr) [2d-arr] {
+0 & 1 & 1 & |[fill=blue!20]| 1 & |[fill=blue!20]| 0 & |[fill=blue!20]| 0 & 0\\
+0 & 0 & 1 & |[fill=blue!20]| 1 & |[fill=blue!20]| 1 & |[fill=blue!20]| 0 & 0\\
+0 & 0 & 0 & |[fill=blue!20]| 1 & |[fill=blue!20]| 1 & |[fill=blue!20]| 1 & 0\\
+0 & 0 & 0 & 1 & 1 & 0 & 0\\
+0 & 0 & 1 & 1 & 0 & 0 & 0\\
+0 & 1 & 1 & 0 & 0 & 0 & 0\\
+1 & 1 & 0 & 0 & 0 & 0 & 0\\
+};
 
-  \node at (0,2.5) {$\mathbf I$};
+\node at (0,2.5) {$\mathbf I$};
 
-  \node[right=0.2em of mtr] (str) {$*$};
+\node[right=0.2em of mtr] (str) {$*$};
 
-  \matrix (K) [2d-arr, right=0.2em of str, nodes={draw, fill=blue!20}] {
-    1 & 0 & 1 \\
-    0 & 1 & 0 \\
-    1 & 0 & 1 \\
-  };
-  \node at (3.5,2.5) {$\mathbf K$};
+\matrix (K) [2d-arr, right=0.2em of str, nodes={draw, fill=blue!20}] {
+  1 & 0 & 1 \\
+  0 & 1 & 0 \\
+  1 & 0 & 1 \\
+};
+\node at (3.5,2.5) {$\mathbf K$};
 
-  \node[right=0.2em of K] (eq) {$=$};
+\node[right=0.2em of K] (eq) {$=$};
 
 
-  \matrix (ret) [2d-arr, right=0.2em of eq] {
-  1 & 4 & 3 & |[fill=red!20]| 4 & 1\\
-  1 & 2 & 4 & 3 & 3\\
-  1 & 2 & 3 & 4 & 1\\
-  1 & 3 & 3 & 1 & 1\\
-  3 & 3 & 1 & 1 & 0\\
-  };
-  \node at (6.5,2.5) {$\mathbf{I * K}$};
+\matrix (ret) [2d-arr, right=0.2em of eq] {
+1 & 4 & 3 & |[fill=red!20]| 4 & 1\\
+1 & 2 & 4 & 3 & 3\\
+1 & 2 & 3 & 4 & 1\\
+1 & 3 & 3 & 1 & 1\\
+3 & 3 & 1 & 1 & 0\\
+};
+\node at (6.5,2.5) {$\mathbf{I * K}$};
 
-  \draw[dashed, teal] (mtr-1-6.north east) -- (K-1-1.north west);
-  \draw[dashed, teal] (mtr-3-6.south east) -- (K-3-1.south west);
+\draw[dashed, teal] (mtr-1-6.north east) -- (K-1-1.north west);
+\draw[dashed, teal] (mtr-3-6.south east) -- (K-3-1.south west);
 
-  \draw[dashed, blue!80!black] (K-1-3.north east) -- (ret-1-4.north west);
-  \draw[dashed, blue!80!black] (K-3-3.south east) -- (ret-1-4.south west);
+\draw[dashed, blue!80!black] (K-1-3.north east) -- (ret-1-4.north west);
+\draw[dashed, blue!80!black] (K-3-3.south east) -- (ret-1-4.south west);
 
-  \foreach \i in {1,2,3} {
-      \foreach \j in {4,5,6} {
-          \node[font=\tiny, scale=0.6, shift={(-1.2ex,-2ex)}] at (mtr-\i-\j) {$\times \pgfmathparse{int(mod(\i+\j,2))}\pgfmathresult$};
-        }
-    }
+\foreach \i in {1,2,3} {
+    \foreach \j in {4,5,6} {
+        \node[font=\tiny, scale=0.6, shift={(-1.2ex,-2ex)}] at (mtr-\i-\j) {$\times \pgfmathparse{int(mod(\i+\j,2))}\pgfmathresult$};
+      }
+  }
 \end{tikzpicture}
 \label{fig:conv2d-example}
 \caption{Visualization of 2D convolution being done for 7x7 input with 3x3 kernel. Adapted from~\cite{riebesell_tikz_2020}.}
@@ -398,23 +398,23 @@ Many classifier networks use a fully connected layer to do the final step in cla
 Convolutional neural networks are a type of neural networks that heavily utilize convolution operations. Convolution is a useful operations used to extract features from data.
 Convolution is defined as
 \begin{align}
-  (f \ast g)(t) = \int_{-\infty}^{\infty}f(t-x)g(t)dx,
+(f \ast g)(t) = \int_{-\infty}^{\infty}f(t-x)g(t)dx,
 \end{align}
 where $f$ and $g$ are functions to be convolved. For computer science the discrete convolution is often more interesting
 \begin{align}
-  (f \ast g)(i) = \sum_{m}f(i-m)g(m).
+(f \ast g)(i) = \sum_{m}f(i-m)g(m).
 \end{align}
 For DNNs we often think about convolution in terms of inputs($f$) and kernels($g$), where input is the useful data we want to extract features from and kernels are the specific selected values that can extract the wanted features from data.
 
 When working with images, for example in a neural network used for classifying objects in images, it  natural to use the two dimensional expansion of the convolution operation
 \begin{align}
-  Conv2D(i, j) = (K \star I)(i,j) = \sum_{m}\sum_{n}I(i-m,j-n)K(m, n)
+Conv2D(i, j) = (K \star I)(i,j) = \sum_{m}\sum_{n}I(i-m,j-n)K(m, n)
 \end{align}
 where $I$ is the input and $K$ is one kernel, $m$ is the width of the kernel and $n$ is the height.
 
 In neural networks convolution is often implemented as cross-correlation but still called convolution, this is also what we have done in our implementation
 \begin{align}
-  Conv2D(i,j) = CrossCorrelation(I, K) = (K \star I)(i,j) = \sum_{m}\sum_{n}I(i+m,j+n)K(m, n)
+Conv2D(i,j) = CrossCorrelation(I, K) = (K \star I)(i,j) = \sum_{m}\sum_{n}I(i+m,j+n)K(m, n)
 \end{align}
 To produce output of one layer one needs to calculate $Conv2D$ for all the positions in the resultant output matrix for all the kernels.
 
@@ -426,11 +426,11 @@ As seen in the previous section, convolution is a costly operation to calculate,
 
 The computational cost of standard convolution is
 \begin{equation}
-  K_{x} \cdot K_{y} \cdot I_{x} \cdot I_{y} \cdot C_{in} \cdot C_{out}
+K_{x} \cdot K_{y} \cdot I_{x} \cdot I_{y} \cdot C_{in} \cdot C_{out}
 \end{equation}
 where $K_{x}$, $K_{y}$, $I_{x}$, $I_{y}$ are the dimensions for single kernel and input channels, $C_{in}$ is the number of input features and $C_{out}$ is the number of output features. Where as the computational complexity of grouped convolution is
 \begin{equation}
-  K_{x} \cdot K_{y} \cdot I_{x} \cdot I_{y} \cdot \frac{C_{in} \cdot C_{out}}{G}
+K_{x} \cdot K_{y} \cdot I_{x} \cdot I_{y} \cdot \frac{C_{in} \cdot C_{out}}{G}
 \end{equation}
 where $G$ is the number of groups. By setting the number of grouped to $G = C_{in}$ we arrive at the special case of grouped convolution called depthwise convolution. In depthwise convolution each input channel only interacts with it's corresponding set of feature kernels giving us a computational complexity which is not dependant on the number of input channels. This effectively removes any interaction across channels, which can limit the amount of features that a CNN can express. To introduce intra-channel interaction to depthwise convolution, we often follow depthwise layer with a pointwise convolution layer. Pointwise convolution is just standard 2D convolution with a filter of size $1 \times 1$, this ensures that output and input have same sized channels. Depthwise followed by pointwise is so common combination that it has it's own name, depthwise separable convolution.
 As shown by~\cite{tan_efficientnet_2020} depthwise separable convolutions can greatly reduce the amount of network parameters and thus reduce the total number of operations during inference without having a noticeable effect on the model accuracy.
@@ -441,7 +441,7 @@ In addition to $Conv2d$ bias is another important concept in neural networks. Bi
 
 In mathematic notation bias is defined as such
 \begin{align}
-  y = x^{T}W + b
+y = x^{T}W + b
 \end{align}
 where if $xA^{T}$ is the non-biased output of a particular channel in layer, $b$ is the bias applied to the whole channel as a constant value.
 
@@ -450,70 +450,70 @@ The combination of convolution and bias form one example of an affine transforma
 To enable neural networks to recognize non-linear features, we need to introduce non linear operations between the linear affine transformations. Traditionally we used sigmoid or tanh functions, which are defined as
 
 \begin{align}
-  \sigma(x) = \frac{1}{1+e^{-x}}
+\sigma(x) = \frac{1}{1+e^{-x}}
 \end{align}
 and,
 \begin{align}
-  tanh(x) = \frac{e^{x}-e^{-x}}{e^{x}-e^{-x}},
+tanh(x) = \frac{e^{x}-e^{-x}}{e^{x}-e^{-x}},
 \end{align}
 to introduce non-linearity. Both functions suffer from the fact that they are expensive to calculate and exhibit the vanishing gradient problem.~\parencite{DeepLearningBook}
 
 Because of these problems DNNs have largely moved to using Rectified linear units for layer activations.
 Rectified linear unit is a relatively simple operation, moving negative values to zero and doing nothing for positive values, defined as
 \begin{align}
- ReLU(x) =
-  \begin{cases}
-  0, & \text{for} \leq 0 \\
-    x, &  \text{otherwise}.
-  \end{cases}
+ReLU(x) =
+\begin{cases}
+0, & \text{for} \leq 0 \\
+  x, &  \text{otherwise}.
+\end{cases}
 \end{align}
 
 Figure~\ref{fig:activation-functions} shows how ReLU and sigmoid non-linearly scale values close to $x=0$.
 
 \begin{figure}[ht]
+\centering
+\begin{minipage}[t]{.45\textwidth}
   \centering
-  \begin{minipage}[t]{.45\textwidth}
-    \centering
-    \begin{tikzpicture}
-        % Axes
-        \draw[thick,->] (-1.5,0) -- (1.5,0) node[anchor=north] {$x$}; % x-axis
-        \draw[thick,->] (0,-1) -- (0,1.5) node[anchor=west] {$f(x)$}; % y-axis
+  \begin{tikzpicture}
+      % Axes
+      \draw[thick,->] (-1.5,0) -- (1.5,0) node[anchor=north] {$x$}; % x-axis
+      \draw[thick,->] (0,-1) -- (0,1.5) node[anchor=west] {$f(x)$}; % y-axis
 
-        % ReLU function
-        \draw[line width=2pt,black] (-1.5, 0) -- (0, 0); % f(x) = 0 for x < 0
-        \draw[line width=2pt,black] (0, 0) -- (1.5, 1.5); % f(x) = x for x >= 0
-    \end{tikzpicture}
-    \captionof{figure}{Rectified linear unit (ReLU)}
-  \end{minipage}
-  \begin{minipage}[t]{.45\textwidth}
-    \centering
-    \begin{tikzpicture}
-        % Axes
-        \draw[thick,->] (-1.5,0) -- (1.5,0) node[anchor=north] {$x$}; % x-axis
-        \draw[thick,->] (0,-0.5) -- (0,1.5) node[anchor=west] {$f(x)$}; % y-axis
+      % ReLU function
+      \draw[line width=2pt,black] (-1.5, 0) -- (0, 0); % f(x) = 0 for x < 0
+      \draw[line width=2pt,black] (0, 0) -- (1.5, 1.5); % f(x) = x for x >= 0
+  \end{tikzpicture}
+  \captionof{figure}{Rectified linear unit (ReLU)}
+\end{minipage}
+\begin{minipage}[t]{.45\textwidth}
+  \centering
+  \begin{tikzpicture}
+      % Axes
+      \draw[thick,->] (-1.5,0) -- (1.5,0) node[anchor=north] {$x$}; % x-axis
+      \draw[thick,->] (0,-0.5) -- (0,1.5) node[anchor=west] {$f(x)$}; % y-axis
 
-        % Sigmoid function plot
-        \draw[line width=2pt,black,domain=-1.5:1.5,samples=100,smooth] plot (\x, {1/(1 + exp(-\x))});
+      % Sigmoid function plot
+      \draw[line width=2pt,black,domain=-1.5:1.5,samples=100,smooth] plot (\x, {1/(1 + exp(-\x))});
 
-        % Labels for Sigmoid
-        \node at (-1.5, 0.2) {$f(x) \to 0$}; % Description for x -> -∞
-        \node at (1.5, 1.2) {$f(x) \to 1$}; % Description for x -> +∞
+      % Labels for Sigmoid
+      \node at (-1.5, 0.2) {$f(x) \to 0$}; % Description for x -> -∞
+      \node at (1.5, 1.2) {$f(x) \to 1$}; % Description for x -> +∞
 
-        % Horizontal lines for asymptotes
-        \draw[dashed] (-1.5,1) -- (1.5,1); % y = 1 asymptote
-        \draw[dashed] (-1.5,0) -- (1.5,0); % y = 0 asymptote
-    \end{tikzpicture}
-    \captionof{figure}{Sigmoid activation}
-  \end{minipage}
-  \caption{Comparison of ReLU and Sigmoid activation functions}
-  \label{fig:activation-functions}
+      % Horizontal lines for asymptotes
+      \draw[dashed] (-1.5,1) -- (1.5,1); % y = 1 asymptote
+      \draw[dashed] (-1.5,0) -- (1.5,0); % y = 0 asymptote
+  \end{tikzpicture}
+  \captionof{figure}{Sigmoid activation}
+\end{minipage}
+\caption{Comparison of ReLU and Sigmoid activation functions}
+\label{fig:activation-functions}
 \end{figure}
 
 
 Combining 2 dimensional affine transformation and ReLU gives as the basic Conv2D layer found in most image classification network, like Resnet~\parencite{he2015deepresiduallearningimage} and MobileNet~\parencite{howard2017mobilenetsefficientconvolutionalneural}.
 \begin{align}
-  ReLU(Conv2D(I, K) + b)
-  \label{eq:conv2d}
+ReLU(Conv2D(I, K) + b)
+\label{eq:conv2d}
 \end{align}
 
 \section{Layer graphs}
@@ -522,17 +522,17 @@ As mentioned, DNNs are neural networks with one or more hidden layers. Generally
 The relationships between layers are presented as graphs, where nodes are layers or fused layers and paths are the data flow directions. Figure~\ref{fig:conv2d-layer} displays the equation~\ref{eq:conv2d} as a simple graph were data flow is always from one layers output to next layers input.
 
 \begin{figure}[ht]
-  \centering
-  \begin{tikzpicture}
-    \node[draw, thick, rectangle, rounded corners, minimum width=2cm, minimum height=1cm, fill=blue!15] (A) at (0,0) {Conv2D};
-    \node[draw, thick, rectangle, rounded corners, minimum width=2cm, minimum height=1cm, fill=blue!15] (B) at (3,0) {Bias};
-    \node[draw, thick, rectangle, rounded corners, minimum width=2cm, minimum height=1cm, fill=blue!15] (C) at (6,0) {ReLU};
+\centering
+\begin{tikzpicture}
+  \node[draw, thick, rectangle, rounded corners, minimum width=2cm, minimum height=1cm, fill=blue!15] (A) at (0,0) {Conv2D};
+  \node[draw, thick, rectangle, rounded corners, minimum width=2cm, minimum height=1cm, fill=blue!15] (B) at (3,0) {Bias};
+  \node[draw, thick, rectangle, rounded corners, minimum width=2cm, minimum height=1cm, fill=blue!15] (C) at (6,0) {ReLU};
 
-    \path [-{Stealth[scale=2]}] (A) edge node[above] {} (B);
-    \path [-{Stealth[scale=2]}] (B) edge node[above] {} (C);
-  \end{tikzpicture}
-  \caption{Feed forward relationship between Conv2d, bias and ReLU layers.}
-  \label{fig:conv2d-layer}
+  \path [-{Stealth[scale=2]}] (A) edge node[above] {} (B);
+  \path [-{Stealth[scale=2]}] (B) edge node[above] {} (C);
+\end{tikzpicture}
+\caption{Feed forward relationship between Conv2d, bias and ReLU layers.}
+\label{fig:conv2d-layer}
 \end{figure}
 For clarity this combination of 2D convolution, bias and ReLU is usually fused into single layer node. Different neural network frameworks use slightly different terminology relating to the meaning of operation, layer and fused layer. For example Tensorflow~\parencite{tensorflow2015-whitepaper}, a popular framework for training, considers Conv2D, bias and ReLU separate layers and the combination of the a fused layer, where as in Pytorch~\cite{pytorch} the combination of Conv2D, bias and ReLU is considered one layer. For the purposes of this work, we use Tensorflow naming scheme.
 
@@ -540,103 +540,103 @@ The simplest kind of relation is a feedforward relationship where the output of 
 
 Connection can also branch, and the same layer output can be used as input for multiple nodes. Resnet~\cite{he2015deepresiduallearningimage} heavily utilizes what are called residual connections. With residual connection an input of a layer is used in multiple parts of a feed forward network. Figure~\ref{fig:network-residual} shows and example of a residual connection, where input of layer A is used again after concatenation as part of input for layer C.
 \begin{figure}
-  \centering
-  \begin{tikzpicture}
-    \node at (-3, 1.3) {Input};
-    \matrix [matrix of math nodes, left delimiter={[}, right delimiter={]}, % for the rectangle border
-              ampersand replacement=\&] % see explanation
-      (mm)
-      at(-3, 0)
-      {
-          \node {(1,1)}; \& \node {(1,2)}; \& \node {(1,3)};\\
-          \node {(2,1)}; \& \node {(2,2)}; \& \node {(2,3)};\\
-          \node {(3,1)}; \& \node {(3,2)}; \& \node {(3,3)};\\
-      };
+\centering
+\begin{tikzpicture}
+  \node at (-3, 1.3) {Input};
+  \matrix [matrix of math nodes, left delimiter={[}, right delimiter={]}, % for the rectangle border
+            ampersand replacement=\&] % see explanation
+    (mm)
+    at(-3, 0)
+    {
+        \node {(1,1)}; \& \node {(1,2)}; \& \node {(1,3)};\\
+        \node {(2,1)}; \& \node {(2,2)}; \& \node {(2,3)};\\
+        \node {(3,1)}; \& \node {(3,2)}; \& \node {(3,3)};\\
+    };
 
-    % Box A (Layer 1) with sub-nodes Conv2d, Bias, ReLU
-    \node[draw, thick, rectangle, rounded corners, minimum width=3cm, minimum height=2cm, fill=blue!15] (A) at (2,0) {};
-    \node at (2,1.3) {Layer A}; % Title for Layer 1
-    \node at (2,0.6) {Conv2d};
-    \node at (2,0) {+ Bias};
-    \node at (2,-0.6) {+ ReLU};
+  % Box A (Layer 1) with sub-nodes Conv2d, Bias, ReLU
+  \node[draw, thick, rectangle, rounded corners, minimum width=3cm, minimum height=2cm, fill=blue!15] (A) at (2,0) {};
+  \node at (2,1.3) {Layer A}; % Title for Layer 1
+  \node at (2,0.6) {Conv2d};
+  \node at (2,0) {+ Bias};
+  \node at (2,-0.6) {+ ReLU};
 
-    % Box B (Layer 2) with sub-nodes Conv2d, Bias, ReLU
-    \node[draw, thick, rectangle, rounded corners, minimum width=3cm, minimum height=2cm, fill=blue!15] (B) at (6,0) {};
-    \node at (6,1.3) {Layer B}; % Title for Layer 2
-    \node at (6,0.6) {Conv2d};
-    \node at (6,0) {+ Bias};
-    \node at (6,-0.6) {+ ReLU};
+  % Box B (Layer 2) with sub-nodes Conv2d, Bias, ReLU
+  \node[draw, thick, rectangle, rounded corners, minimum width=3cm, minimum height=2cm, fill=blue!15] (B) at (6,0) {};
+  \node at (6,1.3) {Layer B}; % Title for Layer 2
+  \node at (6,0.6) {Conv2d};
+  \node at (6,0) {+ Bias};
+  \node at (6,-0.6) {+ ReLU};
 
-    \node at (9, 2) {Output};
-    \matrix [matrix of math nodes, left delimiter={[}, right delimiter={]}, % for the rectangle border
-              ampersand replacement=\&] % see explanation
-      (out)
-      at(9, 0)
-      {
-          \node {(1)}; \\
-          \node {(2)}; \\
-          \node {(3)}; \\
-          \node {...}; \\
-          \node {(10)}; \\
-      };
+  \node at (9, 2) {Output};
+  \matrix [matrix of math nodes, left delimiter={[}, right delimiter={]}, % for the rectangle border
+            ampersand replacement=\&] % see explanation
+    (out)
+    at(9, 0)
+    {
+        \node {(1)}; \\
+        \node {(2)}; \\
+        \node {(3)}; \\
+        \node {...}; \\
+        \node {(10)}; \\
+    };
 
-    % Arrow from A to B
-    \path [-{Stealth[scale=2]}] (mm) edge node[above] {} (A);
-    \path [-{Stealth[scale=2]}] (A) edge node[above] {} (B);
-    \path [-{Stealth[scale=2]}] (B) edge node[above] {} (out);
-  \end{tikzpicture}
-  \caption{Simple feed forward network with two Conv2D with bias and ReLU activation layers.}
-  \label{fig:network-simple}
+  % Arrow from A to B
+  \path [-{Stealth[scale=2]}] (mm) edge node[above] {} (A);
+  \path [-{Stealth[scale=2]}] (A) edge node[above] {} (B);
+  \path [-{Stealth[scale=2]}] (B) edge node[above] {} (out);
+\end{tikzpicture}
+\caption{Simple feed forward network with two Conv2D with bias and ReLU activation layers.}
+\label{fig:network-simple}
 \end{figure}
 
 \begin{figure}
-  \centering
-    \begin{tikzpicture}
-        % Box A (Layer 1) with sub-nodes Conv2d, Bias, ReLU
-        \node[draw, thick, rectangle, rounded corners, minimum width=3cm, minimum height=2cm, fill=blue!15] (A) at (0,0) {};
-        \node at (0,1.3) {Layer A}; % Title for Layer A
-        \node at (0,0.6) {Conv2d};
-        \node at (0,0) {+ Bias};
-        \node at (0,-0.6) {+ ReLU};
+\centering
+  \begin{tikzpicture}
+      % Box A (Layer 1) with sub-nodes Conv2d, Bias, ReLU
+      \node[draw, thick, rectangle, rounded corners, minimum width=3cm, minimum height=2cm, fill=blue!15] (A) at (0,0) {};
+      \node at (0,1.3) {Layer A}; % Title for Layer A
+      \node at (0,0.6) {Conv2d};
+      \node at (0,0) {+ Bias};
+      \node at (0,-0.6) {+ ReLU};
 
-        % Box B (Layer 2) with sub-nodes Conv2d, Bias
-        \node[draw, thick, rectangle, rounded corners, minimum width=3cm, minimum height=2cm, fill=blue!15] (B) at (4,0) {};
-        \node at (4,1.3) {Layer B}; % Title for Layer B
-        \node at (4,0.6) {Conv2d};
-        \node at (4,0) {+ Bias};
-        \node at (4,-0.6) {+ ReLU};
+      % Box B (Layer 2) with sub-nodes Conv2d, Bias
+      \node[draw, thick, rectangle, rounded corners, minimum width=3cm, minimum height=2cm, fill=blue!15] (B) at (4,0) {};
+      \node at (4,1.3) {Layer B}; % Title for Layer B
+      \node at (4,0.6) {Conv2d};
+      \node at (4,0) {+ Bias};
+      \node at (4,-0.6) {+ ReLU};
 
-        % Residual Connection (A to B addition node)
-        \node[circle, draw, thick, minimum size=0.6cm] (input) at (-3,0) {X};
-        \node[circle, draw, thick, minimum size=0.6cm] (add) at (7,0) {+};
-        \node (name1) at (7,0.75) {Concatenation};
-        \node (name2) at (2,-2.75) {Residual connection};
-        \node (name3) at (-3,0.75) {Input};
+      % Residual Connection (A to B addition node)
+      \node[circle, draw, thick, minimum size=0.6cm] (input) at (-3,0) {X};
+      \node[circle, draw, thick, minimum size=0.6cm] (add) at (7,0) {+};
+      \node (name1) at (7,0.75) {Concatenation};
+      \node (name2) at (2,-2.75) {Residual connection};
+      \node (name3) at (-3,0.75) {Input};
 
-        % Arrows from A to B and from B to addition
-        %
-        \path [-{Stealth[scale=2]}] (input) edge node[above] {} (A);
-        \path [-{Stealth[scale=2]}] (A) edge node[above] {} (B);
-        \path [-{Stealth[scale=2]}] (B) edge node[above] {} (add);
+      % Arrows from A to B and from B to addition
+      %
+      \path [-{Stealth[scale=2]}] (input) edge node[above] {} (A);
+      \path [-{Stealth[scale=2]}] (A) edge node[above] {} (B);
+      \path [-{Stealth[scale=2]}] (B) edge node[above] {} (add);
 
-        % Direct residual connection from A to addition node
-        \path [-{Stealth[scale=2]}] (A.east) -- ++(2.5,0) -- (add.west);
-        \path [-{Stealth[scale=2]}] (input) edge[bend right=50] node [left] {} (add);
+      % Direct residual connection from A to addition node
+      \path [-{Stealth[scale=2]}] (A.east) -- ++(2.5,0) -- (add.west);
+      \path [-{Stealth[scale=2]}] (input) edge[bend right=50] node [left] {} (add);
 
-        % Box B (Layer 2) with sub-nodes Conv2d, Bias
-        \node[draw, thick, rectangle, rounded corners, minimum width=3cm, minimum height=2cm, fill=blue!15] (C) at (10,0) {};
-        \node at (10,1.3) {Layer C}; % Title for Layer B
-        \node at (10,0.6) {Conv2d};
-        \node at (10,0) {+ Bias};
-        \node at (10,-0.6) {+ ReLU};
-
-
-        \path [-{Stealth[scale=2]}] (add) edge node[above] {} (C);
+      % Box B (Layer 2) with sub-nodes Conv2d, Bias
+      \node[draw, thick, rectangle, rounded corners, minimum width=3cm, minimum height=2cm, fill=blue!15] (C) at (10,0) {};
+      \node at (10,1.3) {Layer C}; % Title for Layer B
+      \node at (10,0.6) {Conv2d};
+      \node at (10,0) {+ Bias};
+      \node at (10,-0.6) {+ ReLU};
 
 
-    \end{tikzpicture}
-  \caption{Residual feed forward network with fused layers.}
-  \label{fig:network-residual}
+      \path [-{Stealth[scale=2]}] (add) edge node[above] {} (C);
+
+
+  \end{tikzpicture}
+\caption{Residual feed forward network with fused layers.}
+\label{fig:network-residual}
 \end{figure}
 
 
@@ -646,31 +646,31 @@ To perform a given task all neural networks need to be trained. This means that 
 After forward pass comes the backwards pass, where the parameters of the network are adjusted to minimize the loss function for the given inputs. The tuning is done layer by layer starting from the output layer and working towards the input layer, hence the name backpropagation. To tune the parameters in a way that maximally improves the prediction results, we need to minimize the value of the loss function. To accomplish the we calculate the gradient decent of the network. Essentially gradient descent describe derivative of the n-dimensional space housing the function approximation of the network. Each parameter introduces it's own dimension and thus adding a parameter to the derivative.
 
 \begin{equation}
-  g_{K} = \nabla L (\hat{y}, z_{K}) = \frac{\partial L}{\partial a_{K}} \cdot \frac{\partial a_{K}}{\partial z_{K}},
+g_{K} = \nabla L (\hat{y}, z_{K}) = \frac{\partial L}{\partial a_{K}} \cdot \frac{\partial a_{K}}{\partial z_{K}},
 \end{equation}
 where $g$ is the gradient of the last layer's activation in relation to the expected activation as signified by $K$, $L$ is the loss function, $\hat{y}$ is the ground truth or expected prediction, $a_{K}$ is the activation of the output layer or the prediction and $z_{K}$ is the input of the layer.
 To find the gradient for the next layer we apply the same chain rule, since we know that the activation of the last layer is dependant on the activation of the previous layer
 \begin{align}
-  g_{K-1}& = \nabla L(\hat{y}, z_{k-1}) = g_{K} \cdot \nabla L(z_{K}, z_{K-1}) \\
-  & = \frac{\partial L}{\partial a_{K}} \cdot \frac{\partial a_{K}}{\partial z_{K}} \cdot \frac{\partial z_{K}}{\partial a_{K-1}} \cdot \frac{\partial a_{K-1}}{\partial z_{K-1}}.
+g_{K-1}& = \nabla L(\hat{y}, z_{k-1}) = g_{K} \cdot \nabla L(z_{K}, z_{K-1}) \\
+& = \frac{\partial L}{\partial a_{K}} \cdot \frac{\partial a_{K}}{\partial z_{K}} \cdot \frac{\partial z_{K}}{\partial a_{K-1}} \cdot \frac{\partial a_{K-1}}{\partial z_{K-1}}.
 \end{align}
 This same chain rule is applied for the whole graph to produce the complete gradiant of the network with final activation in relation to the input $x$
 \begin{align}
-  \nabla L(\hat{y}, x).
+\nabla L(\hat{y}, x).
 \end{align}
 Since it's known that the activation of a layer is the affine transformation we know that
 \begin{align}
-  z_{K} = a_{K-1}W_{K} + b_{K} \Rightarrow \frac{\partial L}{\partial W_{K}} = \frac{\partial L}{\partial z_{K}} \cdot a_{K-1}
+z_{K} = a_{K-1}W_{K} + b_{K} \Rightarrow \frac{\partial L}{\partial W_{K}} = \frac{\partial L}{\partial z_{K}} \cdot a_{K-1}
 \end{align}
 where $W_{K}$ is the vector of weights for layer $K$.
 To tune the weights of a particular layer we need to define an additional term, a learning $\eta$ which describe the amount of movement towards the minimum value of the loss function. We can then use the following equation to calculate new weights for all the layers
 \begin{equation}
-  W_{k} = W_{K} - \eta \frac{\partial L}{\partial W_{K}}.
+W_{k} = W_{K} - \eta \frac{\partial L}{\partial W_{K}}.
 \end{equation}
 
 Biases are also update with a similar equation
 \begin{equation}
-  b_{k} = b_{K} - \eta \frac{\partial L}{\partial b_{K}}.
+b_{k} = b_{K} - \eta \frac{\partial L}{\partial b_{K}}.
 \end{equation}
 
 
@@ -686,28 +686,28 @@ It's also possible to have only parts of the model quantisized. For these cases 
 
 There are multiple approaches to performing post training quantization, but it essentially always involves representing particular floating point range of a values in layer inputs or outputs with integers fixed to a certain zero-point. Tensorflow uses the affine quantization to quantisize the floating point parameteres to integers
 \begin{equation}
-  x_{Q} = clamp(0, 255, round(\frac{x_{float}}{\Delta}) + z)
+x_{Q} = clamp(0, 255, round(\frac{x_{float}}{\Delta}) + z)
 \end{equation}
 where $x_{float}$ is the original parameter values, $x_{Q}$ is the quantisized parameter value, $z$ is the zero-point and $\Delta$ is the scaling factor discovered during quantization.
 The clamp operation limits the input to a given range as such
 \begin{align}
-  clamp(a, b, x) & = a \qquad \text{if} \; x \leq a  \\
-                 & = x \qquad \text{if} \; a < x < b  \\
-                 & = b \qquad \text{if} \; x \geq b
+clamp(a, b, x) & = a \qquad \text{if} \; x \leq a  \\
+                & = x \qquad \text{if} \; a < x < b  \\
+                & = b \qquad \text{if} \; x \geq b
 \end{align}
 To convert quantisized parameters back to the orignal paramter values affine quantization uses the following operation
 \begin{equation}
-  x_{float} = (x_{Q}-z)\Delta.
+x_{float} = (x_{Q}-z)\Delta.
 \end{equation}
 This back conversion has no need for the clamping operation or rounding, since the floating point range is larger then the 8-bit integer range.
 
 Another choice for quantization is the uniform symmetric which is similar to the affine quantization, but the zero-point is always set as 0. This ensures that the negative and positive sides of the equal, which is desired of signed integer based accelerators. The equation for quantizising a parameter with the uniform symmetric quantization is as follow
 \begin{equation}
-  x_{Q} = clamp(-128, 127, round(\frac{x_{float}}{\Delta})).
+x_{Q} = clamp(-128, 127, round(\frac{x_{float}}{\Delta})).
 \end{equation}
 From the equation we can see that when compared to the affine quantization the zero-point term has been removed and the range has been shifted by $-128$. Converting back to the original parameter is as simple as applying the scaling factor
 \begin{equation}
-  x_{float} = x_{Q}\Delta.
+x_{float} = x_{Q}\Delta.
 \end{equation}
 Some integer accelerators might support performing the quatizations in hardware, but generally it's done in software.
 
@@ -738,8 +738,8 @@ Most ML libraries approximate the AUC with a discrete AUC using the Trapezoidal 
 \end{equation}
 
 \begin{align}
-  \text{AUC} & = \int_{\text{FPR}=0}^{\text{FPR}=1} \text{TPR}(\text{FPR}) \, d(\text{FPR}) \\
-  & \approx \sum_{i=1}^{n-1} \frac{(\text{FPR}_{i+1} - \text{FPR}_i) \cdot (\text{TPR}_{i+1} + \text{TPR}_i)}{2},
+\text{AUC} & = \int_{\text{FPR}=0}^{\text{FPR}=1} \text{TPR}(\text{FPR}) \, d(\text{FPR}) \\
+& \approx \sum_{i=1}^{n-1} \frac{(\text{FPR}_{i+1} - \text{FPR}_i) \cdot (\text{TPR}_{i+1} + \text{TPR}_i)}{2},
 \end{align}
 where TPR is the true positive rate, the relative amount of correct positive predictions from all the positive inputs, and FPR is the false positive rate, relative amount of false positive predictions to all negative inputs.
 
@@ -803,42 +803,42 @@ TVM has the ability to take most of the common ML training graphs and convert th
 During model compilation TVM is able to optimize the graph and allocate acceleratable nodes to suitable accelerators.~\parencite{TVM}
 
 \begin{figure}
-  \centering
-  \begin{tikzpicture}
-      \node[draw, thick, rectangle, rounded corners, minimum width=3cm, minimum height=2cm, fill=blue!15] (A) at (-3,-2.1) {};
-      \node at (-3,-0.8) {Tensorflow Fused Conv2D}; % Title for Layer A
-      \node at (-3,-1.5) {Conv2d};
-      \node at (-3,-2.1) {+ Bias};
-      \node at (-3,-2.7) {+ ReLU};
+\centering
+\begin{tikzpicture}
+    \node[draw, thick, rectangle, rounded corners, minimum width=3cm, minimum height=2cm, fill=blue!15] (A) at (-3,-2.1) {};
+    \node at (-3,-0.8) {Tensorflow Fused Conv2D}; % Title for Layer A
+    \node at (-3,-1.5) {Conv2d};
+    \node at (-3,-2.1) {+ Bias};
+    \node at (-3,-2.7) {+ ReLU};
 
-      % Box for Qnn.conv2d
-      \node[draw, thick, rectangle, rounded corners, minimum width=3cm, minimum height=0.7cm, fill=blue!15] (Qnn) at (3,0) {};
-      \node at (3,0.0) {qnn.conv2d};
+    % Box for Qnn.conv2d
+    \node[draw, thick, rectangle, rounded corners, minimum width=3cm, minimum height=0.7cm, fill=blue!15] (Qnn) at (3,0) {};
+    \node at (3,0.0) {qnn.conv2d};
 
-      % Box for Bias
-      \node[draw, thick, rectangle, rounded corners, minimum width=3cm, minimum height=0.7cm, fill=blue!15] (Bias) at (3,-1.5) {};
-      \node at (3,-1.5) {Bias};
+    % Box for Bias
+    \node[draw, thick, rectangle, rounded corners, minimum width=3cm, minimum height=0.7cm, fill=blue!15] (Bias) at (3,-1.5) {};
+    \node at (3,-1.5) {Bias};
 
-      % Box for Qnn.requantize
-      \node[draw, thick, rectangle, rounded corners, minimum width=3cm, minimum height=0.7cm, fill=blue!15] (Requantize) at (3,-3) {};
-      \node at (3,-3) {qnn.requantize};
+    % Box for Qnn.requantize
+    \node[draw, thick, rectangle, rounded corners, minimum width=3cm, minimum height=0.7cm, fill=blue!15] (Requantize) at (3,-3) {};
+    \node at (3,-3) {qnn.requantize};
 
-      % Box for Clip
-      \node[draw, thick, rectangle, rounded corners, minimum width=3cm, minimum height=0.7cm, fill=blue!15] (Clip) at (3,-4.5) {};
-      \node at (3,-4.5) {Clip};
+    % Box for Clip
+    \node[draw, thick, rectangle, rounded corners, minimum width=3cm, minimum height=0.7cm, fill=blue!15] (Clip) at (3,-4.5) {};
+    \node at (3,-4.5) {Clip};
 
-      % Box for outline
-      \node at (3,1.0) {TVM Relay graph};
-      \draw[dashed] (1, 0.6) rectangle (5, -5.2);
+    % Box for outline
+    \node at (3,1.0) {TVM Relay graph};
+    \draw[dashed] (1, 0.6) rectangle (5, -5.2);
 
-      % Arrows
-      \path [-{Stealth[scale=2]}] (Qnn) edge node[above] {} (Bias);
-      \path [-{Stealth[scale=2]}] (Bias) edge node[above] {} (Requantize);
-      \path [-{Stealth[scale=2]}] (Requantize) edge node[above] {} (Clip);
-      \path [-{Stealth[scale=4]}] (A) edge node[left] {} (1, -2.1);
-  \end{tikzpicture}
-  \caption{Tensorflow layer to TVM relay graph conversion}
-  \label{fig:tflite-to-tvm}
+    % Arrows
+    \path [-{Stealth[scale=2]}] (Qnn) edge node[above] {} (Bias);
+    \path [-{Stealth[scale=2]}] (Bias) edge node[above] {} (Requantize);
+    \path [-{Stealth[scale=2]}] (Requantize) edge node[above] {} (Clip);
+    \path [-{Stealth[scale=4]}] (A) edge node[left] {} (1, -2.1);
+\end{tikzpicture}
+\caption{Tensorflow layer to TVM relay graph conversion}
+\label{fig:tflite-to-tvm}
 \end{figure}
 
 \subsection{Runtimes}
@@ -865,57 +865,57 @@ In the case of the Headsail DLA we offer a high level calls Conv2d, Conv2d + Bia
 In addition to the C++ backend for BYOC we define a python API for performing the necessary legalization and annotation for the graph.
 
 \begin{figure}
-  \centering
-  \begin{tikzpicture}
-      % Box for Qnn.conv2d
-      \node[draw, thick, rectangle, rounded corners, minimum width=3cm, minimum height=0.7cm, fill=blue!15] (Qnn) at (0,0) {};
-      \node at (0,0.0) {qnn.conv2d};
+\centering
+\begin{tikzpicture}
+    % Box for Qnn.conv2d
+    \node[draw, thick, rectangle, rounded corners, minimum width=3cm, minimum height=0.7cm, fill=blue!15] (Qnn) at (0,0) {};
+    \node at (0,0.0) {qnn.conv2d};
 
-      % Box for Bias
-      \node[draw, thick, rectangle, rounded corners, minimum width=3cm, minimum height=0.7cm, fill=blue!15] (Bias) at (0,-1.5) {};
-      \node at (0,-1.5) {Bias};
+    % Box for Bias
+    \node[draw, thick, rectangle, rounded corners, minimum width=3cm, minimum height=0.7cm, fill=blue!15] (Bias) at (0,-1.5) {};
+    \node at (0,-1.5) {Bias};
 
-      % Box for Qnn.requantize
-      \node[draw, thick, rectangle, rounded corners, minimum width=3cm, minimum height=0.7cm, fill=blue!15] (Requantize) at (0,-3) {};
-      \node at (0,-3) {qnn.requantize};
+    % Box for Qnn.requantize
+    \node[draw, thick, rectangle, rounded corners, minimum width=3cm, minimum height=0.7cm, fill=blue!15] (Requantize) at (0,-3) {};
+    \node at (0,-3) {qnn.requantize};
 
-      % Box for Clip
-      \node[draw, thick, rectangle, rounded corners, minimum width=3cm, minimum height=0.7cm, fill=blue!15] (Clip) at (0,-4.5) {};
-      \node at (0,-4.5) {Clip};
+    % Box for Clip
+    \node[draw, thick, rectangle, rounded corners, minimum width=3cm, minimum height=0.7cm, fill=blue!15] (Clip) at (0,-4.5) {};
+    \node at (0,-4.5) {Clip};
 
-      % Box for outline
-      \node at (0,1.0) {TVM Relay graph};
-      \draw[dashed] (-2, 0.6) rectangle (2, -5.2);
+    % Box for outline
+    \node at (0,1.0) {TVM Relay graph};
+    \draw[dashed] (-2, 0.6) rectangle (2, -5.2);
 
-      % Box for composite
-      \node[draw, thick, rectangle, rounded corners, minimum width=3.5cm, minimum height=2cm, fill=blue!15] (Composite) at (5,-0.6) {};
-      \node at (5,0.0) {qnn.conv2d};
-      \node at (5,-0.6) {+ Bias};
-      \node at (5,-1.2) {(Compiler=DLA)};
+    % Box for composite
+    \node[draw, thick, rectangle, rounded corners, minimum width=3.5cm, minimum height=2cm, fill=blue!15] (Composite) at (5,-0.6) {};
+    \node at (5,0.0) {qnn.conv2d};
+    \node at (5,-0.6) {+ Bias};
+    \node at (5,-1.2) {(Compiler=DLA)};
 
-      % Box for Qnn.requantize composite
-      \node[draw, thick, rectangle, rounded corners, minimum width=3cm, minimum height=0.7cm, fill=blue!15] (RequantizeComposite) at (5,-3) {};
-      \node at (5,-3) {qnn.requantize};
+    % Box for Qnn.requantize composite
+    \node[draw, thick, rectangle, rounded corners, minimum width=3cm, minimum height=0.7cm, fill=blue!15] (RequantizeComposite) at (5,-3) {};
+    \node at (5,-3) {qnn.requantize};
 
-      % Box for Clip composite
-      \node[draw, thick, rectangle, rounded corners, minimum width=3cm, minimum height=0.7cm, fill=blue!15] (ClipComposite) at (5,-4.5) {};
-      \node at (5,-4.5) {Clip};
+    % Box for Clip composite
+    \node[draw, thick, rectangle, rounded corners, minimum width=3cm, minimum height=0.7cm, fill=blue!15] (ClipComposite) at (5,-4.5) {};
+    \node at (5,-4.5) {Clip};
 
-      % Box for outline
-      \node at (5,1.0) {Annotated Graph};
-      \draw[dashed] (3, 0.6) rectangle (7, -5.2);
+    % Box for outline
+    \node at (5,1.0) {Annotated Graph};
+    \draw[dashed] (3, 0.6) rectangle (7, -5.2);
 
 
-      % Arrows
-      \path [-{Stealth[scale=2]}] (Qnn) edge node[above] {} (Bias);
-      \path [-{Stealth[scale=2]}] (Bias) edge node[above] {} (Requantize);
-      \path [-{Stealth[scale=2]}] (Requantize) edge node[above] {} (Clip);
-      \path [-{Stealth[scale=2]}] (Composite) edge node[above] {} (RequantizeComposite);
-      \path [-{Stealth[scale=2]}] (RequantizeComposite) edge node[above] {} (ClipComposite);
-      \path [-{Stealth[scale=4]}] (2,-2.1) edge node[left] {} (3, -2.1);
-  \end{tikzpicture}
-  \caption{Graph transformation for DLA-VP}
-  \label{fig:tvm-graph-annotation}
+    % Arrows
+    \path [-{Stealth[scale=2]}] (Qnn) edge node[above] {} (Bias);
+    \path [-{Stealth[scale=2]}] (Bias) edge node[above] {} (Requantize);
+    \path [-{Stealth[scale=2]}] (Requantize) edge node[above] {} (Clip);
+    \path [-{Stealth[scale=2]}] (Composite) edge node[above] {} (RequantizeComposite);
+    \path [-{Stealth[scale=2]}] (RequantizeComposite) edge node[above] {} (ClipComposite);
+    \path [-{Stealth[scale=4]}] (2,-2.1) edge node[left] {} (3, -2.1);
+\end{tikzpicture}
+\caption{Graph transformation for DLA-VP}
+\label{fig:tvm-graph-annotation}
 \end{figure}
 
 
@@ -928,7 +928,7 @@ With custom code generation it's also possible to define baremetal compatible ac
 
 \subsection{TVM quantization}
 TVM implements quantization with it's own QNN-dialect~\cite{jain_efficient_2020}. The QNN-dialect separates quantized and non-quantized operations from each other by categorizing the quantized operations under the \texttt{qnn.op} class. The QNN operation have additional arguments in to indicate scaling factor and zero-point for inputs and outputs
- In addition to having quantizised version of the DL operations the QNN dialect introduces operations for moving data across from non-quantisized domain to quantisized and back. This is done with the \texttt{qnn.quantize}, \texttt{qnn.dequantize} and \texttt{qnn.requantize} operations. \texttt{qnn.quantize} performs affine quantization to a floating point tensor to produce a corresponding quantisized integer tensor, where as \texttt{qnn.dequantize} reverse the affine quantization. \texttt{qnn.requantize} converts a quantizised tensor to another quantisized tensor corresponding with a different scale than the original.
+In addition to having quantizised version of the DL operations the QNN dialect introduces operations for moving data across from non-quantisized domain to quantisized and back. This is done with the \texttt{qnn.quantize}, \texttt{qnn.dequantize} and \texttt{qnn.requantize} operations. \texttt{qnn.quantize} performs affine quantization to a floating point tensor to produce a corresponding quantisized integer tensor, where as \texttt{qnn.dequantize} reverse the affine quantization. \texttt{qnn.requantize} converts a quantizised tensor to another quantisized tensor corresponding with a different scale than the original.
 
 TVM enables compatibility of quantisized networks with other major DNN frameworks like tensorflow with QNN-dialect aware graph parsing. When model from a another framework, the framework specific quantization operations get converted to QNN nodes. The resulting graph is then passed trough canonicalization and legalization passes to produce relay graph that can be annotated for a target.
 Canonicalization pass converts the QNN nodes into relay operations. For example \texttt{qnn.Conv2d} gets broken into, dequantization, floating point convolution, bias, requantization to int8 and clipping operations.
@@ -954,14 +954,14 @@ TinyPerf consists of four benchmarks meant to target different use cases shown i
 \caption{Tiny Performance Benchmarks, from~\parencite{tinyperf}}
 \begin{adjustbox}{max width=\textwidth}
 \begin{tabular}{lccc}
-    \toprule
-    \textbf{Benchmark} & \textbf{Dataset (Input Size)} & \textbf{Model (TFLite Model Size)} & \textbf{Quality Target (Metric)} \\
-    \midrule
-    Keyword Spotting & Speech Commands (49x10) & DS-CNN (52.5 KB) & 90\% (Top-1) \\
-    Visual Wake Words & VWW Dataset (96x96)  & MobileNetV1 (325 KB) & 80\% (Top-1) \\
-    Image Classification & CIFAR10 (32x32) & ResNet (96 KB) & 85\% (Top-1) \\
-    Anomaly Detection & ToyADMOS (5x128)  & FC-AutoEncoder (270 KB) & .85 (AUC) \\
-    \bottomrule
+  \toprule
+  \textbf{Benchmark} & \textbf{Dataset (Input Size)} & \textbf{Model (TFLite Model Size)} & \textbf{Quality Target (Metric)} \\
+  \midrule
+  Keyword Spotting & Speech Commands (49x10) & DS-CNN (52.5 KB) & 90\% (Top-1) \\
+  Visual Wake Words & VWW Dataset (96x96)  & MobileNetV1 (325 KB) & 80\% (Top-1) \\
+  Image Classification & CIFAR10 (32x32) & ResNet (96 KB) & 85\% (Top-1) \\
+  Anomaly Detection & ToyADMOS (5x128)  & FC-AutoEncoder (270 KB) & .85 (AUC) \\
+  \bottomrule
 \end{tabular}
 \end{adjustbox}
 \label{tab:tinyperf}
@@ -1007,14 +1007,15 @@ This section covers the actual implementation of the used software stack in deta
 To enable software development for Headsail before the arriving of the ASICs, we modeled the hardware as a Renode virtual platform, which we call Headsail-VP. With Headsail-VP we aimed to replicate the complete memory map of Headsail, with both processors and some of the peripherals.
 The benefit of developing a virtual versions of Headsail was that we hoped it would enable faster software development, due to the limited accessibility of the ASIC as well as the possibility to modify the design in the case hardware bugs.
 Additionally this knowledge in developing virtual prototypes of chip could allows us the better define the hardware specs based on the software demonstrators we develop.
+To enable CI/CD we used Github actions to run automated testing for the VP to ensure correct behaviour when new features were added.
 
 \subsection{DLA-VP}
 
 \begin{figure}
-  \centering
-  \includegraphics[width=\linewidth]{img/dla-internal.pdf}
-  \caption{Architecture of accelerated DLA flow in Headsail with TVM runtime and a Pytorch model}
-  \label{fig:dla_internal}
+\centering
+\includegraphics[width=\linewidth]{img/dla-internal.pdf}
+\caption{Architecture of accelerated DLA flow in Headsail with TVM runtime and a Pytorch model}
+\label{fig:dla_internal}
 \end{figure}
 
 
@@ -1026,9 +1027,8 @@ Since Renode python peripherals don't have a clock, the state of the peripheral 
 
 To verify that the DLA-VP functionally behaved like the hardware implementation of the DLA, we implemented some of the verification test done by the hardware team with our software stack. Using the same inputs as the RTL tests with DLA-VP we expect the results to be identical. We implemented same tests for the low-level driver as well as the high-level driver to ensure that the DLA-VP as well as the complementing software stack correspond with the behaviour of the hardware implementation. This included reimplementing the bugs and design oversights that reduce the accuracy and possibly performance.
 
+We integrated these same verification tests to our CI/CD to ensure changes that would break the functional correctness of the DLA would not get merged.
 
-
-\fixthis{Write about CI/CD and the DLA verification}
 
 \section{Software support}
 \label{sec:software_support}
@@ -1043,10 +1043,10 @@ Newlib is an implementation of the C standard library meant for use in embedded 
 
 Porting libgloss involves implementing 16 syscalls, crt0 and a linker script. From the 16 syscalls only some are mandatory for us to implement, because we are targeting only bare-metal applications. The table~\ref{tab:newlib_syscalls} shows all the libgloss syscalls with column 3 displaying if we implemented the call. The unimplemented calls still need to be defined in the libgloss source for linking purposes but they don't need do anything except return an error. For example the fork syscall duplicates a process, but since we don't support multithreading or any other form of process concurrency it will never be called, thus having it return error is correct.
 
-\begin{lstlisting}[language=C, caption={Minimal implmentation of the fork() syscall in Newlib Libgloss}]
-  int _fork() {
-      return -1;
-  }
+\begin{lstlisting}[language=C, caption={Minimal implementation of the fork() syscall in Newlib Libgloss}]
+int _fork() {
+    return -1;
+}
 \end{lstlisting}
 
 The system calls can be implemented either in non-reentrant or reentrant way. Reentrant system calls are thread safe but require an additional argument, reentrancy structure, to be passed. Reentrancy strucutre holds local values specific for that instance of the function call, where as the non-reentrant version of the function refers to shared global variables. For single threaded applications on headsail implementing the non-reentrant systems calls was enough.~\parencite{bennett2010porting}
@@ -1084,29 +1084,29 @@ The linker script tells the linker how to link the object files produced by the 
 The allocations are controlled by specific flags defined in the linker script, that are visible to program.
 
 \begin{figure}
-  \centering
+\centering
 \begin{tikzpicture}[scale=0.5]
-  \draw (0, 0) rectangle (5, 3) node[midway] {.text};
-  \draw (0, 3) rectangle (5, 5) node[midway] {.data};
-  \draw (0, 5) rectangle (5, 6) node[midway] {.rodata};
-  \draw (0, 6) rectangle (5, 8) node[midway] {.bss};
-  \draw (0, 8) rectangle (5, 15);
-  \node at (2.5, 14.5) {unallocated};
-  \node at (2.5, 13.5) {space};
-  \node[scale=2] at (2.5, 11) {.};
-  \node[scale=2] at (2.5, 11.4) {.};
-  \node[scale=2] at (2.5, 10.6) {.};
-  \node at (10, 0.5) {origin=0x100000000};
-  \node at (10, 15.5) {end=0x170000000};
-  \node at (-4, 15.5) {stack top};
-  \node at (-4, 12) {stack bottom};
-  \node at (-4, 8.5) {heap start};
+\draw (0, 0) rectangle (5, 3) node[midway] {.text};
+\draw (0, 3) rectangle (5, 5) node[midway] {.data};
+\draw (0, 5) rectangle (5, 6) node[midway] {.rodata};
+\draw (0, 6) rectangle (5, 8) node[midway] {.bss};
+\draw (0, 8) rectangle (5, 15);
+\node at (2.5, 14.5) {unallocated};
+\node at (2.5, 13.5) {space};
+\node[scale=2] at (2.5, 11) {.};
+\node[scale=2] at (2.5, 11.4) {.};
+\node[scale=2] at (2.5, 10.6) {.};
+\node at (10, 0.5) {origin=0x100000000};
+\node at (10, 15.5) {end=0x170000000};
+\node at (-4, 15.5) {stack top};
+\node at (-4, 12) {stack bottom};
+\node at (-4, 8.5) {heap start};
 
-  \draw[->] (9.5, 0) -- (5.5,0);
-  \draw[->] (9.5, 15) -- (5.5,15);
-  \draw[->] (-4, 11.5) -- (-0.5, 11.5);
-  \draw[->] (-4, 15) -- (-0.5, 15);
-  \draw[->] (-4, 8) -- (-0.5, 8);
+\draw[->] (9.5, 0) -- (5.5,0);
+\draw[->] (9.5, 15) -- (5.5,15);
+\draw[->] (-4, 11.5) -- (-0.5, 11.5);
+\draw[->] (-4, 15) -- (-0.5, 15);
+\draw[->] (-4, 8) -- (-0.5, 8);
 \end{tikzpicture}
 \caption{Example configuration of linked program in memory}
 \label{fig:sdram-memory-layout}
@@ -1121,10 +1121,10 @@ We then use a python script to load in the Headsail TVM dylib which is used to g
 Finally we produce an executable binary by combining the microTVM C runtime from the Headsail TVM build, generated C source code for the model, Headsail-bsp for the board functions, Headsail-newlib for the C standard library and finally the use case program.
 
 \begin{figure}
-  \centering
-  \includegraphics[width=\linewidth]{img/dla-architecture.pdf}
-  \caption{Architecture of accelerated DLA flow in Headsail with TVM runtime and a Pytorch model}
-  \label{fig:architecture}
+\centering
+\includegraphics[width=\linewidth]{img/dla-architecture.pdf}
+\caption{Architecture of accelerated DLA flow in Headsail with TVM runtime and a Pytorch model}
+\label{fig:architecture}
 \end{figure}
 
 \section{DLA Driver}
@@ -1136,20 +1136,20 @@ The layer configuration struct is the central component of the DLA driver. It de
 
 \begin{lstlisting}[language=Rust, basicstyle=\footnotesize, caption={Example call to DLA highlevel API}, label={lst:layerstruct}]
 pub struct LayerConfig {
-    pub input_bank: Option<MemoryBank>,
-    pub kernel_bank: Option<MemoryBank>,
-    pub output_bank: Option<MemoryBank>,
-    pub bias_addr: Option<u32>,
-    pub pp_enabled: bool,
-    pub relu_enabled: bool,
-    pub bias_enabled: bool,
-    pub input_size: Option<InputSize>,
-    pub kernel_size: Option<KernelSize>,
-    pub padding: Option<Padding>,
-    pub stride: Option<Stride>,
-    pub mac_clip: Option<u32>,
-    pub pp_clip: Option<u32>,
-    pub simd_mode: Option<SimdBitMode>,
+  pub input_bank: Option<MemoryBank>,
+  pub kernel_bank: Option<MemoryBank>,
+  pub output_bank: Option<MemoryBank>,
+  pub bias_addr: Option<u32>,
+  pub pp_enabled: bool,
+  pub relu_enabled: bool,
+  pub bias_enabled: bool,
+  pub input_size: Option<InputSize>,
+  pub kernel_size: Option<KernelSize>,
+  pub padding: Option<Padding>,
+  pub stride: Option<Stride>,
+  pub mac_clip: Option<u32>,
+  pub pp_clip: Option<u32>,
+  pub simd_mode: Option<SimdBitMode>,
 }
 \end{lstlisting}
 
@@ -1160,46 +1160,46 @@ The \texttt{pp\_enabled}, \texttt{relu\_enabled}, \texttt{bias\_enabled} fields 
 The \texttt{input\_size}, \texttt{kernel\_size}, \texttt{padding} and \texttt{stride} fields control the dimensions of the 2D convolution. \texttt{input\_size} and \texttt{kernel\_size}, define the height and width of the inputs and weights as well as the channels counts. Number of input channels for input and number of output channels for the kernel. \texttt{padding} fields allows for settings the amount of padding for all directions separately as well as the values used as the padding. \texttt{stride} tell the amount of space between samples in the input in vertical and horizontal direction separately. The default stride of 1 means that every input element is sampled, where as stride of 2 means that after a sample, we move two spaces to the particular direction etc.
 
 \begin{figure}
-  \centering
+\centering
 \begin{tikzpicture}[scale=0.7]
 
 %d Stride 1x1
 \foreach \x in {0, 1, 2, 3} {
-    \foreach \y in {0, 1, 2, 3} {
-        \draw[black, thick] (\x,\y) rectangle (\x+1,\y+1);
-        \fill[blue!20] (\x,\y) rectangle (\x+1,\y+1);
-    }
+  \foreach \y in {0, 1, 2, 3} {
+      \draw[black, thick] (\x,\y) rectangle (\x+1,\y+1);
+      \fill[blue!20] (\x,\y) rectangle (\x+1,\y+1);
+  }
 }
 \node[below] at (1.5, -0.5) {Stride 1x1};
 
 % Stride 1x2
 \begin{scope}[shift={(6, 0)}]
-    \foreach \x in {0, 1, 2, 3} {
-        \foreach \y in {0, 1, 2, 3} {
-            \draw[black, thick] (\x,\y) rectangle (\x+1,\y+1);
-        }
-    }
-    \foreach \x in {0, 1, 2, 3} {
-        \foreach \y in {0, 2} {
-            \fill[blue!20] (\x,\y) rectangle (\x+1,\y+1);
-        }
-    }
-    \node[below] at (1.5, -0.5) {Stride 1x2};
+  \foreach \x in {0, 1, 2, 3} {
+      \foreach \y in {0, 1, 2, 3} {
+          \draw[black, thick] (\x,\y) rectangle (\x+1,\y+1);
+      }
+  }
+  \foreach \x in {0, 1, 2, 3} {
+      \foreach \y in {0, 2} {
+          \fill[blue!20] (\x,\y) rectangle (\x+1,\y+1);
+      }
+  }
+  \node[below] at (1.5, -0.5) {Stride 1x2};
 \end{scope}
 
 % Stride 2x2
 \begin{scope}[shift={(12, 0)}]
-    \foreach \x in {0, 1, 2, 3} {
-        \foreach \y in {0, 1, 2, 3} {
-            \draw[black, thick] (\x,\y) rectangle (\x+1,\y+1);
-        }
-    }
-    \foreach \x in {0, 2} {
-        \foreach \y in {0, 2} {
-            \fill[blue!20] (\x,\y) rectangle (\x+1,\y+1);
-        }
-    }
-    \node[below] at (1.5, -0.5) {Stride 2x2};
+  \foreach \x in {0, 1, 2, 3} {
+      \foreach \y in {0, 1, 2, 3} {
+          \draw[black, thick] (\x,\y) rectangle (\x+1,\y+1);
+      }
+  }
+  \foreach \x in {0, 2} {
+      \foreach \y in {0, 2} {
+          \fill[blue!20] (\x,\y) rectangle (\x+1,\y+1);
+      }
+  }
+  \node[below] at (1.5, -0.5) {Stride 2x2};
 \end{scope}
 \end{tikzpicture}
 \caption{Effect of stride to sampling}
@@ -1225,6 +1225,16 @@ Multiplying the shape of a single output channel with the total number of output
 
 Since the output of the DLA is limited to the signed 8 bit range (from $-128$ to $127$) but the convolution is calculated in signed 16-bit range (from $-32768$ to $32767$) the DLA needs to clip half of the bits away. Using the \texttt{mac\_clip} and \texttt{pp\_clip} fields we can control which of the consecutive 8-bits we want to use as the result. By default DLA stores the 8 most significant bits, but by increasing the clipping values we can move the extraction window towards the less significant bits. By moving towards LSB we essentially gain granularity between the values at the cost of losing range in the high values. This is desired when the absolute maximum value of a layer is small. In most cases the optimal extraction window is somewhere between MSB and LSB, thus making it difficult to predict which exact clipping value to use. When the results of a layer are read from the DLA the driver shifts the read values back by the same amount as they were clipped in the accelerator to match the magnitude of the calculations.
 
+To figure out an optimal clipping amount for each layer, we proposed a bias maximum value based heuristic
+\begin{align}
+P & = \max \left( \log_{2} \left( \frac{\max \left( \mathopen| \max(\hat{b}) \mathclose|, \; \mathopen| \min(\hat{b}) \mathclose| \right)}{127} \right), \; 127 \right) + 1 \\
+\text{Bits clipped} & = P \qquad \text{if} \; P < 8  \\
+                              & = 8 \qquad \; \text{otherwise}
+\end{align}
+where $\hat{b}$ is the vector containing all the bias values associated with a given layer. From this vector we find the value with the greatest absolute value, and choose the number of bits needed to represent it as the amount of clipping to use incremented by one. In out testing this heuristic somewhat improved the predictions results when compared to choosing a static amount of clipping.
+We limit the number of clipped bits to high of 8 since, the bit width of the convolution result is 16-bits.
+
+
 \subsection{C-Interface}
 To enable TVM BYOC to call the DLA drivers high-level interface we needed to great C wrappers for the function calls. This was done by implementing a Foreign Function Interface (FFI) for the Rust function calls with the Cbindgen library~\cite{cbindgen}. Cbindgen generates C headers from the Rust code that enables C programs to call Rust functions when linked with the proper static library. For the static library we build the headsail-bsp that implements the high-level operation calls which the FFI interface uses.
 
@@ -1232,10 +1242,10 @@ In the FFI we also define a entry point specifically for the TVM. As previously 
 
 \section{Benchmarking}
 \begin{figure}
-  \centering
-  \includegraphics[width=\linewidth]{img/benchmark-sequence.pdf}
-  \caption{Sequence diagram for TinyPerf benchmarking on Headsail.}
-  \label{fig:dla_internal}
+\centering
+\includegraphics[width=\linewidth]{img/benchmark-sequence.pdf}
+\caption{Sequence diagram for TinyPerf benchmarking on Headsail.}
+\label{fig:dla_internal}
 \end{figure}
 
 
@@ -1245,6 +1255,20 @@ For this reason we need to also do benchmarks with actual CNNs. For this purpose
 From these benchmarks the Anomaly Detection is unacceleratable with the Headsail DLA since it uses FC-AutoEncoder network, which is based on fully connected layers and thus has no operations which our accelerator can execute.
 
 Figure~\ref{fig:dla_internal} shows the sequence of running the TinyPerf benchmark on Headsail. We use a simple Python program running on a host PC as the runner, which reads the benchmark samples from the dataset and send them to Headsail over UART. Since TinyPerf only measures the performance of actual inference, we decided to use the relatively slow UART over SPI or I2C for the simplicity. HPC on Headsail runs a simple C-program to receive the data over UART and to set that data as input for the TVM AOT runtime. After setting the input and output the program calls the AOT runtime API to run inference for the given sample. AOT runtime then sequentially executes the model graph with the annotated graph patterns allocated for the DLA. Result of the inference is then transmitted over UART to the host PC, where the Python program recieves it, performs \texttt{argmax} for the vector to find the prediction and updates the evaluation metric.
+
+\section{TVM transformation scheme and code generation}
+After trial and error we settled on a TVM graph transformation behaviour that provided us with the most stable results in all the tested models.
+
+We implemented our own QNN legalization pass for TVM in which, we look for a TVM canonicalized version of a tflite quantized conv2d fusion layer. In TVM relay representation this pattern is composed of 4 nodes: \texttt{qnn.conv2d}, \texttt{nn.bias\_add}, \texttt{qnn.requantize}, and \texttt{clip}. We also capture an optional pair of nodes at the end of main block. If the fusion layer is followed by \texttt{qnn.add} and \texttt{clip} we capture those nodes as well. This combination is seen in ResNet architecure as the operations to concatenate main branch and the skip branch.
+
+From the found pattern we remove all the zero point correction from the \texttt{qnn.conv2d} and \texttt{qnn.requantize} nodes, if they are present. We learned that the tflite models offered by TinyPerf tended to use affine quantization with zero point being close to $128$. Value this high doesn't work for Headsail DLA, since all base values over $0$ would get clipped.
+We also remove the zero-point from the optional skip connection concatenation node if it was captured, even if the operation is not assigned to the accelerator.
+
+After legalization we do pattern matching for two patterns. First is the standard 2D convolution followed by bias and second is grouped convolution followed by a bias. These patterns are assigned to be executed on the DLA using the high-level API symbols from the FFI.
+
+In the code generation backend we traverse the legalized graph and operate on all the patterns that have been assigned for execution on the DLA.
+From each pattern we extract the embedded operation parameters to produce valid C code to call the high-level API operations. We also generate code to dynamically allocate memory for the intermediary results.
+Some of the operation parameters need to be dynamically extracted from the graph information.
 
 \chapter{Result}
 \begin{table}[h]
@@ -1271,12 +1295,21 @@ The table~\ref{tab:benchmark-results} presents the results of the TinyPerf bench
 \label{ch:conclusions}
 The goals for this project, were to:
 \begin{enumerate}
-  \item Create a virtual counter part of the DLA.
-  \item Experiment with developing Firmware with a virtual prototype.
-  \item Develop a use case to demonstrate the capabilities of the DLA and DLA-VP.
-  \item Benchmark the DLA ASIC.
+\item Create a virtual counter part of the DLA.
+\item Experiment with developing Firmware with a virtual prototype.
+\item Develop a use case to demonstrate the capabilities of the DLA and DLA-VP.
+\item Benchmark the DLA ASIC.
 \end{enumerate}
 It's safe to say that we accomplished all these goals.
+
+We were able to develop a virtual replica of a large ASIC subsystem in DLA-VP, that based on verification testing functions identically to it's hardware counterpart. This proves that the Python Peripheral API in Renode can be successfully used to prototype hardware components. Which in turn can be used to develop driver and application space software, before hardware is taped out.
+This might enable software developers to take greater part in hardware design than before using more familiar tools.
+
+We also developed and integrated a software stack to accelerate inference in pretrained neural networks on the Headsail DLA. The software stack consisted of Headsail BSP with support for high-level CNN operations that could be interfaced with a C-FFI.
+uTVM runtime for executing any arbitrary relay graph model on Headasail.
+And finally our custom TVM code generation backend, that enabled common convolution patterns to be assigned for the accelerator.
+
+With TinyPerf benchmark we were able find a baseline for performance comparisons with other similar devices.
 
 \section{Future Work}
 As the accuracy results show there is space for improving the inference accuracy with the software stack. Different graph transformations should be considered to counter act the resolution limitations caused by the result clipping in the DLA. We also know that the driver is less the optimal when it comes down to moving data trough the different software layers, and this should be addressed by carefully examining the driver implementation and the TVM facing interface.
@@ -1319,26 +1352,26 @@ In addition to deep learning applications the DLA could be used in other workloa
 
 \begin{lstlisting}[style=customc, basicstyle=\footnotesize, caption={Example call to DLA highlevel API}]
 void dla_conv2d(const int8_t *input_data,
-                const int8_t *kernel_data,
-                int8_t *output,
-                uintptr_t input_channels,
-                uintptr_t input_height,
-                uintptr_t input_width,
-                const char *input_order,
-                uintptr_t kernel_amount,
-                uintptr_t kernel_channels,
-                uintptr_t kernel_height,
-                uintptr_t kernel_width,
-                const char *kernel_order,
-                uint32_t pad_top,
-                uint32_t pad_right,
-                uint32_t pad_left,
-                uint32_t pad_bottom,
-                int32_t pad_value,
-                uint32_t stride_x,
-                uint32_t stride_y,
-                uint32_t mac_clip,
-                uint32_t pp_clip);
+              const int8_t *kernel_data,
+              int8_t *output,
+              uintptr_t input_channels,
+              uintptr_t input_height,
+              uintptr_t input_width,
+              const char *input_order,
+              uintptr_t kernel_amount,
+              uintptr_t kernel_channels,
+              uintptr_t kernel_height,
+              uintptr_t kernel_width,
+              const char *kernel_order,
+              uint32_t pad_top,
+              uint32_t pad_right,
+              uint32_t pad_left,
+              uint32_t pad_bottom,
+              int32_t pad_value,
+              uint32_t stride_x,
+              uint32_t stride_y,
+              uint32_t mac_clip,
+              uint32_t pp_clip);
 \end{lstlisting}
 
 \begin{lstlisting}[style=customc, basicstyle=\footnotesize, caption={Code generated by BYOC backend for Headsail DLA to execute Conv2D with bias pattern.}]
@@ -1352,14 +1385,14 @@ void dla_conv2d(const int8_t *input_data,
 
 //This was generated with headsail codegen
 int tvmgen_default_headsail_main_9(int8_t* headsail_9_i0, int8_t* headsail_9_i1, int* headsail_9_i2, int* out0) {
-  float tvmgen_default_headsail_main_9_const_1[1] = {1.000000, };
-  int tvmgen_default_headsail_main_9_const_0[1] = {0, };
-  int* buf_0 = (int*)malloc(32768);
+float tvmgen_default_headsail_main_9_const_1[1] = {1.000000, };
+int tvmgen_default_headsail_main_9_const_0[1] = {0, };
+int* buf_0 = (int*)malloc(32768);
 
-  conv2d_bias(headsail_9_i0, headsail_9_i1, headsail_9_i2, buf_0, tvmgen_default_headsail_main_9_const_0, tvmgen_default_headsail_main_9_const_1, 16, 32, 32, "HWC", 32, 16, 1, 1, "HWCK", 32, 0, 0, 0, 0, 0, 2, 2, 0, 0);
-  memcpy(out0, buf_0, 32768);
-  free(buf_0);
-  return 0;
+conv2d_bias(headsail_9_i0, headsail_9_i1, headsail_9_i2, buf_0, tvmgen_default_headsail_main_9_const_0, tvmgen_default_headsail_main_9_const_1, 16, 32, 32, "HWC", 32, 16, 1, 1, "HWCK", 32, 0, 0, 0, 0, 0, 2, 2, 0, 0);
+memcpy(out0, buf_0, 32768);
+free(buf_0);
+return 0;
 }
 \end{lstlisting}
 
