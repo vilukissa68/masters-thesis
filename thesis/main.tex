@@ -41,6 +41,7 @@ autocite=footnote
 \usepackage{booktabs}
 \usepackage{adjustbox}
 \usepackage{subcaption}
+\usepackage{svg}
 \usepackage[withpage]{acronym}
 \usepackage{tikz}
 \usetikzlibrary{arrows.meta, arrows}
@@ -691,9 +692,12 @@ x_{Q} = clamp(0, 255, round(\frac{x_{float}}{\Delta}) + z)
 where $x_{float}$ is the original parameter values, $x_{Q}$ is the quantisized parameter value, $z$ is the zero-point and $\Delta$ is the scaling factor discovered during quantization.
 The clamp operation limits the input to a given range as such
 \begin{align}
-clamp(a, b, x) & = a \qquad \text{if} \; x \leq a  \\
-                & = x \qquad \text{if} \; a < x < b  \\
-                & = b \qquad \text{if} \; x \geq b
+clamp(a, b, x) =
+  \begin{cases}
+    a, & \text{for} \; x \leq a  \\
+                x, & \text{for} \; a < x < b  \\
+                b, & \text{for} \; x \geq b
+  \end{cases}
 \end{align}
 To convert quantisized parameters back to the orignal paramter values affine quantization uses the following operation
 \begin{equation}
@@ -781,7 +785,7 @@ This section goes over the technologies use to complete this project in detail. 
 Headsail is the third Soc build by the SocHub research group~\parencite{Ballast}. Headsail has two RISCV CPUs, one 32-bit meant for booting up the system called SysCtrl and one 64-bit 4-core CPU called HPC, meant for running the actual applications, based on the CVA6~\cite{zaruba2019costCVA6}.
 Headsail includes a wide variety of different peripherals, one of which is a custom build the Deep Learning accelerator.
 For I/O headsail  has UART, SPI and I2C connectivity.
-In addition CPU bootrams, Headsail features 256 megabytes of SDRAM and 128 kilobytes of shared SRAM. This abundance of memory gives lots of space for
+In addition CPU bootrams, Headsail features 256 megabytes of SDRAM and 128 kilobytes of shared SRAM. This abundance of memory gives application space developers lots of flexibility for their applications. Considering that even small neural networks need megabytes of memory, large memory will be vital for the success of this project.
 
 \subsection{DLA}
 Headsail's DLA is a MAC array based accelerator, which provides the following operations: Conv2D, Bias, ReLU. The operations are implemented as a pipeline, meaning that the order of operations is always the same. During one layer cycle the operations need to be executed in the following order: Conv2d, Bias, ReLU. This is the most commonly found order in modern neural networks so it suits most use cases. In addition to these operations DLA can perform bit shifting for results of the MAC array and the post-processing pipeline.
@@ -1029,107 +1033,52 @@ To verify that the DLA-VP functionally behaved like the hardware implementation 
 
 We integrated these same verification tests to our CI/CD to ensure changes that would break the functional correctness of the DLA would not get merged.
 
-
-\section{Software support}
-\label{sec:software_support}
-Even though Headsail is the third SoCHub Soc, it had little existing software support for C. Previous SoCs had only support for Riscv-rt in rust. So a major part of this project involved setting up a Headsail compatible C toolchain. Since Headsail has RISCV CPUs we could use an already existing riscv-gnu-toolchain for the compiler, but we still had to set up a C standard library for the chip with custom version of newlib libgloss. Also due to specific memory addressing decisions in the hardware, we needed to use medany code model compatible compiler and standard library when targeting the 64-bit processor.
-
-We also developed a Board Support Package for Headsail, which provides drivers for the different peripherals in the SoC. Most importantly for this project, the driver for the DLA is included in the BSP.
-The DLA driver is implemented in two layers. First is the low level layer which implements functions that directly target the register interface in the DLA to drive the hardware. The second is the high level layer which abstracts the low level layer to provied simple calls for the 3 different DLA operations. The high level layer also provides the external symbols for DLA operations used by the TVM code generation.
-
-
-\section{Porting Newlib}
-Newlib is an implementation of the C standard library meant for use in embedded devices~\parencite{newlib}. We chose to use Newlib for our C standard library in Headsail since it's known to be relatively easy to port for new platforms. Newlib is separated into two different parts. First is the Newlib core which implements the actual standard library for different CPU ISA's. Since Newlib already has support for RISCV we didn't need to modify Newlib core in anyway. Second part of Newlib is called Libgloss, which implements the platform dependant features. Since Headsail is a custom platform we needed to implement most of the libgloss for it from scratch.
-
-Porting libgloss involves implementing 16 syscalls, crt0 and a linker script. From the 16 syscalls only some are mandatory for us to implement, because we are targeting only bare-metal applications. The table~\ref{tab:newlib_syscalls} shows all the libgloss syscalls with column 3 displaying if we implemented the call. The unimplemented calls still need to be defined in the libgloss source for linking purposes but they don't need do anything except return an error. For example the fork syscall duplicates a process, but since we don't support multithreading or any other form of process concurrency it will never be called, thus having it return error is correct.
-
-\begin{lstlisting}[language=C, caption={Minimal implementation of the fork() syscall in Newlib Libgloss}]
-int _fork() {
-    return -1;
-}
-\end{lstlisting}
-
-The system calls can be implemented either in non-reentrant or reentrant way. Reentrant system calls are thread safe but require an additional argument, reentrancy structure, to be passed. Reentrancy strucutre holds local values specific for that instance of the function call, where as the non-reentrant version of the function refers to shared global variables. For single threaded applications on headsail implementing the non-reentrant systems calls was enough.~\parencite{bennett2010porting}
-
-
-\begin{table}[htbp]
-\centering
-\begin{tabular}{|l|l|c|}
-\hline
-\textbf{Syscall}       & \textbf{Description}               & \textbf{Implemented (Bool)} \\ \hline
-\texttt{exit}         & Terminates the process             & Yes                       \\ \hline
-\texttt{close}         & Closes a file                      & No                       \\ \hline
-\texttt{fstat}         & Gets file status                   & Yes                       \\ \hline
-\texttt{getpid}        & Gets the process ID                & No                       \\ \hline
-\texttt{isatty}        & Tests if a file descriptor is a terminal & Yes                 \\ \hline
-\texttt{kill}          & Removes a process                    & No                       \\ \hline
-\texttt{link}          & Creates a hard link to a file      & No                       \\ \hline
-\texttt{lseek}         & Re-positions read/write file offset & No                       \\ \hline
-\texttt{open}          & Opens a file                       & No                       \\ \hline
-\texttt{read}          & Reads from a file                  & Yes                       \\ \hline
-\texttt{sbrk}          & Moves end of heap pointer          & Yes                       \\ \hline
-\texttt{stat}          & Retrieves file status              & No                       \\ \hline
-\texttt{times}         & Returns process times              & No                       \\ \hline
-\texttt{unlink}        & Deletes a name or a file           & No                       \\ \hline
-\texttt{wait}          & Waits for process to change state  & No                       \\ \hline
-\texttt{write}         & Writes to a file                   & Yes                       \\ \hline
-\end{tabular}
-\caption{Newlib Syscalls and Implementation Status}
-\label{tab:newlib_syscalls}
-\end{table}
-
-In addition to the syscalls libgloss needs to have a crt0, which is a small program that includes a \texttt{\_start} symbol, call to \texttt{main} function and some global definitions and optionally hardware initalizations. The \texttt{\_start} symbol signifies the beginning of a C program and is used by the linker to place the program to start from the correct memory address. After declaring the \texttt{\_start} symbol out crt0 clears the bss segment, registers the \texttt{exit} function, initializes the UART and finally calls the \texttt{main} function.
-
-The linker script tells the linker how to link the object files produced by the compiler. Our linker script maps the whole SDRAM on headsail as it's total available memory region, which it then sections to the text section, data and read-only data sections and various different initialization sections. Additionally the linker reserves space for the stack and heap data structures according to the linker script definitions. Figure~\ref{fig:sdram-memory-layout} shows an example of how a binary is placed in to the Headsail's SDRAM according to the defined linker script. We always place the \texttt{\_start} start symbol at the beginning of the SDRAM, followed by data sections. By default the linker allocates 4 megabytes to the stack and rest is allocated to the heap.
-The allocations are controlled by specific flags defined in the linker script, that are visible to program.
-
-\begin{figure}
-\centering
-\begin{tikzpicture}[scale=0.5]
-\draw (0, 0) rectangle (5, 3) node[midway] {.text};
-\draw (0, 3) rectangle (5, 5) node[midway] {.data};
-\draw (0, 5) rectangle (5, 6) node[midway] {.rodata};
-\draw (0, 6) rectangle (5, 8) node[midway] {.bss};
-\draw (0, 8) rectangle (5, 15);
-\node at (2.5, 14.5) {unallocated};
-\node at (2.5, 13.5) {space};
-\node[scale=2] at (2.5, 11) {.};
-\node[scale=2] at (2.5, 11.4) {.};
-\node[scale=2] at (2.5, 10.6) {.};
-\node at (10, 0.5) {origin=0x100000000};
-\node at (10, 15.5) {end=0x170000000};
-\node at (-4, 15.5) {stack top};
-\node at (-4, 12) {stack bottom};
-\node at (-4, 8.5) {heap start};
-
-\draw[->] (9.5, 0) -- (5.5,0);
-\draw[->] (9.5, 15) -- (5.5,15);
-\draw[->] (-4, 11.5) -- (-0.5, 11.5);
-\draw[->] (-4, 15) -- (-0.5, 15);
-\draw[->] (-4, 8) -- (-0.5, 8);
-\end{tikzpicture}
-\caption{Example configuration of linked program in memory}
-\label{fig:sdram-memory-layout}
-\end{figure}
-
 \section{DLA Software Architecture}
-The figure~\ref{fig:architecture} shows the high level software architecture of TVM annotated model deployment flow with Headsail DLA. First we use high level operations in DLA driver to provied external symbols for Conv2d, Bias and ReLU. These are referenced in the Headsail build of TVM dylib when built with the Headsail custom code generation option.
-
-In other branch we train and optimize a quantisized convolutional neural network with Pytorch and convert the produced model into a ONNX graph.
-We then use a python script to load in the Headsail TVM dylib which is used to generate C source code for the model from the annoteted ONNX graph. This code now includes calls to the DLA driver operations.
-
-Finally we produce an executable binary by combining the microTVM C runtime from the Headsail TVM build, generated C source code for the model, Headsail-bsp for the board functions, Headsail-newlib for the C standard library and finally the use case program.
-
 \begin{figure}
 \centering
-\includegraphics[width=\linewidth]{img/dla-architecture.pdf}
-\caption{Architecture of accelerated DLA flow in Headsail with TVM runtime and a Pytorch model}
+\includegraphics[width=\linewidth]{img/dla-architecture-new.pdf}
+\caption{Software architecture of accelerated DLA flow in Headsail with TVM runtime and a TFlite model}
 \label{fig:architecture}
 \end{figure}
 
+The figure~\ref{fig:architecture} presents the software architecture of TVM annotated model deployment flow with Headsail DLA. The end goal of this flow is to build and executable binary that includes the AOT runtime with one TinyPerf model to run inference on samples received over UART. The build flow is orchestrated with CMake and the model code generation with a Python script.
+
+The first part of the build process is the TVM code generation. We read the targeted TFlite model with a Python build script and import it to TVM Relay graph. This graph is then compiled to C source code with the TVM dynamic runtime which has been compiled with support for Headsail BYOC backend. Headsail BYOC backend uses the symbols from DLA-driver's C interface to execute CNN operations.
+
+The annotated source code is compiled along side our standard library implementation, the runner application and DLA-driver using riscv64-unknown-none-elf-gcc compiler to produce an executable binary that can be run on HPC.
+
+Both of the CPUs in the Headsail are equipped with JTAG connector which we can connect to with OpenOCD~\cite{openocd2023}. We configure OpenOCD to provide us with a GDB~\cite{gdb2023} interface, which we use to flash the executable.
+
+Running the benchmark is done with simple Python script which reads one input from the targetted benchmark task at a time and writes them to Headsail over UART for inference.
+
+Even though Headsail is the third SoCHub Soc, it had little existing software support for C. Previous SoCs had only support for Riscv-rt in rust. So a major part of this project involved setting up a Headsail compatible C toolchain. Since Headsail has RISCV CPUs we could use an already existing riscv-gnu-toolchain for the compiler, but we still had to set up a C standard library for the chip with custom version of newlib libgloss. Also due to specific memory addressing decisions in the hardware, we needed to use medany code model compatible compiler and standard library when targeting the 64-bit processor.
+
+\section{Board Support Package}
+\label{sec:software_support}
+We started the actual software development by writing a simple BSP for the device. Doing this simultaneously with while refining virtual prototype helped us better understand the complete structure of the SoC.
+
+The Headsail-BSP implements some basic drivers to interact with the hardwares I/O functionality with peripheral UART and CPUs internal timers. BSP also enables interrupts for both CPUs with the CLINT and PLIC peripherals
+
+\subsection{HPC initialization}
+Before we can execute binaries on HPC we need to turn it on and initialize it from Sysctrl. For this purpose we run a small \texttt{HPC-init} binary on startup. The initialization program enables the interconnect between the CPUs and turns on the cores of HPC. In addition to turning on HPC it enables and configures most of the peripherals, such as the SDRAM, DLA and clocks.
+We provide the initialization program as a part of Headsail-BSP, and have plans to integrate it into a SPI based SD-card bootflow to enable easier workflow with the SoC.
+On Headsail-VP \texttt{HPC-init} isn't run at all since all the peripherals are configured automatically during startup, making this procedure specific to the ASIC.
+
+\subsection{Dynamic Memory Allocation}
+Embedded applications often rely on just statically allocated memory, this makes memory management simple and generally perfoment. The nature of neural work loads is such that we absolutely need the ability to dynamically allocate and deallocate memory. Specifically the we want to be able to dynamically allocate input and output buffer for layers. Since layers are have different sized input and outputs with large amount of elements, it isn't feasible to statically allocate them all.
+
+Since we support two different programming languages, we had to have solution for both. For C this was accomplished by porting newlib, which we discuss in detail in section~\ref{sec:newlib}. For Rust we experimented with different possibilities but settled on using an external library called Good Memory Allocator~\cite{galloc_memory_allocator}, which uses bins holding different sized chunks that can dynamically be allocated. Since Good Memory Allocated only depends on the Rust core library, not requiring the full standard library and begin well tested, it suited our purposes well.
+
+\subsection{Memory Map and RISC-V code models}
+The CPUs in Headsail, Sysctrl and HPC work on a semi-unified memory map trough two interconnects. One 32-bit interconnect and one 64-bit interconnect, which allows both of the CPUs to reach external memory regions. The semi-unified comes from the fact that even though the CPUs can both access the same memory regions with same addresses, HPC accesses need to be appended with an extra bit to signify external memory access. This extra bit has the unfortunate effect that it makes every external memory access 64-bits. This mandates that the C-compiler needs to support \texttt{medany} code model~\cite{sifive_riscv_code_models}, which not all instances of riscv-gcc support.
+
+The code model dictates which memory addresses the binary can be mapped to. On RISC-V the standard code model if \texttt{medlow} which enable the code to be linked in a 2 gigabyte long region starting from address $0x0$. Since all external accesses from HPC start with 33th bit set as one, it's impossible to link any HPC program to memory outside of it's bootram. Thus we need to use \texttt{medany} code model which enables using any 2 gigabyte continuous region of memory.
+
+The disadvantage that comes from using \texttt{medany} code model is that it prevents certain linker relaxation to be performed, which in turn negatively affects the performance of the system. In our testing we observed up to a 5 percentage drop in performance when switching from binary linked with \texttt{medlow} to \texttt{medany} when targetting HPC's bootram.
+
 \section{DLA Driver}
-The driver for the DLA is divided into two parts. First is the lower level API that handles the register level interfacing with the DLA. Second is the high-level API which implements a user facing interface for the main operations of the DLA.
-The driver is implemented as Rust module separate from the rest of the BSP.
+To make interfacing with the DLA possible we wrote a driver for the accelerator as a part of the Headsail-BSP, which we simply call the DLA driver.
+The driver is implemented as separate Rust module which can be included with the rest of the BSP using optional feature flags, when invoking the build. This is done so that we can reduce the size of the BSP binary when application don't need the DLA. The driver for the DLA is divided into two parts. First is the lower level API that handles the register level interfacing with the DLA. Second is the high-level API which implements a user facing interface for the main operations of the DLA.
 
 \subsection{Layer struct}
 The layer configuration struct is the central component of the DLA driver. It defines all the necessary information needed to run a single layer on the DLA and is passed for the \texttt{init\_layer} method in the low level API to run the specified layer. The DLA doesn't wait for a particular run command, rather after setting \texttt{READ\_A\_VALID} and \texttt{READ\_A\_VALID} bits in the \texttt{BUF\_CTRL} register to signal all input and kernel data has been set, the DLA starts immediately executing the current configuration.
@@ -1206,8 +1155,8 @@ The \texttt{input\_size}, \texttt{kernel\_size}, \texttt{padding} and \texttt{st
 \label{fig:stride}
 \end{figure}
 
-\subsection{Output}
-To get input from the DLA we first need to define it's input address. Theoretically this address can be any memory address visible to the control processors, but in the driver we have limited the number of possible output addresses only to the DLAs internal memory banks. For setting the output bank for the given layer the driver writes to \texttt{DLA\_PP\_AXI\_WRITE\_ADDRESS} register the wanted output address.
+\subsection{Reading Layer Results}
+To get output from the DLA we first need to define it's output address. Theoretically this address can be any memory address visible to the control processors, but in the driver we have limited the number of possible output addresses only to the DLAs internal memory banks. For setting the output bank for the given layer the driver writes to \texttt{DLA\_PP\_AXI\_WRITE\_ADDRESS} register the wanted output address.
 
 To read the output from the DLA we need to know how many elements the output has for any given operation. This information can be derived from the following equation
 
@@ -1225,11 +1174,14 @@ Multiplying the shape of a single output channel with the total number of output
 
 Since the output of the DLA is limited to the signed 8 bit range (from $-128$ to $127$) but the convolution is calculated in signed 16-bit range (from $-32768$ to $32767$) the DLA needs to clip half of the bits away. Using the \texttt{mac\_clip} and \texttt{pp\_clip} fields we can control which of the consecutive 8-bits we want to use as the result. By default DLA stores the 8 most significant bits, but by increasing the clipping values we can move the extraction window towards the less significant bits. By moving towards LSB we essentially gain granularity between the values at the cost of losing range in the high values. This is desired when the absolute maximum value of a layer is small. In most cases the optimal extraction window is somewhere between MSB and LSB, thus making it difficult to predict which exact clipping value to use. When the results of a layer are read from the DLA the driver shifts the read values back by the same amount as they were clipped in the accelerator to match the magnitude of the calculations.
 
-To figure out an optimal clipping amount for each layer, we proposed a bias maximum value based heuristic
+To find an optimal clipping amount for each layer, we proposed a bias maximum value based heuristic
 \begin{align}
 P & = \max \left( \log_{2} \left( \frac{\max \left( \mathopen| \max(\hat{b}) \mathclose|, \; \mathopen| \min(\hat{b}) \mathclose| \right)}{127} \right), \; 127 \right) + 1 \\
-\text{Bits clipped} & = P \qquad \text{if} \; P < 8  \\
-                              & = 8 \qquad \; \text{otherwise}
+  & \text{Bits clipped} =
+  \begin{cases}
+    P, &  \text{for} \; P < 8  \\
+    8, &  \; \text{otherwise}
+  \end{cases}
 \end{align}
 where $\hat{b}$ is the vector containing all the bias values associated with a given layer. From this vector we find the value with the greatest absolute value, and choose the number of bits needed to represent it as the amount of clipping to use incremented by one. In out testing this heuristic somewhat improved the predictions results when compared to choosing a static amount of clipping.
 We limit the number of clipped bits to high of 8 since, the bit width of the convolution result is 16-bits.
@@ -1239,6 +1191,83 @@ We limit the number of clipped bits to high of 8 since, the bit width of the con
 To enable TVM BYOC to call the DLA drivers high-level interface we needed to great C wrappers for the function calls. This was done by implementing a Foreign Function Interface (FFI) for the Rust function calls with the Cbindgen library~\cite{cbindgen}. Cbindgen generates C headers from the Rust code that enables C programs to call Rust functions when linked with the proper static library. For the static library we build the headsail-bsp that implements the high-level operation calls which the FFI interface uses.
 
 In the FFI we also define a entry point specifically for the TVM. As previously mentioned we always allocate qnn.conv2d + add pattern for the DLA to execute. The code generation backend extract all the necessary information from the Relay nodes of this pattern and generates a function call to call \texttt{dla\_tvm\_qnn\_conv2d\_bias} function from the FFI. In addition to just calling the wanted Conv2D + bias operation from the BSP, the FFI function slices the data buffers to Rust slices and performs certain value conversions, like clipping the 32-bit bias values to 16-bit values. After the operation has been done and the result rest the FFI implementations shifts the values left by the same amount as was clipped in the DLA. These values are then copied to the buffer defined by the TVM codegen.
+
+\section{Porting Newlib}
+\label{sec:newlib}
+
+\begin{table}[]
+\centering
+\begin{tabular}{|l|l|c|}
+\hline
+\textbf{Syscall}       & \textbf{Description}               & \textbf{Implemented (Bool)} \\ \hline
+\texttt{exit}         & Terminates the process             & Yes                       \\ \hline
+\texttt{close}         & Closes a file                      & No                       \\ \hline
+\texttt{fstat}         & Gets file status                   & Yes                       \\ \hline
+\texttt{getpid}        & Gets the process ID                & No                       \\ \hline
+\texttt{isatty}        & Tests if a file descriptor is a terminal & Yes                 \\ \hline
+\texttt{kill}          & Removes a process                    & No                       \\ \hline
+\texttt{link}          & Creates a hard link to a file      & No                       \\ \hline
+\texttt{lseek}         & Re-positions read/write file offset & No                       \\ \hline
+\texttt{open}          & Opens a file                       & No                       \\ \hline
+\texttt{read}          & Reads from a file                  & Yes                       \\ \hline
+\texttt{sbrk}          & Moves end of heap pointer          & Yes                       \\ \hline
+\texttt{stat}          & Retrieves file status              & No                       \\ \hline
+\texttt{times}         & Returns process times              & No                       \\ \hline
+\texttt{unlink}        & Deletes a name or a file           & No                       \\ \hline
+\texttt{wait}          & Waits for process to change state  & No                       \\ \hline
+\texttt{write}         & Writes to a file                   & Yes                       \\ \hline
+\end{tabular}
+\caption{Newlib Syscalls and Implementation Status}
+\label{tab:newlib_syscalls}
+\end{table}
+
+Newlib is an implementation of the C standard library meant for use in embedded devices~\parencite{newlib}. We chose to use Newlib for our C standard library in Headsail since it's known to be relatively easy to port for new platforms. Newlib is separated into two different parts. First is the Newlib core which implements the actual standard library for different CPU ISA's. Since Newlib already has support for RISCV we didn't need to modify Newlib core in anyway. Second part of Newlib is called Libgloss, which implements the platform dependant features. Since Headsail is a custom platform we needed to implement most of the libgloss for it from scratch.
+
+Porting libgloss involves implementing 16 syscalls, crt0 and a linker script. From the 16 syscalls only some are mandatory for us to implement, because we are targeting only bare-metal applications. The table~\ref{tab:newlib_syscalls} shows all the libgloss syscalls with column 3 displaying if we implemented the call. The unimplemented calls still need to be defined in the libgloss source for linking purposes but they don't need do anything except return an error. For example the fork syscall duplicates a process, but since we don't support multithreading or any other form of process concurrency it will never be called, thus having it return error is correct.
+
+\begin{lstlisting}[language=C, caption={Minimal implementation of the fork() syscall in Newlib Libgloss}]
+int _fork() {
+    return -1;
+}
+\end{lstlisting}
+
+The system calls can be implemented either in non-reentrant or reentrant way. Reentrant system calls are thread safe but require an additional argument, reentrancy structure, to be passed. Reentrancy strucutre holds local values specific for that instance of the function call, where as the non-reentrant version of the function refers to shared global variables. For single threaded applications on headsail implementing the non-reentrant systems calls was enough.~\parencite{bennett2010porting}
+
+
+In addition to the syscalls libgloss needs to have a crt0, which is a small program that includes a \texttt{\_start} symbol, call to \texttt{main} function and some global definitions and optionally hardware initalizations. The \texttt{\_start} symbol signifies the beginning of a C program and is used by the linker to place the program to start from the correct memory address. After declaring the \texttt{\_start} symbol out crt0 clears the bss segment, registers the \texttt{exit} function, initializes the UART and finally calls the \texttt{main} function.
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[scale=0.5]
+\draw (0, 0) rectangle (5, 3) node[midway] {.text};
+\draw (0, 3) rectangle (5, 5) node[midway] {.data};
+\draw (0, 5) rectangle (5, 6) node[midway] {.rodata};
+\draw (0, 6) rectangle (5, 8) node[midway] {.bss};
+\draw (0, 8) rectangle (5, 15);
+\node at (2.5, 14.5) {unallocated};
+\node at (2.5, 13.5) {space};
+\node[scale=2] at (2.5, 11) {.};
+\node[scale=2] at (2.5, 11.4) {.};
+\node[scale=2] at (2.5, 10.6) {.};
+\node at (10, 0.5) {origin=0x100000000};
+\node at (10, 15.5) {end=0x170000000};
+\node at (-4, 15.5) {stack top};
+\node at (-4, 12) {stack bottom};
+\node at (-4, 8.5) {heap start};
+
+\draw[->] (9.5, 0) -- (5.5,0);
+\draw[->] (9.5, 15) -- (5.5,15);
+\draw[->] (-4, 11.5) -- (-0.5, 11.5);
+\draw[->] (-4, 15) -- (-0.5, 15);
+\draw[->] (-4, 8) -- (-0.5, 8);
+\end{tikzpicture}
+\caption{Example configuration of linked program in memory}
+\label{fig:sdram-memory-layout}
+\end{figure}
+
+The linker script tells the linker how to link the object files produced by the compiler. Our linker script maps the whole SDRAM on headsail as it's total available memory region, which it then sections to the text section, data and read-only data sections and various different initialization sections. Additionally the linker reserves space for the stack and heap data structures according to the linker script definitions. Figure~\ref{fig:sdram-memory-layout} shows an example of how a binary is placed in to the Headsail's SDRAM according to the defined linker script. We always place the \texttt{\_start} start symbol at the beginning of the SDRAM, followed by data sections. By default the linker allocates 4 megabytes to the stack and rest is allocated to the heap.
+The allocations are controlled by specific flags defined in the linker script, that are visible to program.
+
 
 \section{Benchmarking}
 \begin{figure}
