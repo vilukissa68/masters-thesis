@@ -24,7 +24,8 @@
 % pages.  Availbale: http://tobi.oetiker.ch/lshort/lshort.pdf]
 
 \author{Väinö-Waltteri Granat}
-\title{Zero to DLA: Building Software Support For Custom RISCV SoC To Run Complex Neural Networks} % primary title (for front page)
+%\title{Zero to DLA: Building Software Support For Custom RISC-V SoC To Accelerate Deep Neural Networks} % primary title (for front page)
+\title{Zero to DLA: Building Software Stack For Accelerating Deep Neural Networks On Custom RISC-V SoC} % primary title (for front page)
 \thesistype{Master's thesis} % or Bachelor of Science, Laboratory Report... 
 
 % Put your thesis' main language last
@@ -50,6 +51,7 @@ autocite=footnote
 \usepackage{amsfonts}
 \usepackage{listings, listings-rust}
 %\usepackage{inconsolata}
+\usepackage{graphicx}
 
 \addbibresource{thesis_refs.bib} %Imports bibliography file
 \addbibresource{zotero.bib} %Imports bibliography file
@@ -189,6 +191,11 @@ December 2024
 \end{acronym}
 
 
+\thispagestyle{empty}
+\listoffigures
+\listoftables
+\clearpage
+
 
 \setcounter{tocdepth}{3}              % How many header level are included
 \tableofcontents                      % Create TOC
@@ -214,7 +221,7 @@ December 2024
 
 In recent years neural network based application have become more and more prominent in our everyday-life. The large driver for this has been the adoption of efficient accelerators in mobile device, that have enabled running neural network applications of mobile devices, such as smart phones.
 
-This interest in neural networks has coincided with the industry's move to heterogenous System-on-chip solutions being used in consumer and professional devices, to imporove computational performance.
+This interest in neural networks has coincided with the industry's move to heterogenous System-on-chip solutions being used in consumer and professional devices, to improve computational performance.
 More often these companies integrate their accelerators into SoCs, which include CPUs, GPUs, memory and other accelerators and peripherals in one package. Apple and Qualcomm have proved with their SoCs that they can attain desktop like performance in a smaller package than was previously possible. The industry moving towards SoCs has generated new interest in developing open-source SoCs.
 
 The goal of this project was to build software support for the Deep-Learning Accelerator in the upcoming Headsail SoC from SocHub using a Renode based virtual prototype as the development platform. The goal was to use this concurrent development approach to have software support ready before the chip had been manufactured.
@@ -438,13 +445,13 @@ As shown by~\cite{tan_efficientnet_2020} depthwise separable convolutions can gr
 
 
 \subsection{Bias}
-In addition to $Conv2d$ bias is another important concept in neural networks. Bias is a constant value applied to output channel of the preceding operation. In CNNs when applied after $Conv2d$ the purpose of bias is to signify the importance of each extracted feature. If bias is small or negative it means that the feature is non important for the particular class it's being applied. If bias is large or positive it means that the feature is important.~\cite{DeepLearningBook}
+In addition to $Conv2d$, bias is another important concept in neural networks. Bias is a constant value applied to output channel of the preceding operation. In CNNs when applied after $Conv2d$ the purpose of bias is to signify the importance of each extracted feature. If bias is small or negative it means that the feature is non important for the particular class it's being applied. If bias is large or positive it means that the feature is important.~\cite{DeepLearningBook}
 
 In mathematic notation bias is defined as such
 \begin{align}
 y = x^{T}W + b
 \end{align}
-where if $xA^{T}$ is the non-biased output of a particular channel in layer, $b$ is the bias applied to the whole channel as a constant value.
+where if $xA^{T}$ is the non-biased output of a particular channel in layer, $b$ is the bias applied to the whole channel as a constant value. Many DL frameworks consider bias part of the convolution operation and fuse them together into one layer as is done with for example Tensorflow~\cite{tensorflow2015-whitepaper}.
 
 \subsection{Activation functions}
 The combination of convolution and bias form one example of an affine transformation, a linear transformation between two space.
@@ -459,8 +466,8 @@ tanh(x) = \frac{e^{x}-e^{-x}}{e^{x}-e^{-x}},
 \end{align}
 to introduce non-linearity. Both functions suffer from the fact that they are expensive to calculate and exhibit the vanishing gradient problem.~\parencite{DeepLearningBook}
 
-Because of these problems DNNs have largely moved to using Rectified linear units for layer activations.
-Rectified linear unit is a relatively simple operation, moving negative values to zero and doing nothing for positive values, defined as
+Because of these problems DNNs have largely moved to using Rectified linear units (ReLU) for layer activations.
+ReLU is more simpler operation, moving negative values to zero and doing nothing for positive values, defined as
 \begin{align}
 ReLU(x) =
 \begin{cases}
@@ -468,6 +475,7 @@ ReLU(x) =
   x, &  \text{otherwise}.
 \end{cases}
 \end{align}
+ReLU is essentially a special case of the clamp operation, show in equation~\ref{eq:clamp}, where the low bound is set to 0, and high bound as the maximum signed value of the given bit width. This is also how some DL frameworks implement ReLU activation~\cite{TVM}.
 
 Figure~\ref{fig:activation-functions} shows how ReLU and sigmoid non-linearly scale values close to $x=0$.
 
@@ -516,6 +524,7 @@ Combining 2 dimensional affine transformation and ReLU gives as the basic Conv2D
 ReLU(Conv2D(I, K) + b)
 \label{eq:conv2d}
 \end{align}
+Similarly as with bias, some DL frameworks fuse activation function with the convolution operation to form one layer.
 
 \section{Layer graphs}
 As mentioned, DNNs are neural networks with one or more hidden layers. Generally the amount of layers correlates to better prediction results, due to the increasing amount learnable parameters being able to capture more complex features.
@@ -537,9 +546,12 @@ The relationships between layers are presented as graphs, where nodes are layers
 \end{figure}
 For clarity this combination of 2D convolution, bias and ReLU is usually fused into single layer node. Different neural network frameworks use slightly different terminology relating to the meaning of operation, layer and fused layer. For example Tensorflow~\parencite{tensorflow2015-whitepaper}, a popular framework for training, considers Conv2D, bias and ReLU separate layers and the combination of the a fused layer, where as in Pytorch~\cite{pytorch} the combination of Conv2D, bias and ReLU is considered one layer. For the purposes of this work, we use Tensorflow naming scheme.
 
-The simplest kind of relation is a feedforward relationship where the output of layer A is the input of layer B as shown in the figure~\ref{fig:network-simple}.
+The simplest kind of relation is a feedforward relationship where the output of layer A is the input of layer B as shown in the figure~\ref{fig:network-simple}. In a simple feedforward connection one instance of a layer output is always exactly input for one layer, without recursion or branching.
 
 Connection can also branch, and the same layer output can be used as input for multiple nodes. Resnet~\cite{he2015deepresiduallearningimage} heavily utilizes what are called residual connections. With residual connection an input of a layer is used in multiple parts of a feed forward network. Figure~\ref{fig:network-residual} shows and example of a residual connection, where input of layer A is used again after concatenation as part of input for layer C.
+
+In recursive networks an output of a layer can be an input to a layer preceding it or it's input during the next pass. This kind of structure shown in figure~\ref{fig:recurrent-network} is able to encode time series information, which is heavily used in audio processing and language modeling tasks.
+
 \begin{figure}
 \centering
 \begin{tikzpicture}
@@ -633,11 +645,56 @@ Connection can also branch, and the same layer output can be used as input for m
 
 
       \path [-{Stealth[scale=2]}] (add) edge node[above] {} (C);
-
-
   \end{tikzpicture}
 \caption{Residual feed forward network with fused layers.}
 \label{fig:network-residual}
+\end{figure}
+
+\begin{figure}
+\centering
+  \begin{tikzpicture}
+      % Box A (Layer 1) with sub-nodes Conv2d, Bias, ReLU
+      \node[draw, thick, rectangle, rounded corners, minimum width=3cm, minimum height=2cm, fill=blue!15] (A) at (0,0) {};
+      \node at (0,1.3) {Layer A}; % Title for Layer A
+      \node at (0,0.6) {Conv2d};
+      \node at (0,0) {+ Bias};
+      \node at (0,-0.6) {+ ReLU};
+
+      % Box B (Layer 2) with sub-nodes Conv2d, Bias
+      \node[draw, thick, rectangle, rounded corners, minimum width=3cm, minimum height=2cm, fill=blue!15] (B) at (4,0) {};
+      \node at (4,1.3) {Layer B}; % Title for Layer B
+      \node at (4,0.6) {Conv2d};
+      \node at (4,0) {+ Bias};
+      \node at (4,-0.6) {+ ReLU};
+
+      % Residual Connection (A to B addition node)
+      \node[circle, draw, thick, minimum size=0.6cm] (input) at (-3,0) {+};
+      \node[circle, draw, thick, minimum size=0.3cm, fill=black] (hidden) at (7,0) {};
+      \node (name2) at (2,2.75) {Recursive connection};
+      \node (name3) at (-3,-0.75) {Addition};
+
+      % Arrows from A to B and from B to addition
+      %
+      \path [-{Stealth[scale=2]}] (input) edge node[above] {} (A);
+      \path [-{Stealth[scale=2]}] (A) edge node[above] {} (B);
+      \path [-{Stealth[scale=2]}] (B) edge node[above] {} (C);
+
+      % Direct residual connection from A to addition node
+      \path [-{Stealth[scale=2]}] (A.east) -- ++(2.5,0) -- (add.west);
+      \path [-{Stealth[scale=2]}] (hidden) edge[bend right=50] node [left] {} (input);
+
+      % Box B (Layer 2) with sub-nodes Conv2d, Bias
+      \node[draw, thick, rectangle, rounded corners, minimum width=3cm, minimum height=2cm, fill=blue!15] (C) at (10,0) {};
+      \node at (10,1.3) {Layer C}; % Title for Layer B
+      \node at (10,0.6) {Conv2d};
+      \node at (10,0) {+ Bias};
+      \node at (10,-0.6) {+ ReLU};
+
+
+      \path [-{Stealth[scale=2]}] (add) edge node[above] {} (C);
+  \end{tikzpicture}
+\caption{Recurrent neural network}
+\label{fig:recurrent-network}
 \end{figure}
 
 
@@ -692,6 +749,7 @@ x_{Q} = clamp(0, 255, round(\frac{x_{float}}{\Delta}) + z)
 where $x_{float}$ is the original parameter values, $x_{Q}$ is the quantisized parameter value, $z$ is the zero-point and $\Delta$ is the scaling factor discovered during quantization.
 The clamp operation limits the input to a given range as such
 \begin{align}
+  \label{eq:clamp}
 clamp(a, b, x) =
   \begin{cases}
     a, & \text{for} \; x \leq a  \\
@@ -862,11 +920,11 @@ The other transformation pass is the graph annotation. By default all the operat
 During code generation with the AOT runtime, TVM traverses the graph and generates code to execute each node. If the node or composite node is annotated to be executed for an accelerator TVM refers to the corresponding code generation backend to produce code for executing the operation. This exposes the way for developers for integrating new accelerators for TVM.
 
 \subsection{BYOC}
-Bring your own codegen or BYOC, is one of the offered APIs for integrating new devices into TVM. In the BYOC API developers define how they want the annotated patterns to be executed on their accelerator.
-
-In the case of the Headsail DLA we offer a high level calls Conv2d, Conv2d + Bias, Conv2d + ReLU and Conv2d + Bias + ReLU. BYOC for Headsail DLA then extracts the needed values from the relay graph and generates C code with the extracted values to call the high level API.
-
-In addition to the C++ backend for BYOC we define a python API for performing the necessary legalization and annotation for the graph.
+``Bring your own codegen'' or BYOC, is one of the possible APIs for integrating new devices into TVM.
+With BYOC, developers define target specific relay backend to generate C code for executing the annotated patterns in the model graph.
+The backend is created by defining \texttt{CallNode} operators that are called when the backend traverses a network graph.
+These operators extract the needed information of the nodes for use with the target's deep learning API.
+Target backend is defined as a C++ module in TVM relay backend and can output either C code or object code when supplied with TVM's LLVM integration.
 
 \begin{figure}
 \centering
@@ -909,7 +967,6 @@ In addition to the C++ backend for BYOC we define a python API for performing th
     \node at (5,1.0) {Annotated Graph};
     \draw[dashed] (3, 0.6) rectangle (7, -5.2);
 
-
     % Arrows
     \path [-{Stealth[scale=2]}] (Qnn) edge node[above] {} (Bias);
     \path [-{Stealth[scale=2]}] (Bias) edge node[above] {} (Requantize);
@@ -926,8 +983,9 @@ In addition to the C++ backend for BYOC we define a python API for performing th
 \subsection{TVM on baremetal}
 TVM also provides a tool to run TVM models on baremetal platforms called microTVM. MicroTVM is only dependant on the C standard library and thus can be used in any baremetal system that has a working C-toolchain.
 
-MicroTVM works by generating platform independent C-source code from Relay IR-models, which can then be integrated with the microTVM c-runtime to produce executable binaries to run the network.
+MicroTVM works by generating platform independent C-source code from Relay IR-models, which can then be integrated with the microTVM AOT runtime to produce executable binaries to run the network.
 
+The DNN operation implementation are provided by TVM contrib library.
 With custom code generation it's also possible to define baremetal compatible accelerator nodes, which the TVM runtime is able to assign layers for during the C source code generation.~\parencite{TVM}
 
 \subsection{TVM quantization}
@@ -977,7 +1035,7 @@ Since TinyPERF aims to suit most kinds of targets, they give the users lots of f
 \subsection{Image Classification}
 The image classification task aims to classify images from the CIFAR-10 dataset~\cite{Cifar10Krizhevsky09learningmultiple}. CIFAR-10 includes 32x32 RGB color images, each belonging to one class. The 10 classes of CIFAR-10 are labeld as, airplane, automobile, bird, cat, deer, dog, frog, horse, ship and truck.
 
-To do this classification TinyPERF uses Resnet. Resnet is an implementation of ImageNet, where between every pair of layers there is a residual connection added from the pair preceding the previous pair.
+To do this classification TinyPERF uses Resnet~\cite{he2015deepresiduallearningimage}. Resnet is an implementation of ImageNet, where between every pair of layers there is a residual connection added from the pair preceding the previous pair.
 The backbone architecture introduced in ImageNet uses multiple consecutive layers of 3x3 kernel size 2D convolutions
 Backbone of the network is built from multiple consecutive 3x3 convolution layers which are in addition to simple feed forward connections.
 Resnet architectures vary by the depth of the network, i.e. number of layers. For example Resnet-50 has 50 layers and Resnet-34 has 34. The image classification task uses custom ResNet-9, which lacks the downsampling pooling layers to compensate for the low resolution of CIFAR-10 dataset.
@@ -987,7 +1045,7 @@ In the Visual Wake Words (VWW) task, the goal is to identify if at least on pers
 The training dataset consists of RGB images preprocessed to 96x96 pixels, featuring at least one person. The testing set, which the benchmark uses features images of the same size, but some have people and some do not.
 
 The model chosen for the VWW is MobileNetV1~\cite{howard2017mobilenetsefficientconvolutionalneural}
-Backbone of MobileNet consists of 13 depthwise 2 dimensional convolution layers each followed by a $K=1x1$ 2D convolution. After backbone there is a simple average pooling layer followed by binary classifier.
+Backbone of MobileNet consists of 13 depthwise 2 dimensional convolution layers each followed by a point-wise convolution. After backbone there is a simple average pooling layer followed by binary classifier.
 
 \subsection{Keyword Spotting}
 The keyword spotting task is an audio processing task where the goal is to identify spoken keyword from multiple sound sources. Data used dataset is the Speech Commands V2 dataset~\cite{warden_speech_2018}, consists of short clips where one of 30 words possible words are pronounced. From these words ten are used as keywords alongside background noise and rest of the words as unknown, to produce 12 labels.
@@ -1009,7 +1067,7 @@ This section covers the actual implementation of the used software stack in deta
 
 \section{Headsail-VP}
 To enable software development for Headsail before the arriving of the ASICs, we modeled the hardware as a Renode virtual platform, which we call Headsail-VP. With Headsail-VP we aimed to replicate the complete memory map of Headsail, with both processors and some of the peripherals.
-The benefit of developing a virtual versions of Headsail was that we hoped it would enable faster software development, due to the limited accessibility of the ASIC as well as the possibility to modify the design in the case hardware bugs.
+The benefit of developing a virtual versions of Headsail was that we hoped it would enable faster software development, due to the limited accessibility of the ASIC as well as the possibility to modify the design in the case of hardware bugs.
 Additionally this knowledge in developing virtual prototypes of chip could allows us the better define the hardware specs based on the software demonstrators we develop.
 To enable CI/CD we used Github actions to run automated testing for the VP to ensure correct behaviour when new features were added.
 
@@ -1023,9 +1081,9 @@ To enable CI/CD we used Github actions to run automated testing for the VP to en
 \end{figure}
 
 
-The virtual prototype of the DLA was implemented as a Renode python peripheral. The DLA-VP supports all the same operations as the corresponding ASIC implementation, with identical register interface and same data buffer architecture. This allowed us to develop the driver for the DLA completely on the VP first. After the ASICs where ready we could confirm that the DLA driver was indeed usable on both VP and ASIC.
+The virtual prototype of the DLA was implemented as a Renode python peripheral. The DLA-VP supports all the same operations as the ASIC implementation, with identical register interface and same data buffer architecture. This allowed us to develop the driver for the DLA completely on the VP first. After the ASICs where ready we could confirm that the DLA driver was indeed usable on both VP and ASIC. Figure~\ref{fig:dla_internal} shows the high level structure of the DLA, featuring the input buffer as colored block and the functional blocks in white. This highlevel processing pipeline is followed with both the ASIC implementations as well as in DLA-VP.
 
-DLA-VP implements the register interface as a list, with the same length. Since numbers in python can be infinite length we had to carefully sanitize all the transactions to the registers so that no accesses of 8-bit values happened.
+DLA-VP implements the register interface as a list, with the same length. Since numbers in python can be infinite in length we had to carefully sanitize all the transactions to the registers, so that no accesses over 8-bit values were possible. This same sanitation logic also applied to writing results to the output buffer, since on ASIC all output buffer entries are signed 8-bit values.
 
 Since Renode python peripherals don't have a clock, the state of the peripheral can only be changed when a CPU reads or writes to an address that is registered for the peripheral. DLA-VP is designed to run a processing loop after each write to it's memory region. The processing loop checks if the state of DLA-VP is ready for operation execution and if yes performs the operation per configuration. Read accesses don't change the devices internal state, so the processing loop isn't executed on them. After the executing write call, the result of the operation can be read on the next clock cycle from the peripherals memory region.
 
@@ -1050,14 +1108,19 @@ The annotated source code is compiled along side our standard library implementa
 Both of the CPUs in the Headsail are equipped with JTAG connector which we can connect to with OpenOCD~\cite{openocd2023}. We configure OpenOCD to provide us with a GDB~\cite{gdb2023} interface, which we use to flash the executable.
 
 Running the benchmark is done with simple Python script which reads one input from the targetted benchmark task at a time and writes them to Headsail over UART for inference.
+The script then waits for the runner program on Headsail to respond with the result vector of the inference, from which it finds the top-1 classification and updates the precision score for the benchmark, before sending the next input.
 
 Even though Headsail is the third SoCHub Soc, it had little existing software support for C. Previous SoCs had only support for Riscv-rt in rust. So a major part of this project involved setting up a Headsail compatible C toolchain. Since Headsail has RISCV CPUs we could use an already existing riscv-gnu-toolchain for the compiler, but we still had to set up a C standard library for the chip with custom version of newlib libgloss. Also due to specific memory addressing decisions in the hardware, we needed to use medany code model compatible compiler and standard library when targeting the 64-bit processor.
 
 \section{Board Support Package}
 \label{sec:software_support}
-We started the actual software development by writing a simple BSP for the device. Doing this simultaneously with while refining virtual prototype helped us better understand the complete structure of the SoC.
+We started the actual software development by writing a simple BSP for Headsail. Doing this simultaneously with while refining virtual prototype helped us better understand the complete structure of the SoC.
 
-The Headsail-BSP implements some basic drivers to interact with the hardwares I/O functionality with peripheral UART and CPUs internal timers. BSP also enables interrupts for both CPUs with the CLINT and PLIC peripherals
+The BSP is written in \texttt{no\_std} Rust, since it is the default language of choice for SoCHub software projects. Rust has a healthy embedded software ecosystem, with libraries supporting \texttt{no\_std} environments, like our target hardware. Most importantly the riscv-rt~\cite{riscv_rt} library that provides startup code and interrupt functionality to baremetal RISC-V devices.
+
+The Headsail-BSP implements some basic drivers to interact with the hardwares I/O functionality with peripheral UART and CPUs internal timers. BSP also enables interrupts for both CPUs with the CLINT and PLIC peripherals. We also implement basic testbench definitions to enable consistent automated testing setup for CI/CD.
+
+Rust features allow us to host both HPC and Sysctrl specific code in one code base with minimal effort. This allows us to use same peripheral drivers with CPU specific memory maps, reducing the amount of duplicated code. Using Rust feature flags we can choose between HPC or Sysctrl builds, to target a specific CPU. Using this same principle, we can isolate VP and ASIC specific behind their own feature flags.
 
 \subsection{HPC initialization}
 Before we can execute binaries on HPC we need to turn it on and initialize it from Sysctrl. For this purpose we run a small \texttt{HPC-init} binary on startup. The initialization program enables the interconnect between the CPUs and turns on the cores of HPC. In addition to turning on HPC it enables and configures most of the peripherals, such as the SDRAM, DLA and clocks.
@@ -1231,7 +1294,7 @@ int _fork() {
 }
 \end{lstlisting}
 
-The system calls can be implemented either in non-reentrant or reentrant way. Reentrant system calls are thread safe but require an additional argument, reentrancy structure, to be passed. Reentrancy strucutre holds local values specific for that instance of the function call, where as the non-reentrant version of the function refers to shared global variables. For single threaded applications on headsail implementing the non-reentrant systems calls was enough.~\parencite{bennett2010porting}
+The system calls can be implemented either in non-reentrant or reentrant way. Re-entrant system calls are thread safe but require an additional argument, re-entrancy structure, to be passed. Re-entrancy structure holds local values specific for that instance of the function call, where as the non-reentrant version of the function refers to shared global variables. For single threaded applications on headsail implementing the non-reentrant systems calls was enough.~\parencite{bennett2010porting}
 
 
 In addition to the syscalls libgloss needs to have a crt0, which is a small program that includes a \texttt{\_start} symbol, call to \texttt{main} function and some global definitions and optionally hardware initalizations. The \texttt{\_start} symbol signifies the beginning of a C program and is used by the linker to place the program to start from the correct memory address. After declaring the \texttt{\_start} symbol out crt0 clears the bss segment, registers the \texttt{exit} function, initializes the UART and finally calls the \texttt{main} function.
@@ -1274,7 +1337,7 @@ The allocations are controlled by specific flags defined in the linker script, t
 \centering
 \includegraphics[width=\linewidth]{img/benchmark-sequence.pdf}
 \caption{Sequence diagram for TinyPerf benchmarking on Headsail.}
-\label{fig:dla_internal}
+\label{fig:dla_sequence}
 \end{figure}
 
 
@@ -1283,7 +1346,9 @@ For the DLA there are two things we can benchmark. First is to look at the amoun
 For this reason we need to also do benchmarks with actual CNNs. For this purpose we use MLPerf Tiny Benchmark from MLCommons.
 From these benchmarks the Anomaly Detection is unacceleratable with the Headsail DLA since it uses FC-AutoEncoder network, which is based on fully connected layers and thus has no operations which our accelerator can execute.
 
-Figure~\ref{fig:dla_internal} shows the sequence of running the TinyPerf benchmark on Headsail. We use a simple Python program running on a host PC as the runner, which reads the benchmark samples from the dataset and send them to Headsail over UART. Since TinyPerf only measures the performance of actual inference, we decided to use the relatively slow UART over SPI or I2C for the simplicity. HPC on Headsail runs a simple C-program to receive the data over UART and to set that data as input for the TVM AOT runtime. After setting the input and output the program calls the AOT runtime API to run inference for the given sample. AOT runtime then sequentially executes the model graph with the annotated graph patterns allocated for the DLA. Result of the inference is then transmitted over UART to the host PC, where the Python program recieves it, performs \texttt{argmax} for the vector to find the prediction and updates the evaluation metric.
+Figure~\ref{fig:dla_sequence} shows the sequence of running the TinyPerf benchmark on Headsail. We use a simple Python program running on a host PC as the runner, which reads the benchmark samples from the dataset and send them to Headsail over UART. Since TinyPerf only measures the performance of actual inference, we decided to use the relatively slow UART over SPI or I2C for the simplicity. HPC on Headsail runs a simple C-program to receive the data over UART and to set that data as input for the TVM AOT runtime. After setting the input and output the program calls the AOT runtime API to run inference for the given sample. AOT runtime then sequentially executes the model graph with the annotated graph patterns allocated for the DLA. Result of the inference is then transmitted over UART to the host PC, where the Python program receives it, find the top-1 classification from the vector and updates the evaluation metric, before sending the next input for inference.
+
+We also want to compare how the DLA compares to running the same benchmark without the accelerator. To do this we can invoke the TVM AOT runtime to be build without graph annotations, allocating all the convolution to HPC. This is necessary to conclude if the accelerator is actually able to accelerate the workloads meant for it.
 
 \section{TVM transformation scheme and code generation}
 After trial and error we settled on a TVM graph transformation behaviour that provided us with the most stable results in all the tested models.
