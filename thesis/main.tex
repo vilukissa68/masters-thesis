@@ -1098,6 +1098,64 @@ To verify that the DLA-VP functionally behaved like the hardware implementation 
 
 We integrated these same verification tests to our CI/CD to ensure changes that would break the functional correctness of the DLA would not get merged.
 
+\subsection{Result width limitation}
+\begin{figure}
+  \centering
+  \begin{tikzpicture}[
+  2d-arr/.style={matrix of nodes, text centered, row sep=-\pgflinewidth, column sep=-\pgflinewidth, text height=2ex,text width=2em, nodes={draw, fill=blue!20}},
+  2d-arr-small/.style={matrix of nodes, text centered, row sep=-\pgflinewidth, column sep=-\pgflinewidth, text height=2ex,text width=1em, nodes={draw, fill=blue!20}}
+]
+
+  \matrix (A) [2d-arr, nodes={}] {
+      \node{-32}; & \node{64}; & \node{96}; \\
+      \node{18}; & \node{-128}; & \node{124}; \\
+      \node{64}; & \node{76}; & \node{-127}; \\
+    };
+
+    \node[right=0.2em of A] (eq) {$*$};
+
+    \node at (0,1.5) {$\mathbf A$};
+
+    \matrix (K) [2d-arr-small, right=0.2em of str, nodes={draw}] {
+      1 & 2 \\
+      -1 & 3 \\
+    };
+    \node at (3.4,1.5) {$\mathbf K$};
+
+    \node[right=0.2em of K] (eq) {$=$};
+
+
+    \matrix (B) [2d-arr, right=0.2em of eq, nodes={draw}] {
+     |[fill=red!20]| -306 & |[fill=red!20]| 756 \\
+      -74 & |[fill=red!20]| -337 \\
+    };
+    \node at (6.3,1.5) {$\mathbf B$};
+
+    \matrix (C) [2d-arr, right=2.5em of B, nodes={draw}] {
+     |[fill=red!20]| -128 & |[fill=red!20]| 127 \\
+      -74 & |[fill=red!20]| -128 \\
+    };
+
+  \node at (8.0,0.6) {$\text{clip}_0$};
+  \path [|->] (B) edge node[above] {} (C);
+
+
+  \end{tikzpicture}
+  \label{fig:clip-matrix}
+  \caption{Example convolution where some values will be clipped.}
+\end{figure}
+
+
+\label{sec:result-width-problem}
+A major limitation of the DLA's design is it's limited bit width of the output elements. A single element in the output tensor is represented with a signed byte and thus has the value in the range from $-128$ to $127$. This can be seen from the figure~\ref{fig:dla_internal} where the bit-width of data is reduced in half after the MAC clip and PP clip blocks. This inevitably has the consequence that we will lose some accuracy of results when we move data back to the CPU. The amount of inaccuracy depends on the amount of clipping we perform in the clipping step. DLA has the ability to clip any sequence of 8-bits from the 16-bit sequence that is each result tensor element. Figure~\ref{fig:clip-matrix} shows and example of the clipping behaviour
+
+\begin{figure}
+  \centering
+  \includegraphics[width=0.85\linewidth]{img/clipping.eps}
+  \caption{Simulation of the effect of different result clippings to the layer.}
+  \label{fig:clipping}
+\end{figure}
+
 \section{DLA Software Architecture}
 \begin{figure}
 \centering
@@ -1242,7 +1300,7 @@ H_{\text{out}} = \frac{H_{\text{in}} + P_{\text{top}} + P_{\text{bottom}} - K_y 
 where $W$ is width, $H$ is height, $P$ is padding to either left, right, bottom or top, $K$ is the shape of the kernel and $S$ is the stride in horizontal or vertical direction.
 Multiplying the shape of a single output channel with the total number of output channels gives use the total amount of output elements. Since DLA can only output 8-bit values we know that the number of bites to read per layer is equal to the amount of output elements.
 
-Since the output of the DLA is limited to the signed 8 bit range (from $-128$ to $127$) but the convolution is calculated in signed 16-bit range (from $-32768$ to $32767$) the DLA needs to clip half of the bits away. Using the \texttt{mac\_clip} and \texttt{pp\_clip} fields we can control which of the consecutive 8-bits we want to use as the result. By default DLA stores the 8 most significant bits, but by increasing the clipping values we can move the extraction window towards the less significant bits. By moving towards LSB we essentially gain granularity between the values at the cost of losing range in the high values. This is desired when the absolute maximum value of a layer is small. In most cases the optimal extraction window is somewhere between MSB and LSB, thus making it difficult to predict which exact clipping value to use. When the results of a layer are read from the DLA the driver shifts the read values back by the same amount as they were clipped in the accelerator to match the magnitude of the calculations.
+As explained in section~\ref{sec:result-width-problem} the output of the DLA is limited to the signed 8 bit range (from $-128$ to $127$) but the convolution is calculated in signed 16-bit range (from $-32768$ to $32767$) the DLA needs to clip half of the bits away. Using the \texttt{mac\_clip} and \texttt{pp\_clip} fields we can control which of the consecutive 8-bits we want to use as the result. By default DLA stores the 8 most significant bits, but by increasing the clipping values we can move the extraction window towards the less significant bits. By moving towards LSB we essentially gain granularity between the values at the cost of losing range in the high values. This is desired when the absolute maximum value of a layer is small. In most cases the optimal extraction window is somewhere between MSB and LSB, thus making it difficult to predict which exact clipping value to use. When the results of a layer are read from the DLA the driver shifts the read values back by the same amount as they were clipped in the accelerator to match the magnitude of the calculations.
 
 To find an optimal clipping amount for each layer, we proposed a bias maximum value based heuristic
 \begin{align}
@@ -1394,14 +1452,14 @@ The table~\ref{tab:benchmark-results} presents the results of the TinyPerf bench
 
 
 \section{Image classification}
-\begin{figure}
+\begin{figure}[h]
   \centering
   \includegraphics[width=0.8\textwidth]{img/ic_200_abs_heuristic.eps}
   \caption{Confusion matrix of image classification task results when using bias heuristic (N=200).}
   \label{fig:ic-results}
 \end{figure}
 
-\begin{figure}
+\begin{figure}[h]
   \centering
   \includegraphics[width=0.8\textwidth]{img/ic_200_no_acc.eps}
   \caption{Confusion matrix of image classification task results without DLA (N=200).}
@@ -1414,7 +1472,7 @@ Figure~\ref{fig:ic-results} shows the results for the TinyPerf image classificat
 Figure~\ref{fig:ic-results-no-acc} shows the results for running the IC task without the DLA. With accuracy of $0.88$ it easily passed the minimum requirement of the task. When compared to the runs with DLA we can see that there are some similarities
 
 \section{Keyword spotting}
-\begin{figure}
+\begin{figure}[h]
   \centering
   \includegraphics[width=0.8\textwidth]{img/kws_200_abs_heuristic.eps}
   \caption{Confusion matrix of keyword spotting task results when using bias heuristic (N=200).}
@@ -1422,7 +1480,7 @@ Figure~\ref{fig:ic-results-no-acc} shows the results for running the IC task wit
 \end{figure}
 
 
-\begin{figure}
+\begin{figure}[h]
   \centering
   \includegraphics[width=0.8\textwidth]{img/kws_200_no_acc.eps}
   \caption{Confusion matrix of keyword spotting task results without DLA (N=200).}
@@ -1436,22 +1494,23 @@ The CPU only run of the benchmark performed as expected, reaching the required a
 \section{Visual Wakeup Words}
 \begin{figure}
 \centering
-\begin{minipage}{.5\textwidth}
+\begin{minipage}{.45\textwidth}
   \centering
   \includegraphics[width=\linewidth]{img/vww_200_no_acc.eps}
-  \caption{A subfigure}
-  \label{fig:sub1}
+  \caption{VWW task on Headsail-VP with DLA}
+  \label{fig:vww-dla}
 \end{minipage}%
-\begin{minipage}{.5\textwidth}
+\begin{minipage}{.45\textwidth}
   \centering
   \includegraphics[width=\linewidth]{img/vww_200_no_acc.eps}
-  \caption{A subfigure}
-  \label{fig:sub2}
+  \caption{VWW task on Headsail-VP without DLA}
+  \label{fig:vww-no-acc}
 \end{minipage}
-\caption{A figure with two subfigures}
-\label{fig:test}
+\caption{Visual wakeup word task results on Headsail}
+\label{fig:vww-results}
 \end{figure}
 
+Figure~\ref{fig:vww-results} shows the results of the TinyPerf visual wakeup word task for Headsail-VP. Subfigure~\ref{fig:vww-no-acc} shows the results of the benchmark for the CPU only run. This run exceeds the required $80\%$ accuracy threshold with an accuracy of $83\%$. From the confusion matrix we can see that the reference model has a bias towards False predictions. This effect can be seen exaggerated in the benchmark run on DLA in figure~\ref{fig:vww-dla}.
 
 
 \chapter{Conclusions}
