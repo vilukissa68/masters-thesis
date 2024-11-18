@@ -54,6 +54,7 @@ autocite=footnote
 %\usepackage{inconsolata}
 \usepackage{graphicx}
 \usepackage{float}
+\usepackage{multirow}
 
 \addbibresource{thesis_refs.bib} %Imports bibliography file
 \addbibresource{zotero.bib} %Imports bibliography file
@@ -301,7 +302,7 @@ where $g$ maps RGB image domain to a codomain of length 8 is acts as the domain 
 \section{Deep Learning}
 Deep learning is a subcategory of machine learning that focuses on using deep neural networks as the model. Deep neural networks are a specific case of multilayer perceptrons where there is at least one hidden layer between input and output layer to introduce non-linearity. DNNs try to solve the problem of choosing a good model for a problem statement, by allowing the developers to discover a suitable function using a training algorithm.
 
-DNN model is weighted graph where nodes are grouped into mostly sequential layers and vertices connect nodes of consecutive layers with simple operations. The vertices hold weights and biases signifying the amount of association between nodes. Essentially what the graph models is a N-dimensional which the non-linear function inhabits, where each of the vertices introduces it's own dimension.
+DNN model is weighted graph where nodes are grouped into mostly sequential layers and vertices connect nodes of consecutive layers with simple operations. The vertices hold weights and biases signifying the amount of association between nodes. Essentially what the graph models is a N-dimensional space which the non-linear function inhabits, where each of the vertices introduces it's own dimension.
 This means that increasing the amount of parameters in a model allows it to approximate more complex function, generally increasing the ability to perform more complex tasks.~\cite{sze_efficient_2017}
 
 DNNs differ from other ML methods by their adaptable general architecture that can facilitate problems magnitudes more difficult than traditional methods allow. This ability to solve increasingly more difficult problems come with a cost of needing large amount of computing resource and training data.
@@ -1102,52 +1103,101 @@ We integrated these same verification tests to our CI/CD to ensure changes that 
 \begin{figure}
   \centering
   \begin{tikzpicture}[
-  2d-arr/.style={matrix of nodes, text centered, row sep=-\pgflinewidth, column sep=-\pgflinewidth, text height=2ex,text width=2em, nodes={draw, fill=blue!20}},
+  2d-arr/.style={matrix of nodes, text centered, row sep=-\pgflinewidth, column sep=-\pgflinewidth, text height=2ex,text width=1.85em, nodes={draw, fill=blue!20}},
   2d-arr-small/.style={matrix of nodes, text centered, row sep=-\pgflinewidth, column sep=-\pgflinewidth, text height=2ex,text width=1em, nodes={draw, fill=blue!20}}
 ]
 
-  \matrix (A) [2d-arr, nodes={}] {
-      \node{-32}; & \node{64}; & \node{96}; \\
-      \node{18}; & \node{-128}; & \node{124}; \\
-      \node{64}; & \node{76}; & \node{-127}; \\
+  % \matrix (A) [2d-arr, nodes={}] {
+  %     \node{-32}; & \node{64}; & \node{96}; \\
+  %     \node{18}; & \node{-128}; & \node{124}; \\
+  %     \node{64}; & \node{76}; & \node{-127}; \\
+  %   };
+
+  %   \node[right=0.1em of A] (eq) {$*$};
+
+  %   \node at (0,1.5) {$\mathbf A$};
+
+  %   \matrix (K) [2d-arr-small, right=0.1em of str, nodes={draw}] {
+  %     1 & 2 \\
+  %     -1 & 3 \\
+  %   };
+  %   \node at (3.4,1.5) {$\mathbf K$};
+
+  %   \node[right=0.1em of K] (eq) {$=$};
+
+
+    \matrix (B) [2d-arr, right=0.1em of eq, nodes={draw}] {
+      -306 & 756 \\
+      -74 & -337 \\
     };
-
-    \node[right=0.2em of A] (eq) {$*$};
-
-    \node at (0,1.5) {$\mathbf A$};
-
-    \matrix (K) [2d-arr-small, right=0.2em of str, nodes={draw}] {
-      1 & 2 \\
-      -1 & 3 \\
-    };
-    \node at (3.4,1.5) {$\mathbf K$};
-
-    \node[right=0.2em of K] (eq) {$=$};
-
-
-    \matrix (B) [2d-arr, right=0.2em of eq, nodes={draw}] {
-     |[fill=red!20]| -306 & |[fill=red!20]| 756 \\
-      -74 & |[fill=red!20]| -337 \\
-    };
-    \node at (6.3,1.5) {$\mathbf B$};
+    \node at (6.3,1.0) {\textbf{Result}};
 
     \matrix (C) [2d-arr, right=2.5em of B, nodes={draw}] {
      |[fill=red!20]| -128 & |[fill=red!20]| 127 \\
       -74 & |[fill=red!20]| -128 \\
     };
 
-  \node at (8.0,0.6) {$\text{clip}_0$};
-  \path [|->] (B) edge node[above] {} (C);
+  \matrix (D) [2d-arr, above=1.5em of C, nodes={draw}] {
+     |[fill=red!20]| -5  & |[fill=red!20]| 11 \\
+     |[fill=red!20]| -2 & |[fill=red!20]| -6 \\
+    };
 
+  \node at (7.9,0.6) {$\text{clip}_0$};
+  \node at (7.9,1.7) {$\text{clip}_6$};
+  \path [|->] (B) edge node[above] {} (C);
+  \path [|->] (B) edge node[above] {} (D);
+
+  \matrix (C2) [2d-arr, right=1.5em of C, nodes={draw}] {
+     |[fill=red!20]| -128 & |[fill=red!20]| 127 \\
+      -74 & |[fill=red!20]| -128 \\
+    };
+
+  \matrix (D2) [2d-arr, right=1.5em of D, nodes={draw}] {
+     |[fill=red!20]| -320  & |[fill=red!20]| 704 \\
+      |[fill=red!20]|-128 & |[fill=red!20]| -384 \\
+    };
+
+  \node at (11,1.0) {$\text{rshift}_N$};
+  \path [|->] (C) edge node[above] {} (C2);
+  \path [|->] (D) edge node[above] {} (D2);
+
+\matrix (C3) [2d-arr, right=1.5em of C2, nodes={draw}] {
+     |[fill=red!20]| 0.58 & |[fill=red!20]| 0.83 \\
+      0.0 & |[fill=red!20]|  0.62 \\
+    };
+
+  \matrix (D3) [2d-arr, right=1.5em of D2, nodes={draw}] {
+     |[fill=red!20]| 0.05  & |[fill=red!20]| 0.07  \\
+     |[fill=red!20]| 0.73  & |[fill=red!20]| 0.14 \\
+    };
+
+  \node at (14,1.0) {$\text{error}$};
+  \path [|->] (C2) edge node[above] {} (C3);
+  \path [|->] (D2) edge node[above] {} (D3);
+
+  \matrix (C4) [2d-arr, right=1.5em of C3, nodes={draw}] {
+     |[fill=red!20]| 0.51 \\
+    };
+
+  \matrix (D4) [2d-arr, right=1.5em of D3, nodes={draw}] {
+     |[fill=red!20]| 0.25 \\
+    };
+
+  \node at (17,1.0) {$\text{error}_{avg}$};
+  \path [|->] (C3) edge node[above] {} (C4);
+  \path [|->] (D3) edge node[above] {} (D4);
 
   \end{tikzpicture}
+  \caption{Example of the result reading procedure from DLA with two different clipping values, and their effect on the retreived values.}
   \label{fig:clip-matrix}
-  \caption{Example convolution where some values will be clipped.}
 \end{figure}
 
 
 \label{sec:result-width-problem}
-A major limitation of the DLA's design is it's limited bit width of the output elements. A single element in the output tensor is represented with a signed byte and thus has the value in the range from $-128$ to $127$. This can be seen from the figure~\ref{fig:dla_internal} where the bit-width of data is reduced in half after the MAC clip and PP clip blocks. This inevitably has the consequence that we will lose some accuracy of results when we move data back to the CPU. The amount of inaccuracy depends on the amount of clipping we perform in the clipping step. DLA has the ability to clip any sequence of 8-bits from the 16-bit sequence that is each result tensor element. Figure~\ref{fig:clip-matrix} shows and example of the clipping behaviour
+A major limitation of the DLA's design is it's limited bit width of the output elements. A single element in the output tensor is represented with a signed byte and thus has the value in the range from $-128$ to $127$. This can be seen from the figure~\ref{fig:dla_internal} where the bit-width of data is reduced in half after the MAC clip and PP clip blocks. This inevitably has the consequence that we will lose some accuracy of results when we move data back to the CPU. The amount of inaccuracy depends on the amount of clipping we perform in the clipping step. DLA has the ability to clip any sequence of 8-bits from the 16-bit sequence that is each result tensor element.
+
+Figure~\ref{fig:clip-matrix} shows and example of the clipping behaviour for two different clipping value for two different clipping values. In the figure the Result matrix is some arbitrary convolution result from the MAC array, which gets applied clipping values of $0$ which means that we don't clip the result, giving us the 8 least significant bits as the read result. The second clipping amount is $6$. In the driver we perform right shifting to reverse the effect of the clipping giving as results in the correct magnitude. By taking the difference between the original values and the right shifted values we can get the element-wise and average amounts of error in for both clipping values. In figure~\ref{fig:clipping} we have repeated this procedure for all nine possible clipping values and plotted the results. From these results we can see that for this particular result the best accuracy is retreived with clipping amount of 3. For different matrices the optimal clipping value will be something different. Choosing this result poorly can cause complete error of the results as shown with the result of clipping value of 8.
+This behaviour is the most significant cause on incompatibility between the DLA and DNNs trained on high-level frameworks, such a Tensorflow lite, and mitigating it's effect were a major challenge for this project.
 
 \begin{figure}
   \centering
@@ -1155,6 +1205,8 @@ A major limitation of the DLA's design is it's limited bit width of the output e
   \caption{Simulation of the effect of different result clippings to the layer.}
   \label{fig:clipping}
 \end{figure}
+
+A secondary problem cause by the limited bit-width of the DLA relates the bias. Some DNN model rely on bias values close to the maximum value of a signed 32-bit value. This is a problem for the DLA since, it only support bias values up to 16-bits. This causes some results channels to lose their relative values to equalized due to bias values getting saturated, when the bias values are larger than the maximum 16-bit values.
 
 \section{DLA Software Architecture}
 \begin{figure}
@@ -1432,15 +1484,23 @@ Some of the operation parameters need to be dynamically extracted from the graph
 \chapter{Results}
 \begin{table}[h]
 \centering
-\begin{tabular}{|c|c|c|c|}
+\begin{tabular}{|l|l|c|c|c|c|}
 \hline
-\textbf{Task} & \textbf{Accuracy} & \textbf{Precision} & \textbf{Recall}  \\ \hline
-KWS (with bias heuristic) & 0.90 &  0.92 & 0.90 \\ \hline
-KWS (no DLA) & 0.90 &  0.92 & 0.90 \\ \hline
-IC (with bias heuristic) &  0.69 & 0.74 & 0.70 \\ \hline
-IC (no DLA) &  0.88 & 0.88 & 0.88 \\ \hline
-VWW (no DLA) & 0.83 & 0.83 & 0.84 \\ \hline
-Anomaly Detection* & 100  & 100 & 0 \\ \hline
+  \multirow{2}{*}{\textbf{Task}}  & \multirow{2}{*}{\textbf{Target}}  & \multirow{2}{*}{\textbf{Accuracy}} & \multirow{2}{*}{\textbf{Precision}} & \multirow{2}{*}{\textbf{Recall}} & \multirow{2}{*}{\shortstack[c]{\textbf{Passes}\\ \textbf{TinyPerf}}} \\
+  & & & & & \\\hline
+\multirow{2}{*}{\shortstack[l]{\textbf{Keyword}\\ \textbf{Spotting (KWS)}}}
+                                  & \textbf{HPC+DLA} & 0.90               & 0.92   & 0.90         & Yes                          \\ \cline{2-6}
+                                  & \textbf{HPC} & 0.90               & 0.92       & 0.90     & Yes                          \\ \hline
+\multirow{2}{*}{\shortstack[l]{\textbf{Image}\\ \textbf{Classifcation (IC)}}}
+                                  & \textbf{HPC+DLA} & 0.69               & 0.74      & 0.70      & No                           \\ \cline{2-6}
+                                  & \textbf{HPC} & 0.88               & 0.88      & 0.88      & Yes                          \\ \hline
+\multirow{2}{*}{\shortstack[l]{\textbf{Visual Wakeup}\\ \textbf{Words (VWW)}}}
+                                  & \textbf{HPC+DLA} & 0.50               & 0.50   & 0.50          & No                           \\ \cline{2-6}
+                                  & \textbf{HPC} & 0.83               & 0.83        & 0.84    & Yes                          \\ \hline
+\multirow{2}{*}{\shortstack[l]{\textbf{Anomaly}\\ \textbf{Detection (AD)}}}
+                                  & \textbf{HPC+DLA} & -               & -   & -          & No                           \\ \cline{2-6}
+                                  & \textbf{HPC} & -               & -        & -    & Yes                          \\ \hline
+
 \end{tabular}
 \caption{TinyPerf benchmark results for HPC and HPC with DLA.}
 \label{tab:benchmark-results}
@@ -1496,7 +1556,7 @@ The CPU only run of the benchmark performed as expected, reaching the required a
 \centering
 \begin{minipage}{.45\textwidth}
   \centering
-  \includegraphics[width=\linewidth]{img/vww_200_no_acc.eps}
+  \includegraphics[width=\linewidth]{img/vww_200_acc.eps}
   \caption{VWW task on Headsail-VP with DLA}
   \label{fig:vww-dla}
 \end{minipage}%
@@ -1510,8 +1570,11 @@ The CPU only run of the benchmark performed as expected, reaching the required a
 \label{fig:vww-results}
 \end{figure}
 
-Figure~\ref{fig:vww-results} shows the results of the TinyPerf visual wakeup word task for Headsail-VP. Subfigure~\ref{fig:vww-no-acc} shows the results of the benchmark for the CPU only run. This run exceeds the required $80\%$ accuracy threshold with an accuracy of $83\%$. From the confusion matrix we can see that the reference model has a bias towards False predictions. This effect can be seen exaggerated in the benchmark run on DLA in figure~\ref{fig:vww-dla}.
+Figure~\ref{fig:vww-results} shows the results of the TinyPerf visual wakeup word task for Headsail-VP. Subfigure~\ref{fig:vww-no-acc} shows the results of the benchmark for the CPU only run. This run exceeds the required $80\%$ accuracy threshold with an accuracy of $83\%$. From the confusion matrix we can see that the reference model has a bias towards False predictions. This effect can be seen exaggerated in the benchmark run on DLA in figure~\ref{fig:vww-dla}. From the results of the DLA run we can conclude that the TinyPerf reference model is not compatible with the DLA at this point, since accuracy of $0.5$ for a binary classifier implies a random results.
 
+At this moment it unclear why this task performed so poorly on the DLA, but what we are seeing from the results is that the inherent weight and biases of the particular model. This is supported by the results of the HPC only run where the predictions steered noticeably towards False predctions. One possible issued we noticed is that the VWW reference model has very high bias values in it's last convolution layer. As discussed earlier in section~\ref{sec:software_support} might result in channel saturation issues when the bit-width of the bias is limited.
+
+\section{Visual Wakeup Words}
 
 \chapter{Conclusions}
 \label{ch:conclusions}
