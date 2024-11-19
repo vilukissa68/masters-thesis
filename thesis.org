@@ -81,5 +81,10 @@ How does the performance on ASIC compare to ideal. How does our DLA compare to s
 Running ASIC benchmarks, optimizing the driver, linux driver, intergration with other frameworks
 
 * TODOS :thesis:
-** TODO Find comparisons between FPU vs INT units to justify development for integer accelerators
-** TODO Write about depthwise conv2d
+** DROPPED Find comparisons between FPU vs INT units to justify development for integer accelerators
+** TODO Get and report Anomaly Detection result for the HPC
+** TODO Write abstract
+** TODO Final grammar and spelling check
+** TODO Add TUNI AI clause
+** TODO Improve introdocution
+** DONE Write about depthwise conv2d
