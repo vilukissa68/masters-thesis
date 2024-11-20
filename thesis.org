@@ -83,6 +83,7 @@ Running ASIC benchmarks, optimizing the driver, linux driver, intergration with 
 * TODOS :thesis:
 ** DROPPED Find comparisons between FPU vs INT units to justify development for integer accelerators
 ** TODO Get and report Anomaly Detection result for the HPC
+*** TODO Figure out the ToyAdmos dataset
 ** TODO Write abstract
 ** TODO Final grammar and spelling check
 ** TODO Add TUNI AI clause

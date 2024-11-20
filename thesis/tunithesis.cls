@@ -66,6 +66,9 @@
     \end{center}
 }
 
+% Terminology settings
+\newcommand\@aidisclaimertitle{Use of artificial intelligence in this work}
+\newcommand\@aidisclaimerfile{use-of-ai.tex}
 
 
 %
@@ -404,4 +407,5 @@
 %       \@latex@warning
 %         {Citation `\@citeb' on page \thepage \space undefined}}%
 %       {\csname b@\@citeb\endcsname}}}{#1}}
+
 
