@@ -86,7 +86,7 @@
 
 %% A command for a final unnumbered page.
 
-\NewDocumentCommand\finalpage{m}{
+\NewDocumentCommand\finalpage{m m}{
     \begingroup
         \setbeamertemplate{background}{
             \begin{tikzpicture}
@@ -98,7 +98,10 @@
             \vfill
             \centering
             \color{TAUWHITE}
-            \resizebox{0.6\textwidth}{!}{#1}
+            %\resizebox{0.6\textwidth}{!}{#1}
+            {\Huge \textit{#1\\}}
+            \vspace{0.5cm}
+            {\Huge \textit{#2}}
         \end{frame}
     \endgroup
 }
