@@ -1,0 +1,22 @@
+# Disallow everything
+*
+
+# Allow directories
+!*/
+
+# Allow Git-related files
+!README.md
+!LICENSE.md
+!LICENSE.GNU-GPLv3.md
+!LICENSE.LaTeX-1.3c.txt
+!.gitignore
+
+# Allow LaTeX-related file types
+!*.cls
+!*.sty
+!*.tex
+!*.bib
+
+# Allow TAU logos, both normal and its negative
+!tau-logo/tau-logo.pdf
+!tau-logo/tau-logo-nega.pdf

@@ -1,0 +1,47 @@
+% Copyright (c) 2020, Santtu Söderholm <santtu.soderholm@tuni.fi>
+%
+% This file may be distributed and/or modified under the LaTeX Project Public License.
+%
+
+\mode<presentation>
+
+% Requirements
+\RequirePackage[utf8]{inputenc}
+\RequirePackage[T1]{fontenc}
+\RequirePackage{mathtools}
+\RequirePackage{tikz}
+\RequirePackage[default]{opensans}
+\RequirePackage{booktabs}
+\RequirePackage{caption}
+\RequirePackage{datetime2}
+\DTMsetdatestyle{iso}
+\RequirePackage{accsupp}
+\RequirePackage{xparse}
+
+% Beamer Settings
+
+\def\taulogow{0.15\paperwidth}
+\def\taulogox{0.085\paperwidth}
+\def\taulogoy{0.93\paperheight}
+
+\useinnertheme{taupresentation}
+\useoutertheme{taupresentation}
+\usecolortheme{taupresentation}
+
+\setbeamertemplate{navigation symbols}{}
+
+% Front page information
+\title{\mytitle}
+\date{\today}
+\author{\myauthor}
+
+% Copyable equations with xparse and accsupp
+% Source: https://tex.stackexchange.com/a/119718
+\NewDocumentCommand{\copyable}{m}{%
+  \BeginAccSupp{%
+    ActualText=\detokenize{#1},%
+    method=escape,%
+  }%
+  #1
+  \EndAccSupp{}%
+}

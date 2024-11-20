@@ -1,0 +1,132 @@
+%%% preamble.tex
+%
+% This is where one loads LaTeX packages and defines their own commands. Some
+% of the commands you see here are defined in the file
+% presentation-metadata.tex.
+%
+
+%% Load packages.
+
+\usepackage[utf8]{inputenc}
+
+\usepackage[\mylanguage]{babel}
+
+\usefonttheme{professionalfonts} % Needed for Beamer + fourier font
+
+\usepackage{fourier}
+
+\usepackage{mathtools}
+
+\usepackage[\citationsettings]{biblatex}
+
+\addbibresource{../../thesis/thesis_refs.bib}
+\addbibresource{../../thesis/zotero.bib}
+
+\usepackage{csquotes}
+
+\usepackage{adjustbox}
+\usepackage{multirow}
+%% Commands.
+
+\NewDocumentCommand\bvec{ m }{\vec{\mathbf{#1}}}
+
+\DeclareMathOperator\divop{div}
+
+\DeclarePairedDelimiter\arcs{(}{)}
+
+%% Set graphicspath to contents/images/, so users don't need to enter the full path of the file.
+
+\graphicspath{{../content/images/}}
+
+%% Patch the item separation between itemize and enumerate items.
+
+\usepackage{xpatch}
+
+\xpatchcmd
+  {\itemize}
+  {\def\makelabel}
+  {\setlength{\itemsep}{1ex}\def\makelabel}
+  {}
+  {}
+
+\xpatchcmd
+  {\enumerate}
+  {\def\makelabel}
+  {\setlength{\itemsep}{1ex}\def\makelabel}
+  {}
+  {}
+
+%% Define inline verbatim command with xparse.
+
+\NewDocumentCommand\code{m}{\texttt{#1}}
+
+\NewDocumentCommand\latexcommand{m}{\textbackslash\code{#1}}
+
+%% Define temporary image background style command.
+%
+% Invoke before a frame to set a background image for the following frames. If
+% a background image is to be set for a single frame, surround this command
+% and the frame itself with \begingroup … \endgroup.
+%
+\NewDocumentCommand\setbackgroundimage{
+    O{0.9}   % Optional image width in relation to paper width, given inside [⋅].
+    D(){0.5} % Optional image x position in relation to paper height, given inside (⋅).
+    D<>{0.4} % Optional image y position in relation to paper height, given inside <⋅>.
+    m        % A mandatory path to the background image.
+}{
+    \setbeamertemplate{background}{
+        \begin{tikzpicture}
+            \useasboundingbox (0,0) rectangle (\the\paperwidth,\the\paperheight);
+            \fill[color=white] (0,0) rectangle (\the\paperwidth,\the\paperheight);
+            \node at (\taulogox, \taulogoy) {\includegraphics[width=\taulogow]{../tau-logo/tau-logo.pdf}};
+            \node at (#2\paperwidth, #3\paperheight) {\includegraphics[width=#1\paperwidth]{#4}};
+        \end{tikzpicture}
+    }
+}
+
+%% A command for a final unnumbered page.
+
+\NewDocumentCommand\finalpage{m}{
+    \begingroup
+        \setbeamertemplate{background}{
+            \begin{tikzpicture}
+                \useasboundingbox (0,0) rectangle (\the\paperwidth,\the\paperheight);
+                \fill[color=TAUPURPLE] (0,0) rectangle (\the\paperwidth,\the\paperheight);
+            \end{tikzpicture}
+        }
+        \begin{frame}[noframenumbering]{}
+            \vfill
+            \centering
+            \color{TAUWHITE}
+            \resizebox{0.6\textwidth}{!}{#1}
+        \end{frame}
+    \endgroup
+}
+
+%% Citation bracket color.
+
+\DeclareOuterCiteDelims{cite}{\textcolor{TAUPURPLE}{\bibopenbracket}}{\textcolor{TAUPURPLE}{\bibclosebracket}}
+
+%% Write metadata to an external file, where pdfx can read it from.
+
+\begin{filecontents*}[overwrite]{\jobname.xmpdata}
+\Title{\mytitle}
+\Author{\myauthor}
+\Subject{\mysubject}
+\Keywords{\mykeywords}
+\Creator{\mycreator}
+\end{filecontents*}
+
+%% PDF/A
+
+\usepackage[a-3a, mathxmp]{pdfx}
+
+\hypersetup{
+    colorlinks,
+    allcolors=black,
+    urlcolor=TAUPURPLE,
+    citecolor=TAUPURPLE,
+    anchorcolor=TAUPURPLE
+}
+
+\usepackage{url}

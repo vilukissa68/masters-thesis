@@ -1,0 +1,25 @@
+%%% 16-9/main.tex
+%
+% This is the file one should compile with a LaTeΧ compiler, if they wish to
+% use the aspect ratio 16:9 for their presentation.
+%
+% Copyright © 2023, Santtu Söderholm <santtu.soderholm@tuni.fi>
+%
+% This file may be distributed and/or modified under the LaTeX Project Public License.
+%
+
+\input{../set-pdf-version.tex}
+
+\input{../content/presentation-metadata.tex}
+
+\documentclass[tikz,\sixteenbyninefontsize,aspectratio=169]{beamer}
+
+\input{../content/preamble.tex}
+
+\usetheme{taupresentation}
+
+\begin{document}
+
+\input{../content/subject-matter.tex}
+
+\end{document}
