@@ -31,7 +31,7 @@
 % Put your thesis' main language last
 % http://mirrors.ctan.org/macros/latex/required/babel/base/babel.pdf
 \usepackage{lastpage}
-\usepackage[english]{babel}
+\usepackage[english, finnish]{babel}
 \usepackage[
 backend=biber,
 style=numeric-comp,
@@ -69,6 +69,8 @@ maxbibnames=5
 \newcommand{\fixthis}[1]{\textbf{\textit{\textcolor{red}{[#1]}}}}
 
 \definecolor{tunipurple}{RGB}{78, 0, 142}
+
+\hyphenation{jär-jes-tel-mä-pii-re-jä}
 
 \newcommand\todo[1]{{\color{red}!!!TODO: #1}} % Remark text in braces appears in red
 \newcommand{\angs}{\textsl{\AA}}              % , e.g. slanted symbol for Ångstöm
@@ -163,9 +165,14 @@ December 2024
 % Abstract and keywords
 % ---------------------------------------
 
-\noindent Lorem ipsum~
+\noindent In recent years we have seen a large increase in the number of applications utilizing convolutional neural networks on mobile device in our everyday life. This phenomenon has coincided with the increased interest in heterogeneous system on chips in consumer electronics. This has motivated organizations and research groups to build their own SoCs. One such SoC is Headsail. A multicore RISC-V SoC featuring a variety of peripherals, developed in Tampere University's SoC Hub research team.
 
-\noindent\textbf{Keywords:} DLA, Deep-Learning, SoC, Virtual Prototype.
+The purpose of this project was to target Headsail's custom deep learning accelerator, and develop a software stack to utilize it's capabilities for running inference on arbitrary convolutional neural networks. At the time of starting this project Headsail was still in development so we build our own Headsail virtual prototype with the accelerator using Renode, and it's Python peripheral API. The goal was to run a neural accelerator benchmark simulating real-life use cases on the virtual prototype to confirm the feasibility of the stack, and then to run the same use case on the ASIC.
+This necessitated for us to develop a driver for the accelerator, BSP for the platform and port a C standard library for it, integrate the platform package with the TVM machine learning compiler and finally to evaluate the accuracy of the stack and the accelerator.
+
+In the end we were able to design and build a working software stack to facilitate the SoC as well as the deep learning accelerator. We were also able to integrate the stack with TVM, which enabled us to build programs to run inference on quantized convolutional neural network, trained on common high-level deep learning framework. Using MLPerf Tiny benchmark we were able to evaluate the accuracy of the stack and concluded that DLA is capable of executing some models with an acceptable accuracy. Due to time constraints we were not able to run the benchmark on the final ASIC.
+
+\noindent\textbf{Keywords:} deep learning, system-on-chip, RISC-V, TVM, Renode
 
 ~
 
@@ -173,6 +180,42 @@ December 2024
 
 
 \clearpage
+
+\chapter*{Tiivistelmä}
+
+\begin{spacing}{1.0}
+\noindent \@author: \@title\\
+\@thesistype\\
+Tampere University\\
+Master’s Degree Programme in Signal Processing and Machine Learning\\
+December 2024
+\end{spacing}
+\noindent\rule{12cm}{0.4pt}
+
+\vspace{0.5cm}
+
+% ---------------------------------------
+% Abstract and keywords
+% ---------------------------------------
+
+\noindent \foreignlanguage{finnish}{Arkielämässämme kohtaamiemme konvolutioverkkoja hyödyntävien sovellusten määrä on lisääntynyt, samanaikaisesti kiinnostuksen kasvaessa heterogeenisiä järjestelmäpiirejä kohtaan. Yksi esimerkki tällaisesta järjestelmäpiiristä on Tampereen yliopiston SoC Hub -tutkimusryhmässä kehitetty Headsail. Headsailissä on avoimeen RISC-V -suoritinarkkitehtuuriin pohjautuva moniydinsuoritin, joka sisältää useita
+oheislaitteita, joista yksi on syväoppimiskiihdytin.}
+
+\foreignlanguage{finnish}{Työn tarkoituksena oli suunnitella ohjelmistopino jolla syväoppimiskiihdytintä voitaisiin käyttää päätelmien laskemiseen.
+Projektin alkaessa Headsail oli vielä kehityksessä, joten rakensimme sitä vastaanvan virtuaaliprototyypin, jossa oli mukana myös syväoppimiskiihdytin. Virtuaaliprototyyppi rakennettiin Renode-alustaa ja sen Python-oheislaiterajapintaa hyödyntäen. Tavoitteena oli suorittaa sellainen suorituskykytesti, joka mukailisi neuroverkkojen todellisia käyttötapauksia, siten että ohjelmistopinon soveltuvuus voitaisiin varmistaa. Lopuksi sama testi suoritettaisiin myös lopullisella piirillä. Tähän tarkoitukseen kehitimme ainakin seuraavat komponentit: ajurin syväoppimiskiihdyttimen käyttöä varten, alustakohtaisen tukipaketin ja version C-standardikirjastosta, TVM koneoppimiskääntäjän kanssa yhteensopivan integraation ja lopuksi menetelmän ohjelmistopinon  ja kiihdyttimen arvioimiseksi.}
+
+\foreignlanguage{finnish}{Lopulta saimme valmiiksi syväoppimiskiihdyttimen käytön mahdollistavan ohjelmistopinon. Integraatio TVM-koneoppimiskääntäjän kanssa, mahdollisti sellaisten ohjelmistojen kehittämisen, joissa hyödynnettiin korkeantason alustoilla kehitettyjä kvantisoituja konvoluutioneuroverkkoja. MLPerf Tiny -suorituskykytestin avulla pystyimme arvioimaan ohjelmistopinoa hyödyntävien ohjelmistojen ennustustarkkuuden ja osoittamaan että Headsailin syväoppimiskiihdytintä voidaan käyttää kiihdyttmään joitain neuroverkkoja, siten että tarkkuus säilyy hyväksyttävänä. Aikarajoitteiden vuoksi emme kuitenkaan pystyneet suorittamaan samaa testiä lopullisella piirillä.}
+
+
+\noindent\textbf{Keywords:} syväoppiminen, järjestelmäpiiri, RISC-V, TVM, Renode
+
+~
+
+\noindent Tämän julkaisun alkuperäisyys on tarkastettu Turnitin OriginalityCheck -ohjelmalla.
+
+
+\clearpage
+
 
 \section*{List of Abbreviations}
 \begin{acronym}
