@@ -1,11 +1,32 @@
 #+title: Thesis
-
-* Teesien Työkalut
-** TODO Hyvä tieteellinen käytäntö
-** TODO Opinnäytetyöseminaari
-** TODO Urasuunnittelu
-** TODO Ohjaussuunnitelma
-** TODO Tutkimusmenetelmät
+* TODOS :thesis:
+** Diplomityö [/]
+** TODO Get and report Anomaly Detection result for the HPC
+**** TODO Figure out the ToyAdmos dataset
+*** TODO Write abstract [0/2]
+**** TODO Englanninkielinen tiviistelmä
+**** TODO Suomenkielinen tiviistelmä
+*** TODO Final grammar and spelling check
+*** DONE Add TUNI AI clause
+*** TODO Improve introdocution
+*** DONE Write about depthwise conv2d
+** TODO Byrokaratia [0/3]
+*** TODO Kypsyysnäyte
+**** TODO 400-500 sanainen tiivistelmä
+*** TODO Tekstin alkuperäisyyden tarkistus
+*** DOING Teesien Työkalut [2/5]
+**** DONE Hyvä tieteellinen käytäntö
+**** DOING Opinnäytetyöseminaari [1/3]
+***** DONE Seminaariin osallistuminen x3
+***** DOING Seminaaridiat
+***** TODO Seminaariesitys
+**** DROPPED Urasuunnittelu
+**** TODO Ohjaussuunnitelma
+**** DOING Tutkimusmenetelmät 3/4
+***** DONE Yhteinen osio
+***** DOING Määrälliset tutkimukset
+***** DROPPED Laadulliset tutkimukset
+***** DONE Soveltava tutkimus
 
 * DOING Propose a topic for master's thesis
 ** Implementing Software Stack for Deep Learning Accelerator in RISCV SoC
@@ -16,76 +37,3 @@
 ** Deploying Hardware Accelerated Neural Networks on RISCV SoC
 ** End-to-End Software Support on Accelerated Neural Networks with RISCV
 ** Headsail DLA: Building a DNN Stack From Zero
-
-* Integrated vs federated
-
-
-* Proposed structure
-** Title page
-** Abstract
-** ToC
-** List of figure/tables/abbreviations
-** Introduction
-Motivate reason for building a DLA
-** Background on general DLA desigs
-*** What are DLAs and why build one
-Focus on rise of accelerators purpose built for CNNs in recent times. Mobile devices, laptop SoCs.
-*** What is Deep Learning?
-**** Convolution
-***** Weights
-***** Inputs
-***** Biases
-***** Dimensions
-***** Activations
-**** Layers
-***** Conv2d + Bias + Relu
-***** Fully connected
-***** Output dimensions
-**** Classification and other tasks
-***** Binary classifier
-***** N-class classifier
-*** Other similar projects
-** Methodology
-*** MAC-Array
-What is convolution, why is it important and why it's hard to calculate?
-*** DNN Training vs. Inference
-Why we only run inference. How to deploy a neural network on embedded.
-*** Quantization
-What is quantization and how does it affect inference accuracy
-*** Baremetal performance evaluation
-How to measure DLA performance based on the number of convolutions per time unit. Optimal vs Real-life
-*** Real-life use-case evaluation (TinyPerf/Custom application)
-Difficulties of AI performance evaluation -> TinyPerf is a common benchmark
-** Implementation
-*** Headsail SoC
-Basics of the system and restrictions it places for DLA -> Barely any existing software support
-*** Renode
-Advantages of using a emulator to develop software before hardware is taped out
-**** Interfacing with renode from python module
-*** uTVM
-What is the function of an AI runtime, why micro-tvm suits this projects. Custom codegen.
-*** Pytorch / Onnx
-Why intermediate representation is needed (Onnx)
-*** Use cases / TinyPerf
-What uses cases we built and why
-** Results
-*** Functional verification of the DLA driver (on VP)
-Does the driver works and how do we know it works -> Run Conv2d calculations, run a CNN
-*** ASIC results (If obtained)
-How does the performance on ASIC compare to ideal. How does our DLA compare to similar projects.
-*** Problems with the design
-**** Limited output size and it's effect on accuracy
-** Conclusions
-*** Conclusion
-*** Future work
-Running ASIC benchmarks, optimizing the driver, linux driver, intergration with other frameworks
-
-* TODOS :thesis:
-** DROPPED Find comparisons between FPU vs INT units to justify development for integer accelerators
-** TODO Get and report Anomaly Detection result for the HPC
-*** TODO Figure out the ToyAdmos dataset
-** TODO Write abstract
-** TODO Final grammar and spelling check
-** TODO Add TUNI AI clause
-** TODO Improve introdocution
-** DONE Write about depthwise conv2d
