@@ -1592,8 +1592,8 @@ After finishing development of the software stack described in the chapter~\ref{
                                   & \textbf{HPC} & 0.83               & 0.83        & 0.84    & \scalecheck                          \\ \cline{2-6}
                                   & \textbf{HPC+DLA} & 0.50               & 0.50   & 0.50          &                            \\ \hline
 \multirow{2}{*}{\shortstack[l]{\textbf{Anomaly}\\ \textbf{Detection (AD)}}}
-                                  & \textbf{HPC FP32} & \multicolumn{3}{c|}{AUC = 0.90}     & \scalecheck   \\ \cline{2-6}
-                                  & \textbf{HPC INT8} & \multicolumn{3}{c|}{AUC = 0.68}      &                            \\ \hline
+                                  & \textbf{HPC } & \multicolumn{3}{c|}{AUC = 0.68}     &   \\ \cline{2-6}
+                                  & \textbf{HPC+DLA} & \multicolumn{3}{c|}{-}      &                            \\ \hline
 
 \end{tabular}
 \caption{MLPerf Tiny benchmark results for HPC and HPC with DLA.}
@@ -1677,7 +1677,7 @@ Figure~\ref{fig:vww-results} shows the results of the MLPerf Tiny visual wake wo
 At this moment it's unclear why this task performed so poorly on the DLA, but what we are seeing from the results is that the inherent weight and biases of the particular model. This is supported by the results of the HPC only run where the predictions steered noticeably towards False predictions. One possible issued we noticed is that the VWW reference model has very high bias values in its last convolution layer. As discussed earlier in section~\ref{sec:software_support} might result in channel saturation issues when the bit-width of the bias is limited.
 
 \section{Anomaly Detection}
-The FC-AutoEncoder model used in the anomaly detection task isn't acceleratable on Headsail DLA, and thus we have results only for the HPC only run. The results are inline with what is expected from the reference model, passing the set AUC metric with a value of 0.90 when ran on the floating point model. But surprisingly failing with the INT8 quantized model, with an AUC score of 0.69. We suspect that this discrepancy is due to some issue with the input data quantization, in our preprocessing setup.
+The FC-AutoEncoder model used in the anomaly detection task isn't acceleratable on Headsail DLA, and thus we have results only for the HPC only run. With an AUC score of 0.69, we didn't reach the required threshold of $0.85$. This was suprising since the other benchmarks did easily reach their required accuracies, when ran with only HPC.  We suspect that this discrepancy is due to some issue with the input data quantization in our preprocessing setup, but we didn't have time to investigate further.
 
 \chapter{Conclusions}
 \label{ch:conclusions}
