@@ -250,7 +250,7 @@
 \renewcommand*\l@paragraph    {\@dottedtocline{5}{9.5em}{5em}}
 \renewcommand*\l@subparagraph {\@dottedtocline{6}{11.5em}{6em}}
 \newcommand*\l@appendix       {\baselineskip 0.3in\@dottedtocline{1}{0.0em}{3.8em}}
-
+\newcommand{\@prefacename}{Preface}
 
 
 %
@@ -381,6 +381,19 @@
 
 }
 \fi
+
+% Make the preface
+\newcommand{\preface}[2]{
+    \clearpage
+    \chapter*{\@prefacename}
+    \noindent\input{#1}\par
+    \bigskip
+    \noindent#2,
+    \par
+    \bigskip
+    \noindent\@author
+    \clearpage
+}
 
 \pagestyle{fancyplain}
 \rhead{}
