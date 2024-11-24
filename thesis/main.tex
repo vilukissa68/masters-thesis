@@ -25,13 +25,14 @@
 
 \author{Väinö-Waltteri Granat}
 %\title{Zero to DLA: Building Software Support For Custom RISC-V SoC To Accelerate Deep Neural Networks} % primary title (for front page)
-\title{Zero to DLA: Building Software Stack for Accelerating Deep Neural Networks on Custom RISC-V SoC} % primary title (for front page)
-\thesistype{Master's thesis} % or Bachelor of Science, Laboratory Report... 
+\title{Zero to DLA: Building a Software Stack for Accelerating Deep Neural Networks on Custom RISC-V SoC} % primary title (for front page)
+\def\finnishtitle{Ohjelmistopinon kehittäminen syvöoppivien neuroverkkojen kiihdytykseen mukautetulla RISC-V järjestelmäpiirillä}
+\thesistype{Master of Science Thesis} % or Bachelor of Science, Laboratory Report...
 
 % Put your thesis' main language last
 % http://mirrors.ctan.org/macros/latex/required/babel/base/babel.pdf
 \usepackage{lastpage}
-\usepackage[english, finnish]{babel}
+\usepackage[english]{babel}
 \usepackage[
 backend=biber,
 style=numeric-comp,
@@ -134,7 +135,7 @@ maxbibnames=5
     \begin{spacing}{1.0}
       \textsf{Faculty of Information Technology and Communication Sciences (ITC)\\
       \@thesistype\\
-      December 2024}
+      November 2024}
     \end{spacing}
 \end{flushright}
 
@@ -154,8 +155,8 @@ maxbibnames=5
 \noindent \@author: \@title\\
 \@thesistype\\
 Tampere University\\
-Master’s Degree Programme in Signal Processing and Machine Learning\\
-December 2024
+Master’s Degree Programme in Information Technology\\
+November 2024
 \end{spacing}
 \noindent\rule{12cm}{0.4pt}
 
@@ -165,14 +166,14 @@ December 2024
 % Abstract and keywords
 % ---------------------------------------
 
-\noindent In recent years we have seen a large increase in the number of applications utilizing convolutional neural networks on mobile device in our everyday life. This phenomenon has coincided with the increased interest in heterogeneous system on chips in consumer electronics. This has motivated organizations and research groups to build their own SoCs. One such SoC is Headsail. A multicore RISC-V SoC featuring a variety of peripherals, developed in Tampere University's SoC Hub research team.
+\noindent In recent years we have seen a large increase in the number of applications utilizing convolutional neural networks on mobile device in our everyday-life. This phenomenon has coincided with the increased interest in heterogeneous system on chips in consumer electronics. This has motivated organizations and research groups to build their own SoCs. One such SoC is Headsail. A multicore RISC-V SoC featuring a variety of peripherals, developed in Tampere University's SoC Hub research team.
 
-The purpose of this project was to target Headsail's custom deep learning accelerator, and develop a software stack to utilize it's capabilities for running inference on arbitrary convolutional neural networks. At the time of starting this project Headsail was still in development so we build our own Headsail virtual prototype with the accelerator using Renode, and it's Python peripheral API. The goal was to run a neural accelerator benchmark simulating real-life use cases on the virtual prototype to confirm the feasibility of the stack, and then to run the same use case on the ASIC.
+The purpose of this project was to target Headsail's custom deep learning accelerator, and develop a software stack to utilize its capabilities for running inference on arbitrary convolutional neural networks. At the time of starting this project Headsail was still in development so we build our own Headsail virtual prototype with the accelerator using Renode, and it's Python peripheral API. The goal was to run a neural accelerator benchmark simulating real-life use cases on the virtual prototype to confirm the feasibility of the stack, and then to run the same use case on the ASIC.
 This necessitated for us to develop a driver for the accelerator, BSP for the platform and port a C standard library for it, integrate the platform package with the TVM machine learning compiler and finally to evaluate the accuracy of the stack and the accelerator.
 
 In the end we were able to design and build a working software stack to facilitate the SoC as well as the deep learning accelerator. We were also able to integrate the stack with TVM, which enabled us to build programs to run inference on quantized convolutional neural network, trained on common high-level deep learning framework. Using MLPerf Tiny benchmark we were able to evaluate the accuracy of the stack and concluded that DLA is capable of executing some models with an acceptable accuracy. Due to time constraints we were not able to run the benchmark on the final ASIC.
 
-\noindent\textbf{Keywords:} deep learning, system-on-chip, RISC-V, TVM, Renode
+\noindent\textbf{Keywords:} deep learning, system-on-chip, RISC-V, TVM, Renode, MLPerf Tiny
 
 ~
 
@@ -184,11 +185,11 @@ In the end we were able to design and build a working software stack to facilita
 \chapter*{Tiivistelmä}
 
 \begin{spacing}{1.0}
-\noindent \@author: \@title\\
-\@thesistype\\
-Tampere University\\
-Master’s Degree Programme in Signal Processing and Machine Learning\\
-December 2024
+\noindent \@author: \finnishtitle\\
+Diplomityö\\
+Tampereen yliopisto\\
+Tietotekniikan diplomi-insinöörin tutkinto-ohjelma \\
+Marraskuu 2024
 \end{spacing}
 \noindent\rule{12cm}{0.4pt}
 
@@ -198,7 +199,7 @@ December 2024
 % Abstract and keywords
 % ---------------------------------------
 
-\noindent \foreignlanguage{finnish}{Arkielämässämme kohtaamiemme konvolutioverkkoja hyödyntävien sovellusten määrä on lisääntynyt, samanaikaisesti kiinnostuksen kasvaessa heterogeenisiä järjestelmäpiirejä kohtaan. Yksi esimerkki tällaisesta järjestelmäpiiristä on Tampereen yliopiston SoC Hub -tutkimusryhmässä kehitetty Headsail. Headsailissä on avoimeen RISC-V -suoritinarkkitehtuuriin pohjautuva moniydinsuoritin, joka sisältää useita
+\noindent \foreignlanguage{finnish}{Arkielämässämme kohtaamiemme konvolutioverkkoja hyödyntävien sovellusten mää\-rä on lisääntynyt, samanaikaisesti kiinnostuksen kasvaessa heterogeenisiä jär\-jes\-tel\-mä\-pii\-re\-jä kohtaan. Yksi esimerkki tällaisesta järjestelmäpiiristä on Tampereen yliopiston SoC Hub -tutkimusryhmässä kehitetty Headsail. Headsailissä on avoimeen RISC-V -suoritinarkkitehtuuriin pohjautuva moniydinsuoritin, joka sisältää useita
 oheislaitteita, joista yksi on syväoppimiskiihdytin.}
 
 \foreignlanguage{finnish}{Työn tarkoituksena oli suunnitella ohjelmistopino jolla syväoppimiskiihdytintä voitaisiin käyttää päätelmien laskemiseen.
@@ -207,7 +208,7 @@ Projektin alkaessa Headsail oli vielä kehityksessä, joten rakensimme sitä vas
 \foreignlanguage{finnish}{Lopulta saimme valmiiksi syväoppimiskiihdyttimen käytön mahdollistavan ohjelmistopinon. Integraatio TVM-koneoppimiskääntäjän kanssa, mahdollisti sellaisten ohjelmistojen kehittämisen, joissa hyödynnettiin korkeantason alustoilla kehitettyjä kvantisoituja konvoluutioneuroverkkoja. MLPerf Tiny -suorituskykytestin avulla pystyimme arvioimaan ohjelmistopinoa hyödyntävien ohjelmistojen ennustustarkkuuden ja osoittamaan että Headsailin syväoppimiskiihdytintä voidaan käyttää kiihdyttmään joitain neuroverkkoja, siten että tarkkuus säilyy hyväksyttävänä. Aikarajoitteiden vuoksi emme kuitenkaan pystyneet suorittamaan samaa testiä lopullisella piirillä.}
 
 
-\noindent\textbf{Keywords:} syväoppiminen, järjestelmäpiiri, RISC-V, TVM, Renode
+\noindent\textbf{Keywords:} syväoppiminen, järjestelmäpiiri, RISC-V, TVM, Renode, MLPerf Tiny
 
 ~
 
@@ -299,12 +300,15 @@ Projektin alkaessa Headsail oli vielä kehityksessä, joten rakensimme sitä vas
 \setcounter{page}{1} % Start numbering from zero because command
                      % 'chapter*' does page break
 
-In recent years neural network based application have become more and more prominent in our everyday-life. The large driver for this has been the adoption of efficient accelerators in mobile device, that have enabled running neural network applications of mobile devices, such as smartphones.
+In recent years neural network based applications have become more prominent in our everyday-life, where most smartphones come equipped with predictive text keyboards, facial recognition functionalities and automatic enhancements on pictures. A large driver for this has been the adoption of efficient accelerators in mobile device, that have enabled executing inference on more complex deep neural networks on mobile and edge devices.
 
-This interest in neural networks has coincided with the industry's move to heterogeneous System-on-chip solutions being used in consumer and professional devices, to improve computational performance.
-More often these companies integrate their accelerators into SoCs, which include CPUs, GPUs, memory and other accelerators and peripherals in one package. Apple and Qualcomm have proved with their SoCs that they can attain desktop like performance in a smaller package than was previously possible. The industry moving towards SoCs has generated new interest in developing open-source SoCs.
+This interest in neural networks has coincided with the industry's move towards heterogeneous System-on-chip (SoC) solutions being put into consumer and professional electronics, with the goal of improving task specific performance and improving battery life. With SoCs, a single circuit houses multiple different computing elements, such as a CPU, GPU, memory, IO and task specific accelerators.
+In addition to commercial SoCs, academic organization have been taping out their own SoC for research purposes. One such SoC is Headsail by the SoC Hub consortium~\cite{keelhaul} in Tampere University.
 
-The goal of this project was to build software support for the Deep-Learning Accelerator in the upcoming Headsail SoC from SoC Hub using a Renode based virtual prototype as the development platform. The goal was to use this concurrent development approach to have software support ready before the chip had been manufactured.
+This thesis has two goals. First is to build a virtual counterpart of the Headsail, to enable firmware development before the tape-out. We want to know if a high-level full system emulator, can be used as a prototyping platform for firmware development for a heterogeneous SoC.
+The second goal is to design and develop a software stack capable of utilizing a deep learning accelerator in Headsail for executing inference of arbitrary INT8 quantized neural networks, alongside a use-case application showcasing these capabilities. We propose one such software stack based on completely open-source technologies, which we develop on the virtual counterpart of Headsail.
+
+This thesis consists of six chapters. Chapter~\ref{ch:background} goes over the necessary background information, for understanding the theory behind our approach. Chapter~\ref{ch:methodology} introduces all the relevant technologies used in the stack, with great detail. Chapter~\ref{ch:implementation} present our solution for the described software stack, explains the rationale without design choices. Chapter~\ref{ch:results} presents the results of the benchmark for the virtual version of Headsail. And finally, chapter~\ref{ch:conclusions} is the concluding chapter that summarizes the work presented in this thesis, and presents topics for future work that could be done to improve the work presented in this thesis.
 
 \chapter{Background}
 This section covers the topics in Deep Learning that relate to the implementation of the project, with focus on performing inference on deep neural networks. In addition to this we discuss hardware approaches for building tightly integrated single chip systems with SoCs and for accelerating inference workloads with dedicated deep learning accelerators.
@@ -831,7 +835,7 @@ Model training is computationally expensive process and in the case of some of t
 Most training frameworks use 32-bit floating point values to represent rational numbers.~\cite{paszke_pytorch_2019}\cite{tensorflow2015-whitepaper}. This allows for the best accuracy in the training. After training the weights and biases can be moved to the target device for inference. Even in the cases where the target model is to be quantized, the network is first trained with high accuracy floating points and quantized afterwards, to represent the rational values with integers to ensure high model accuracy.
 
 \section{Quantization}
-When training DNN models with high-level tools like Pytorch, models are built to use floating point values. In recent years big players like NVIDIA have started to utilize more and more quantized integer models\fixthis{Needs citation}. This is due to the fact that as the amount of parameters in models like GPT, has been growing exponentially\fixthis{Needs citation}. Often there are significant performance gains available by reducing the granularity of the parameters without a major loss in model accuracy as shown~\cite{krishnamoorthi_quantizing_2018,draghici_capabilities_2002}. Standard floating point value has a width of 32-bits, whereas INT8 which is the most common integer type in DNNs has just the 8 bits. Thus, when less granularity is acceptable similarly performing integer based accelerator can do 4 times the calculations when compared to a floating point accelerator.
+When training DNN models with high-level tools like Pytorch, models are built to use floating point values. In recent years quantization has become a well proven optimization technique for improving inference throughput, and reducing the size of models~\cite{wu_integer_2020}. Often there are significant performance gains available by reducing the granularity of the parameters without a major loss in model accuracy as shown~\cite{krishnamoorthi_quantizing_2018,draghici_capabilities_2002}. Standard floating point value has a width of 32-bits, whereas INT8 which is the most common integer type in DNNs has just the 8 bits. Thus, when less granularity is acceptable similarly performing integer based accelerator can do 4 times the calculations when compared to a floating point accelerator.
 Some models reduce that amount of granularity even more and have layers using 4-bit or 2-bit integers. With 2-bit integers one can do 16-times as many calculations in comparison to floating points.
 
 It's also possible to have only parts of the model quantized. For these cases it might be necessary to have additional conversion layers to go from floating point inputs to integers and backwards. This can be useful for the cases where the target platform is only able to accelerate quantized layers, but the developer want's to use well proven subnetwork to ensure accuracy while the rest of the network is hardware accelerated to improve performance.
@@ -870,7 +874,7 @@ Some integer accelerators might support performing the quatizations in hardware,
 \section{Validation and DNN inference evaluation metrics}
 Model validation is a practice of evaluating the quality of predictions of a neural network. Validation can be done during model training, as well as after training has finished. The purpose of training validation is to detect overfitting, by testing the so far trained model between training loops with data it has not been trained on. The idea is to simulate inference, so that it performs equally well for unseen data as it does with training data.
 
-Post training validation ensures that the trained model still performs in a new platform or environment. For example after a model has been trained on a high-level framework and moved on to a different run time on a another platform, it should be validated to confirm that the new stack works as expected. Different runtime have different implementations of operation and thus the conversion between models, might need additional work from the developer to ensure compatibility.
+Post training validation ensures that the trained model still performs in a new platform or environment. For example after a model has been trained on a high-level framework and moved on to a different run time on an another platform, it should be validated to confirm that the new stack works as expected. Different runtime have different implementations of operation and thus the conversion between models, might need additional work from the developer to ensure compatibility.
 
 To evaluate the accuracy of a neural network we measure the amount of correct predictions relative to incorrect predictions. The suitable metric depends on the used codomain's dimensionality and the problem definition. A metric suitable for 100-class classifier might not suit binary classifier.
 
@@ -893,7 +897,7 @@ In addition to these measures there is false positive rate which is the same as 
 \text{FPR} = \frac{\text{FP}}{\text{FP} + \text{TN}}.
 \end{equation}
 
-For example, let's say we have a binary classifier validate on a dataset that is extremely one-sided, where $999/1000$ entries are false and the rest is true. We could make a simple model that always predicts a false. This would give us a accuracy of $99.9\%$, while being totally unable to distinguish between the classes, while the rest of the measures reflect the nature of the model more accurate manner with a value of $0$.~\cite{DeepLearningBook}
+For example, let's say we have a binary classifier validate on a dataset that is extremely one-sided, where $999/1000$ entries are false, and the rest is true. We could make a simple model that always predicts a false. This would give us an accuracy of $99.9\%$, while being totally unable to distinguish between the classes, while the rest of the measures reflect the nature of the model more accurate manner with a value of $0$.~\cite{DeepLearningBook}
 
 \subsection{Top-1}
 Top-1 is the most straightforward evaluation metric for multi-class classifiers. In top-1 we simply take the highest classified class and compare that to ground truth. If the predicted class is the same as the ground truth the predictions is counted as correct. This is repeated for all inputs in the validation set, and the final accuracy is determined by the relation of correct predictions to the total number of predictions done.
@@ -914,7 +918,7 @@ where TPR is the true positive rate, the relative amount of correct positive pre
 
 \section{System-on-chip}
 The limited growth in single-core performance due to limitations of Dennard scaling~\cite{esmaeilzadeh_dark_2011}, has shifted the focus of CPU designers towards homogeneous multicore architectures.
-and the to need overcome Moore's law chipmakers have been moving even further towards heterogeneous architectures. Heterogeneous architectures consist of conventional von Neumann CPUs and unconventional computing elements working together to perform calculations. Unconventional computing elements, might include GPGPUs, FPGAs and custom logic units.~\cite{chung_single-chip_2010}
+And the need to overcome Moore's law has made chipmakers move even further towards heterogeneous architectures. Heterogeneous architectures consist of conventional von Neumann CPUs and unconventional computing elements working together to perform calculations. Unconventional computing elements, might include GPGPUs, FPGAs and custom logic units.~\cite{chung_single-chip_2010}
 
 System-on-chips (SoCs) are a form of heterogeneous computing, where multiple different computing elements and electronic systems are integrated into one circuit.~\cite{Greaves2021}
 SoCs generally include CPUs, memories, IO interfaces and specialized accelerators, but conceptually there is no set definition on what SoC needs to include.
@@ -943,8 +947,8 @@ This section goes over the technologies used to complete this project in detail.
 
 \section{Headsail}
 Headsail is the third SoC build by the SoC Hub research group~\parencite{Ballast}. Headsail has two RISCV CPUs, one 32-bit meant for booting up the system called SysCtrl and one 64-bit 4-core CPU called HPC, meant for running the actual applications, based on the CVA6~\cite{zaruba2019costCVA6}.
-Headsail includes a wide variety of different peripherals, one of which is a custom built the Deep Learning accelerator.
-For I/O headsail  has UART, SPI and I2C connectivity.
+Headsail includes a wide variety of different peripherals, one of which is a custom-built the Deep Learning accelerator.
+For I/O headsail has UART, SPI and I2C connectivity.
 In addition to CPU bootrams, Headsail features 256 megabytes of SDRAM and 128 kilobytes of shared SRAM. This abundance of memory gives application space developers lots of flexibility for their applications. Considering that even small neural networks need megabytes of memory, large memory will be vital for the success of this project.
 
 \subsection{DLA}
@@ -1155,7 +1159,7 @@ The model chosen for the VWW is MobileNetV1~\cite{howard2017mobilenetsefficientc
 Backbone of MobileNet consists of 13 depthwise-separable convolution layers, which are followed by a classifier consisting of average pooling layer and a FC-layer. This architecture makes it the largest model in the benchmark both in terms of parameters and the number of layers.
 
 \subsection{Keyword Spotting}
-The keyword spotting task is an audio processing task where the goal is to identify spoken keyword from multiple sound sources. Data used dataset is the Speech Commands V2 dataset~\cite{warden_speech_2018}, consists of short clips where one of 30 words possible words are pronounced. From these words ten are used as keywords alongside background noise and rest of the words as unknown, to produce 12 labels. The samples are converted to spectograms, allowing us to use a proven image classification network for the classification.
+The keyword spotting task is an audio processing task where the goal is to identify spoken keyword from multiple sound sources. Data used dataset is the Speech Commands V2 dataset~\cite{warden_speech_2018}, consists of short clips where one of 30 words possible words are pronounced. From these words ten are used as keywords alongside background noise and rest of the words as unknown, to produce 12 labels. The samples are converted to spectrograms, allowing us to use a proven image classification network for the classification.
 
 MLPerf Tiny uses model called DS-CNN for the KWS task.
 DS-CNN is very similar to MobileNet, in that it heavily utilized depthwise convolutional layers for the backbone.~\cite{shaheed_ds-cnn_2022}
@@ -1177,7 +1181,7 @@ To enable software development for Headsail before the arrival of the ASICs, we 
 The aim with the virtual platform was to kick-start software development for the ASIC and to give developers a more streamlined development environment.
 We hoped that headsail-vp would enable faster software development, by removing some friction associated to working on the ASIC, as well as giving use the possibility of modifying the design in the case of hardware bugs.
 Additionally, this knowledge in developing virtual prototypes of chip could allow us to better define the hardware specs based on the software demonstrators we develop in for the future chips.
-Renode's integration with RobotFramework allowed us to setup a CI/CD pipeline with Github actions from the beginning, ensuring the functionality of new features.
+Renode's integration with RobotFramework allowed us to set up a CI/CD pipeline with Github actions from the beginning, ensuring the functionality of new features.
 
 \subsection{DLA-vp}
 
@@ -1188,7 +1192,7 @@ Renode's integration with RobotFramework allowed us to setup a CI/CD pipeline wi
 \label{fig:dla_internal}
 \end{figure}
 
-Since wanted to develop a use-case for the Headsail DLA with the virtual platform, but because the DLA is a custom ASIC design we had to model it in Renode ourselves. From the two possible options of adding new peripherals to renode we chose to use the Python peripheral API. This decision was due to the developer's confidence in writing Python rather than C\#, and the interest in seeing if a peripheral of this size could be successfully implemented with the more limited API.
+Since wanted to develop a use-case for the Headsail DLA with the virtual platform, but because the DLA is a custom ASIC design we had to model it in Renode ourselves. From the two possible options of adding new peripherals to Renode, we chose to use the Python peripheral API. This decision was due to the developer's confidence in writing Python rather than C\#, and the interest in seeing if a peripheral of this size could be successfully implemented with the more limited API.
 
 The DLA-vp supports all the same operations as the ASIC implementation, with identical register interface and same data buffer architecture. This allowed us to develop the driver for the DLA completely on the VP first. After the ASICs where ready we could confirm that the DLA driver was indeed usable on both VP and ASIC. Figure~\ref{fig:dla_internal} shows the high-level structure of the DLA, featuring the input buffer as colored block and the functional blocks in white. This high-level processing pipeline is followed with both the ASIC implementation and in DLA-vp.
 
@@ -1478,7 +1482,7 @@ int _fork() {
 
 Porting Libgloss involves implementing 16 system calls, crt0 and a linker script. From the 16 system calls only some are mandatory for us to implement, because we are targeting only bare-metal applications without a filesystem. The table~\ref{tab:newlib_syscalls} shows all the Libgloss system calls with column 3 displaying if we implemented the call. The unimplemented calls still need to be defined in the Libgloss source for linking purposes, but they don't need to do anything except return an error. Program~\ref{lst:newlib-stump}, shows and example of a minimal implementation for the fork system call in Headsail's Newlib port. The purpose of the Fork system calls is to  duplicate a process, but since we don't support multithreading or any other form of process concurrency it will never be called, thus having it return error is correct behaviour. We use this same approach in the rest of the system call that we didn't implement.
 
-The system calls can be implemented either in non-reentrant or reentrant way. Re-entrant system calls are thread safe but require an additional argument, re-entrancy structure, to be passed. Re-entrancy structure holds local values specific for that instance of the function call, whereas the non-reentrant version of the function refers to shared global variables. For single threaded applications on headsail implementing the non-reentrant systems calls was enough.~\parencite{bennett2010porting}
+The system calls can be implemented either in non-reentrant or reentrant way. Re-entrant system calls are thread safe but require an additional argument--the reentrancy structure--to be passed. Reentrancy structure holds local values specific for that instance of the function call, whereas the non-reentrant version of the function refers to shared global variables. For single threaded applications on headsail implementing the non-reentrant systems calls was enough.~\parencite{bennett2010porting}
 
 In addition to the system calls Libgloss needs to have a crt0, which is a small program that includes a \texttt{\_start} symbol, a call to the \texttt{main} function, some global definitions, and optionally hardware initializations. The \texttt{\_start} symbol signifies the beginning of a C program and is used by the linker to place the program to start from the correct memory address. After declaring the \texttt{\_start} symbol, our crt0 clears the bss segment, registers the \texttt{exit} function, initializes the UART and finally calls the \texttt{main} function.
 
@@ -1576,6 +1580,7 @@ Even though Headsail is the third SoC Hub Soc, it had little existing software s
 
 
 \chapter{Results}
+\label{ch:results}
 After finishing development of the software stack described in the chapter~\ref{ch:implementation} we ran the MLPerf Tiny benchmark for two configurations. First being on the headsail-vp with only single HPC core, and second on headsail-vp with single HPC core and the DLA-vp working in tandem. Unfortunately due to problems with the ASIC, we were not able to include any results from the Hardware and thus this benchmark only serves the purpose of validating the ability of the Headsail to execute the reference models.
 \begin{table}[h]
 \centering
@@ -1603,7 +1608,7 @@ After finishing development of the software stack described in the chapter~\ref{
 
 The table~\ref{tab:benchmark-results} presents the results of the MLPerf Tiny benchmarks, for HPC standalone and HPC with 2D convolutions assigned to the DLA. As noted previously the Anomaly Detection task is unacceleratable due to the lack of convolutions, and thus it has equal performance between the runs.
 
-When run without the DLA, just with HPC, Headsail passes the accuracy requirements for all the tasks as can be seen from the last column of the table. However, this was not the case for runs using the DLA. With the exception of the keyword spotting task all the task failed to pass their required accuracy threshold. Since anomaly detection is not a CNN we couldn't accelerate it on the DLA.
+When run without the DLA, just with HPC, Headsail passes the accuracy requirements for all the tasks as can be seen from the last column of the table. However, this was not the case for runs using the DLA. Except for the keyword spotting task all the task failed to pass their required accuracy threshold. Since anomaly detection is not a CNN we couldn't accelerate it on the DLA.
 
 As mentioned previously Renode isn't fitting for performance evaluation, and thus it isn't feasible to benchmark DLA-vp with MLPerf Tiny. We can however run the MLPerf Tiny tasks to see if the DLA reaches the required accuracy requirements of the benchmark. This essentially verifies the complete software stack and was especially useful during the development of DLA graph legalization pass.
 
@@ -1678,7 +1683,7 @@ Figure~\ref{fig:vww-results} shows the results of the MLPerf Tiny visual wake wo
 At this moment it's unclear why this task performed so poorly on the DLA, but what we are seeing from the results is that the inherent weight and biases of the particular model. This is supported by the results of the HPC only run where the predictions steered noticeably towards False predictions. One possible issued we noticed is that the VWW reference model has very high bias values in its last convolution layer. As discussed earlier in section~\ref{sec:software_support} might result in channel saturation issues when the bit-width of the bias is limited.
 
 \section{Anomaly Detection}
-The FC-AutoEncoder model used in the anomaly detection task isn't acceleratable on Headsail DLA, and thus we have results only for the HPC only run. With an AUC score of 0.69, we didn't reach the required threshold of $0.85$. This was suprising since the other benchmarks did easily reach their required accuracies, when ran with only HPC.  We suspect that this discrepancy is due to some issue with the input data quantization in our preprocessing setup, but we didn't have time to investigate further.
+The FC-AutoEncoder model used in the anomaly detection task isn't acceleratable on Headsail DLA, and thus we have results only for the HPC only run. With an AUC score of 0.69, we didn't reach the required threshold of $0.85$. This was surprising since the other benchmarks did easily reach their required accuracies, when ran with only HPC. We suspect that this discrepancy is due to some issue with the input data quantization in our preprocessing setup, but we didn't have time to investigate further.
 
 \chapter{Conclusions}
 \label{ch:conclusions}
@@ -1710,7 +1715,7 @@ As we have seen from other deep learning accelerators, the main bottleneck in th
 
 From hardware point of view this project has highlighted many limitations regarding the DLA when considering actual use-cases for it. To enable the use of better data locality principles the next iteration of the Headsail could include a FIFO-based scaler unit in between Bias and ReLU steps. This would allow allocating the \text{qnn.requantize} operations to the accelerator, which would reduce the amount data transfers between the TVM runtime and the driver, possible improving performance while also fixing the issue caused by result clipping the original design, while keeping the output width as 8-bits. This would give better compatibility with pretrained models.
 
-To improve DL support on Headsail, there is a need for DLA specific training flow to be implemented with one of the major DL frameworks. This would enabled the creation of models with full compatibility with the DLA. Since development and training of models takes a lot of time and computing resource it wasn't included in this work but should be pursued with more time.
+To improve DL support on Headsail, there is a need for DLA specific training flow to be implemented with one of the major DL frameworks. This would enable the creation of models with full compatibility with the DLA. Since development and training of models takes a lot of time and computing resource it wasn't included in this work but should be pursued with more time.
 
 As discussed earlier in this work, fully connected layers are still widely used as major component in auto-encoders and classifiers layers in many networks, and thus accelerating them can introduce significant performance increases for some networks. To enable accelerating all the tasks in MLPerf Tiny we should consider if the next iteration of the MAC array could be modified to support fully connected layer without greatly increasing the area in the chip.
 
@@ -1795,20 +1800,20 @@ int tvmgen_default_headsail_main_0(int8_t* headsail_0_i0, int8_t* headsail_0_i1,
 
 
 
-\def\appB{APPENDIX B. Something completely different} % Define another new command
-\chapter*{\appB}                       % As above, but use \appB instead of \appA
-\label{app:B}
-\markboth{\appB}{\appB}                     
-\addcontentsline{toc}{chapter}{\appB}  
+% \def\appB{APPENDIX B. Something completely different} % Define another new command
+% \chapter*{\appB}                       % As above, but use \appB instead of \appA
+% \label{app:B}
+% \markboth{\appB}{\appB}
+% \addcontentsline{toc}{chapter}{\appB}
 
 
-You can append to your thesis, for example, lengthy mathematical
-derivations, an important algorithm in a programming language, input
-and output listings, an extract of a standard relating to your thesis,
-a user manual, empirical knowledge produced while preparing the
-thesis, the results of a survey, lists, pictures, drawings, maps,
-complex charts (conceptual schema, circuit diagrams, structure charts)
-and so on.
+% You can append to your thesis, for example, lengthy mathematical
+% derivations, an important algorithm in a programming language, input
+% and output listings, an extract of a standard relating to your thesis,
+% a user manual, empirical knowledge produced while preparing the
+% thesis, the results of a survey, lists, pictures, drawings, maps,
+% complex charts (conceptual schema, circuit diagrams, structure charts)
+% and so on.
 
 
 %

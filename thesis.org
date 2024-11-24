@@ -1,14 +1,15 @@
 #+title: Thesis
 * TODOS :thesis:
 ** Diplomityö [/]
-** TODO Get and report Anomaly Detection result for the HPC
-**** TODO Figure out the ToyAdmos dataset
-*** TODO Write abstract [0/2]
-**** TODO Englanninkielinen tiviistelmä
-**** TODO Suomenkielinen tiviistelmä
+*** DONE Get and report Anomaly Detection result for the HPC
+**** DONE Figure out the ToyAdmos dataset
+*** DONE Write abstract [2/2]
+**** DONE Englanninkielinen tiviistelmä
+**** DONE Suomenkielinen tiviistelmä
 *** TODO Final grammar and spelling check
 *** DONE Add TUNI AI clause
-*** TODO Improve introdocution
+*** DONE Improve introdocution
+*** DONE Preface
 *** DONE Write about depthwise conv2d
 ** TODO Byrokaratia [0/3]
 *** TODO Kypsyysnäyte
