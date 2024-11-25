@@ -1,6 +1,6 @@
 #+title: Thesis
 * TODOS :thesis:
-** Diplomityö [/]
+** Diplomityö [6/7]
 *** DONE Get and report Anomaly Detection result for the HPC
 **** DONE Figure out the ToyAdmos dataset
 *** DONE Write abstract [2/2]

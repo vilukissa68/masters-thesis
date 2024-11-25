@@ -29,7 +29,7 @@
 % \RequirePackage[utf8]{inputenc}% includes scandinavian letters
 \RequirePackage{graphicx}        % for figures
 \RequirePackage{psfrag}          % for editing ps files
-\RequirePackage{subfigure}       % parallel small figures a,b,c...
+%\RequirePackage{subfigure}       % parallel small figures a,b,c...
 \RequirePackage{wrapfig}         % put text around the fig
 \RequirePackage{fancyhdr}        % prettier paging, http://www.ctan.org/tex-archive/macros/latex/contrib/fancyhdr/fancyhdr.pdf
 \RequirePackage{supertabular}    % tables over 1 page
@@ -206,7 +206,7 @@
 \renewcommand \thefigure{
   \ifnum \c@chapter>\z@ \chapfigname.\fi \@arabic\c@figure}
 \captionsetup[figure]{labelfont={bf,it},textfont={it}}
-\captionsetup[subfigure]{labelfont=bf,textfont=normalfont,singlelinecheck=off,justification=raggedright}
+%\captionsetup[subfigure]{labelfont=bf,textfont=normalfont,singlelinecheck=off,justification=raggedright}
 
 
 \renewcommand \thetable{

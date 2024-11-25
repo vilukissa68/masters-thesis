@@ -26,7 +26,7 @@
 \author{Väinö-Waltteri Granat}
 %\title{Zero to DLA: Building Software Support For Custom RISC-V SoC To Accelerate Deep Neural Networks} % primary title (for front page)
 \title{Zero to DLA: Building a Software Stack for Accelerating Deep Neural Networks on Custom RISC-V SoC} % primary title (for front page)
-\def\finnishtitle{Ohjelmistopinon kehittäminen syvöoppivien neuroverkkojen kiihdytykseen mukautetulla RISC-V järjestelmäpiirillä}
+\def\finnishtitle{Ohjelmistopinon kehittäminen syväoppivien neuroverkkojen kiihdyttämiseksi mukautetulla RISC-V järjestelmäpiirillä}
 \thesistype{Master of Science Thesis} % or Bachelor of Science, Laboratory Report...
 
 % Put your thesis' main language last
@@ -144,7 +144,6 @@ maxbibnames=5
 \clearpage
 \fi
 
-\input{use-of-ai.tex}
 
 % Turn off page numbering for the first pages
 \pagenumbering{gobble}
@@ -166,12 +165,12 @@ November 2024
 % Abstract and keywords
 % ---------------------------------------
 
-\noindent In recent years we have seen a large increase in the number of applications utilizing convolutional neural networks on mobile device in our everyday-life. This phenomenon has coincided with the increased interest in heterogeneous system on chips in consumer electronics. This has motivated organizations and research groups to build their own SoCs. One such SoC is Headsail. A multicore RISC-V SoC featuring a variety of peripherals, developed in Tampere University's SoC Hub research team.
+\noindent In recent years we have seen a large increase in the number of applications utilizing convolutional neural networks on mobile device in our everyday-life. This phenomenon has coincided with the increased interest in heterogeneous system-on-chips in consumer electronics. This has motivated organizations and research groups to build their own SoCs. One such SoC is Headsail. A multicore RISC-V SoC featuring a variety of peripherals, developed in Tampere University's SoC Hub research team.
 
-The purpose of this project was to target Headsail's custom deep learning accelerator, and develop a software stack to utilize its capabilities for running inference on arbitrary convolutional neural networks. At the time of starting this project Headsail was still in development so we build our own Headsail virtual prototype with the accelerator using Renode, and it's Python peripheral API. The goal was to run a neural accelerator benchmark simulating real-life use cases on the virtual prototype to confirm the feasibility of the stack, and then to run the same use case on the ASIC.
+The purpose of this project was to target Headsail's custom deep learning accelerator, and develop a software stack to utilize its capabilities for running inference on arbitrary convolutional neural networks. At the time of starting this project Headsail was still in development so we built a Headsail virtual prototype with the accelerator using Renode, and Renode's Python peripheral API. The goal was to run a neural accelerator benchmark simulating real-life use cases on the virtual prototype to confirm the feasibility of the stack, and then to run the same use case on the ASIC.
 This necessitated for us to develop a driver for the accelerator, BSP for the platform and port a C standard library for it, integrate the platform package with the TVM machine learning compiler and finally to evaluate the accuracy of the stack and the accelerator.
 
-In the end we were able to design and build a working software stack to facilitate the SoC as well as the deep learning accelerator. We were also able to integrate the stack with TVM, which enabled us to build programs to run inference on quantized convolutional neural network, trained on common high-level deep learning framework. Using MLPerf Tiny benchmark we were able to evaluate the accuracy of the stack and concluded that DLA is capable of executing some models with an acceptable accuracy. Due to time constraints we were not able to run the benchmark on the final ASIC.
+In the end we were able to design and build a working software stack to facilitate the SoC aswell as the deep learning accelerator. We were also able to integrate the stack with TVM, which enabled us to build programs to run inference on quantized convolutional neural network, trained on common high-level deep learning framework. Using MLPerf Tiny benchmark we were able to evaluate the accuracy of the stack and concluded that DLA is capable of executing some models with an acceptable accuracy. Due to time constraints we were not able to run the benchmark on the final ASIC.
 
 \noindent\textbf{Keywords:} deep learning, system-on-chip, RISC-V, TVM, Renode, MLPerf Tiny
 
@@ -217,7 +216,15 @@ Projektin alkaessa Headsail oli vielä kehityksessä, joten rakensimme sitä vas
 
 \clearpage
 
+\input{use-of-ai.tex}
+
 \preface{preface.tex}{Tampere, 24th November 2024}
+
+% TOC
+\setcounter{tocdepth}{3}              % How many header level are included
+\tableofcontents                      % Create TOC
+\clearpage
+
 
 \section*{List of Abbreviations}
 \begin{acronym}
@@ -277,9 +284,6 @@ Projektin alkaessa Headsail oli vielä kehityksessä, joten rakensimme sitä vas
 \listoftables
 \clearpage
 
-
-\setcounter{tocdepth}{3}              % How many header level are included
-\tableofcontents                      % Create TOC
 
 % The actual text begins here and page numbering changes to 1,2...
 % Leave the backside of title empty in twoside mode
@@ -347,9 +351,9 @@ This section covers the topics in Deep Learning that relate to the implementatio
 Machine Learning is a field of computer science that researches algorithms that allow programs to adapt to given inputs as means to improve itself.~\cite{mitchell1997machine}
 The central component of machine learning is the model, which is a function that distinguishes a concept from data.
 
-To build a model we first need training data. Training data is a set of data, often with known associated categories, that corresponds with the unseen data we want to categorize with the model. For example if training a model to count the number of people in image, we would have a training data consisting of images with different amount of people, with the wanted categorization (number of people present in the image) associated with each. Model is then trained by choosing a particular function and changing its parameters so that it can categorize training data in a wanted manner. After training the performance can then be validated by feeding the model unseen data and seeing how well it can categorize it.
+To build a model we first need training data. Training data is a set of data, often with known associated categories, that corresponds with the unseen data we want to categorize with the model. For example if training a model to count the number of people in image, we would have a training data consisting of images with different amount of people, with the wanted categorization (number of people present in the image) associated with each. This is known as supervised learning, as opposed to unsupervised learning where the class labels are not present. Model is then trained by choosing a particular function and changing its parameters so that it can categorize training data in a wanted manner. After training the performance can then be validated by feeding the model unseen data and seeing how well it can categorize it.
 
-A particular models domain and codomain are defined by the given problem statement. For example, inputs of an image classifier are three-dimensional arrays, where the second and third dimensions correspond to the height and width of the image and the first dimension as the channel in RGB color space as shown in figure~\ref{fig:rgb-array}, this commonly known as CHW layout.
+A particular model's domain and codomain are defined by the given problem statement. For example, inputs of an image classifier are three-dimensional arrays, where the second and third dimensions correspond to the height and width of the image and the first dimension as the channel in RGB color space as shown in figure~\ref{fig:rgb-array}, this commonly known as CHW layout.
 The output of this model would be one or more labels from the codomain.
 
 
@@ -378,7 +382,7 @@ where $g$ maps RGB image domain to a codomain of length 8 is acts as the domain 
 
 
 \section{Deep Learning}
-Deep learning is a subcategory of machine learning that focuses on using deep neural networks as the model. Deep neural networks are a specific case of multilayer perceptrons where there is at least one hidden layer between input and output layer to introduce non-linearity. DNNs try to solve the problem of choosing a good model for a problem statement, by allowing the developers to discover a suitable function using a training algorithm.
+Deep learning is a subcategory of machine learning that focuses on using deep neural networks as the model. Deep neural networks are a specific case of multilayer perceptrons where there is at least one hidden layer between input and output layer that introduces non-linearity, to the model. DNNs try to solve the problem of choosing a good model for a problem statement, by allowing the developers to discover a suitable function using a training algorithm.
 
 DNN model is weighted graph where nodes are grouped into mostly sequential layers and vertices connect nodes of consecutive layers with simple operations. The vertices hold weights and biases signifying the amount of association between nodes. Essentially what the graph models is, is a N-dimensional space which the non-linear function inhabits, where each of the vertices introduces its own dimension.
 This means that increasing the amount of parameters in a model allows it to approximate more complex function, generally increasing the ability to perform more complex tasks.~\cite{sze_efficient_2017}
@@ -430,7 +434,7 @@ where $y$ is the output of the layer, $W$ is the weight matrix for that layer an
 
 Figure~\ref{fig:fc-layer} shows a simple fully connected network. In the figure each node is an element in one layer's input $x$ and the vertices are the weights that connect each input to each output element. The second layer in the figure is a hidden layer, since it doesn't have input or output nodes from the network.
 
-Many classifier networks use a fully connected layer to do the final step in classification to squash the prediction dimensions to correspond with the expected codomain dimensions. This allows for a network to be used for different sized codomains. In such a case the last FC-layer is known as classifier and preceding set of layers is called a backbone. If for example we have a network architecture is good at classifying images, and we have two different problem definitions. From which first is to classify cars images from 20 different manufacturers and second is to classify animal images to ruminants and monogastrics. We can just modify the FC classifier to have 20 outputs for the first problem and two for the second and train with different datasets.
+Many classifier networks use a fully connected layer to perform the final step in classification to squash the prediction dimensions to correspond with the expected codomain dimensions. This allows for a network to be used for different sized codomains. In such a case the last FC-layer is known as classifier and preceding set of layers is called a backbone. If for example we have a network architecture is good at classifying images, and we have two different problem definitions. From which first is to classify cars images from 20 different manufacturers and second is to classify animal images to ruminants and monogastrics. We can just modify the FC classifier to have 20 outputs for the first problem and two for the second and train with different datasets.
 
 \subsection{Convolutional neural networks}
 \begin{figure}
@@ -488,8 +492,7 @@ Many classifier networks use a fully connected layer to do the final step in cla
 \caption{Visualization of 2D convolution being done for 7x7 input with 3x3 kernel. Adapted from~\cite{riebesell_tikz_2020}.}
 \end{figure}
 
-Convolutional neural networks are a type of neural networks that heavily utilize convolution operations. Convolution is used to extract features from data.
-Convolution is defined as
+Convolutional neural networks are a type of neural networks that heavily utilize convolution operations. Convolution is used to extract features from data, and is defined as
 \begin{align}
 (f \ast g)(t) = \int_{-\infty}^{\infty}f(t-x)g(t)dx,
 \end{align}
@@ -517,7 +520,7 @@ The specific weights are found during training and that defines which features a
 \subsection{Depthwise Separable Convolution}
 As seen in the previous section, convolution is a costly operation to calculate, when the size of inputs and amount of features grows. This is especially difficult for low power hardware that can't parallellize convolution and has to process the operation sequentially.
 
-One common solution for this problem that is often seen in embedded applications, is to use grouped convolution. In grouped convolution we separate the input channels and filters into $G$ groups so that the convolution is only performed among inputs and filters belonging to the same group. The groups essentially behave as completely independent convolution layers from in respect to the other groups.  In the end after each input channels has been processed the resulting features get concatenated back into one tensor which has the equal size as the output of same convolution without groups with less calculation.~\cite{howard2017mobilenetsefficientconvolutionalneural, tan_efficientnet_2020}
+One common solution for this problem that is often seen in embedded applications, is to use grouped convolution. In grouped convolution we separate the input channels and filters into $G$ groups so that the convolution is only performed among inputs and filters belonging to the same group. The groups essentially behave as completely independent convolution layers in respect to the other groups.  In the end after each input channels has been processed the resulting features get concatenated back into one tensor which has the equal size as the output of same convolution without groups with less calculation.~\cite{howard2017mobilenetsefficientconvolutionalneural, tan_efficientnet_2020}
 
 The computational cost of standard two-dimensional convolution is
 \begin{equation}
@@ -615,7 +618,7 @@ Figure~\ref{fig:activation-functions} shows how ReLU and sigmoid non-linearly sc
 \end{figure}
 
 
-Combining two-dimensional affine transformation and ReLU gives as the basic Conv2D layer found in most image classification network, like Resnet~\parencite{he2015deepresiduallearningimage} and MobileNet~\parencite{howard2017mobilenetsefficientconvolutionalneural}.
+Combining two-dimensional affine transformation and ReLU gives us the basic Conv2D layer found in most image classification network, like Resnet~\parencite{he2015deepresiduallearningimage} and MobileNet~\parencite{howard2017mobilenetsefficientconvolutionalneural}.
 And as with bias, some DL frameworks fuse activation function with the convolution operation to form one layer. Giving use the common definition of a single two-dimensional layer in
 \begin{align}
 ReLU(Conv2D(I, K) + \hat{b}),
@@ -624,7 +627,7 @@ ReLU(Conv2D(I, K) + \hat{b}),
 where $I$ and $K$ are the respective input and weight tensors of the layer,  $\hat{b}$ is the vector containing channelwise bias values and $ReLU$ function for the hidden activation of the layer.
 
 \section{Layer graphs}
-As mentioned, DNNs are neural networks with one or more hidden layers. Generally the amount of layers correlates to better prediction results, due to the increasing amount learnable parameters being able to capture more complex features.
+As mentioned before, DNNs are neural networks with one or more hidden layers. Generally the amount of layers correlates to better prediction results, due to the increasing amount learnable parameters being able to capture more complex features.
 
 The relationships between layers can be presented as graphs, where nodes are layers or fused layers and paths are the data flow directions. Figure~\ref{fig:conv2d-layer} displays the equation~\ref{eq:conv2d} as a simple graph were data flow is always from one layers output to next layers input.
 
@@ -797,7 +800,7 @@ Connection can also branch, and the same layer output can be used as input for m
 
 
 \section{Neural Model Training}
-To perform a given task all neural networks need to be trained. With training the network parameters (weights and biases) are tuned in such a way that the network approximates a function performant in the task. This same concept applies to most model based ML-methods but with neural network this training is most often done with the backpropagation algorithm. The first step of backpropagation is the forward pass. Forward pass is essentially inference, where the network is given inputs from a known set of inputs with associated ground truth labels for which the network performs predictions. The predictions are then compared with the ground truth with a loss function to calculate current network error. The choice of loss function is critical and poor choice can heavily effect the models potential to discover suitable parameters. Some common loss functions are mean squared error, cross entropy loss and L1 loss.
+To perform a given task all neural networks need to be trained. With training the network parameters (weights and biases) are tuned in such a way that the network approximates a function performant in the task. This same concept applies to most model based ML-methods, but with neural network this training is most often done with the backpropagation algorithm. The first step of backpropagation is the forward pass. Forward pass is essentially inference, where the network is given inputs from a known set of inputs with associated ground truth labels for which the network performs predictions. The predictions are then compared with the ground truth with a loss function to calculate current network error. The choice of loss function is critical and poor choice can heavily effect the models potential to discover suitable parameters. Some common loss functions are mean squared error, cross entropy loss and L1 loss.
 
 After forward pass comes the backwards pass, where the parameters of the network are adjusted to minimize the loss function for the given inputs. The tuning is done layer by layer starting from the output layer and working towards the input layer, hence the name backpropagation. To tune the parameters in a way that maximally improves the prediction results, we need to minimize the value of the loss function. To accomplish this we calculate the gradient decent of the network. Essentially gradient descent describe derivative of the n-dimensional space housing the function approximation of the network. Each parameter introduces its own dimension and thus adding a parameter to the derivative.
 
@@ -819,7 +822,7 @@ Since it's known that the activation of a layer is the affine transformation we 
 z_{K} = a_{K-1}W_{K} + b_{K} \Rightarrow \frac{\partial L}{\partial W_{K}} = \frac{\partial L}{\partial z_{K}} \cdot a_{K-1}
 \end{align}
 where $W_{K}$ is the vector of weights for layer $K$.
-To tune the weights of a particular layer we need to define an additional term, a learning $\eta$ which describe the amount of movement towards the minimum value of the loss function. We can then use the following equation to calculate new weights for all the layers
+To tune the weights of a particular layer we need to define an additional term, a learning rate $\eta$ which describe the amount of movement towards the minimum value of the loss function. We can then use the following equation to calculate new weights for all the layers
 \begin{equation}
 W_{k} = W_{K} - \eta \frac{\partial L}{\partial W_{K}}.
 \end{equation}
@@ -835,16 +838,16 @@ Model training is computationally expensive process and in the case of some of t
 Most training frameworks use 32-bit floating point values to represent rational numbers.~\cite{paszke_pytorch_2019}\cite{tensorflow2015-whitepaper}. This allows for the best accuracy in the training. After training the weights and biases can be moved to the target device for inference. Even in the cases where the target model is to be quantized, the network is first trained with high accuracy floating points and quantized afterwards, to represent the rational values with integers to ensure high model accuracy.
 
 \section{Quantization}
-When training DNN models with high-level tools like Pytorch, models are built to use floating point values. In recent years quantization has become a well proven optimization technique for improving inference throughput, and reducing the size of models~\cite{wu_integer_2020}. Often there are significant performance gains available by reducing the granularity of the parameters without a major loss in model accuracy as shown~\cite{krishnamoorthi_quantizing_2018,draghici_capabilities_2002}. Standard floating point value has a width of 32-bits, whereas INT8 which is the most common integer type in DNNs has just the 8 bits. Thus, when less granularity is acceptable similarly performing integer based accelerator can do 4 times the calculations when compared to a floating point accelerator.
-Some models reduce that amount of granularity even more and have layers using 4-bit or 2-bit integers. With 2-bit integers one can do 16-times as many calculations in comparison to floating points.
+When training DNN models with high-level tools like Pytorch, models are built to use floating point values. In recent years quantization has become a well proven optimization technique for improving inference throughput, and reducing the size of models~\cite{wu_integer_2020}. Often there are significant performance gains available by reducing the granularity of the parameters without a major loss in model accuracy as shown~\cite{krishnamoorthi_quantizing_2018,draghici_capabilities_2002}. Standard floating point value has a width of 32-bits, whereas INT8 which is a common integer type in DNNs has just the 8 bits. Thus, when less granularity is acceptable similarly performing integer based accelerator can do 4 times the calculations when compared to a floating point accelerator.
+Some models reduce that amount of granularity even more and have layers using 4-bit or 2-bit integers. With 2-bit integers one can do 16-times as many calculations as with floating points, if we suppose hardware that has the same throughput for floating points and integers, with the ability to utilize SIMD instructions. Though, on real hardware integers are almost always faster to calculate than floating points, skewing the performance benefit even more towards quantized integers.
 
 It's also possible to have only parts of the model quantized. For these cases it might be necessary to have additional conversion layers to go from floating point inputs to integers and backwards. This can be useful for the cases where the target platform is only able to accelerate quantized layers, but the developer want's to use well proven subnetwork to ensure accuracy while the rest of the network is hardware accelerated to improve performance.
 
-There are multiple approaches to performing post training quantization, but it essentially always involves representing particular floating point range of a values in layer inputs or outputs with integers fixed to a certain zero-point. Zero-point encodes the integer value that represents the original domain's value zero in the new domain. Tensorflow uses the affine quantization to quantize the floating point parameters to integers
+There are multiple approaches to performing post training quantization, but it essentially always involves representing particular floating point range of a values in layer inputs or outputs with integers fixed to a certain zero point. Zero point encodes the integer value that represents the original domain's value zero in the new domain. Tensorflow uses the affine quantization to quantize the floating point parameters to integers
 \begin{equation}
 x_{Q} = clamp(0, 255, round(\frac{x_{float}}{\Delta}) + z)
 \end{equation}
-where $x_{float}$ is the original parameter values, $x_{Q}$ is the quantized parameter value, $z$ is the zero-point and $\Delta$ is the scaling factor discovered during quantization.
+where $x_{float}$ is the original parameter values, $x_{Q}$ is the quantized parameter value, $z$ is the zero point and $\Delta$ is the scaling factor discovered during quantization.
 The clamp operation limits the input to a given range as such
 \begin{align}
   \label{eq:clamp}
@@ -861,11 +864,11 @@ x_{float} = (x_{Q}-z)\Delta.
 \end{equation}
 This back conversion has no need for the clamping operation or rounding, since the floating point range is larger than the 8-bit integer range.
 
-Another choice for quantization is the uniform symmetric which is similar to the affine quantization, but the zero-point is always set as 0. This ensures that the negative and positive sides are equal, which is desired of signed integer based accelerators. The equation for quantizing a parameter with the uniform symmetric quantization is as follows
+Another choice for quantization is the uniform symmetric which is similar to the affine quantization, but the zero point is always set as 0. This ensures that the negative and positive sides are equal, which is desired of signed integer based accelerators. The equation for quantizing a parameter with the uniform symmetric quantization is as follows
 \begin{equation}
 x_{Q} = clamp(-128, 127, round(\frac{x_{float}}{\Delta})).
 \end{equation}
-From the equation we can see that when compared to the affine quantization the zero-point term has been removed and the range has been shifted by $-128$. Converting back to the original parameter is as simple as applying the scaling factor
+From the equation we can see that when compared to the affine quantization the zero point term has been removed and the range has been shifted by $-128$. Converting back to the original parameter is as simple as applying the scaling factor
 \begin{equation}
 x_{float} = x_{Q}\Delta.
 \end{equation}
@@ -897,7 +900,7 @@ In addition to these measures there is false positive rate which is the same as 
 \text{FPR} = \frac{\text{FP}}{\text{FP} + \text{TN}}.
 \end{equation}
 
-For example, let's say we have a binary classifier validate on a dataset that is extremely one-sided, where $999/1000$ entries are false, and the rest is true. We could make a simple model that always predicts a false. This would give us an accuracy of $99.9\%$, while being totally unable to distinguish between the classes, while the rest of the measures reflect the nature of the model more accurate manner with a value of $0$.~\cite{DeepLearningBook}
+To highlight the need for these different metrics let's say we have a binary classifier to validate on a dataset that is extremely one-sided, where $999/1000$ entries are false, and the rest is true. We could make a simple model that always predicts a false. This would give us an accuracy of $99.9\%$, while being totally unable to distinguish between the classes, while the rest of the measures reflect the nature of the model more accurate manner with a value of $0$.~\cite{DeepLearningBook}
 
 \subsection{Top-1}
 Top-1 is the most straightforward evaluation metric for multi-class classifiers. In top-1 we simply take the highest classified class and compare that to ground truth. If the predicted class is the same as the ground truth the predictions is counted as correct. This is repeated for all inputs in the validation set, and the final accuracy is determined by the relation of correct predictions to the total number of predictions done.
@@ -924,17 +927,19 @@ System-on-chips (SoCs) are a form of heterogeneous computing, where multiple dif
 SoCs generally include CPUs, memories, IO interfaces and specialized accelerators, but conceptually there is no set definition on what SoC needs to include.
 This essentially produces a single functional entity that can easily integrated into multitude of different general processing workloads.
 
-What separates SoCs from other heterogeneous architectures is its level of integration between computing elements. Interconnects that connect the chips computing elements can be run on very high bitrates, greatly reducing latency. Unified memory architectures and DMAs enable different components to use the same data without needing to rely on the main computing units for access, improving the system's coherency. The single chip design of SoCs give them a noticeable advantage in terms of physical size and energy consumption, when compared to traditional heterogeneous architectures. This has made SoC a popular option for mobile and edge devices, where the physical size and the decreased energy consumption has significantly been able to improve performance.
+What separates SoCs from other heterogeneous architectures is its level of integration between computing elements. Interconnects that connect the chips computing elements can be run on very high bitrates, greatly reducing latency. Unified memory architectures and DMAs enable different components to use the same data without needing to rely on the main computing units for access, improving the system's coherency. The single chip design of SoCs give them a noticeable advantage in terms of physical size and energy consumption, when compared to traditional heterogeneous architectures. This has made SoC a popular option for mobile and edge devices, where the physical size and the decreased energy consumption has significantly been able to improve performance.\cite{di_natale_moving_2010}
 
-In recent times SoC have also begun being seen more in consumer laptops, effectively handling desktop workloads as is the case with the Apple M-series of chips as well as the Qualcomm Snapdragon Elite X chip, Intel Lunar Lake.
+In recent times SoC have also begun being seen more in consumer laptops, effectively handling desktop workloads as is the case with the Apple M-series of chips~\cite{apple_m1} and Qualcomm's Snapdragon Elite X series of  chips~\cite{snapdragon_x_elite}.
 
-\cite{di_natale_moving_2010}
+
 
 \section{Deep Learning Accelerators}
 \label{sec:dlas}
-Deep Learning Accelerators (DLAs) or sometimes called Neural Processing Units (NPUs) are hardware accelerators, that accelerate common neural network operations. In many networks, this means accelerating convolution and dense layers by parallellizing the calculation of output elements. Due to the size of DNNs an accelerator cannot usually fit the whole model in to its memory. This necessitates a need for off-chip memory to store the model, which the accelerator accesses for new data between layers. The consecutive nature of most DNN models also makes it impossible to have a pipelined execution of layers, next layer computation generally cannot begin before the previous is finished. For this reason DLAs usually feature just one central computing element.
+Deep Learning Accelerators (DLAs) or sometimes called Neural Processing Units (NPUs) are hardware accelerators, that accelerate common neural network operations. In many networks, this means accelerating convolution and dense layers by parallellizing the calculation of output elements.
 
-In desktop applications and data center workloads neural networks have been accelerated with GPUs, due to their ability to perform linear-algebra operations like matrix multiplication with high amount of parallellity. To improve power efficiency, it's becoming more common for mobile devices to have dedicated DLAs instead of GPUs. Companies such as Apple and Qualcomm now include multiple mobile DLA's in their SoCs to run applications like face recognition on phones using their chips.
+Due to the size of DNNs an accelerator cannot usually fit the whole model in to its memory. This necessitates a need for off-chip memory to store the model, which the accelerator accesses for new data between layers. The consecutive nature of most DNN models also makes it impossible to have a pipelined execution of layers, next layer computation generally cannot begin before the previous is finished. For this reason DLAs usually feature just one central computing element.
+
+In desktop applications and data center workloads neural networks have been accelerated with GPUs, due to their ability to perform linear-algebra operations like matrix multiplication with high amount of parallellity. To improve power efficiency, it's becoming more common for mobile devices to have dedicated DLAs in addition to GPUs. Companies such as Apple and Qualcomm now include multiple mobile DLA's in their SoCs to run applications like face recognition on phones using their chips.
 
 In addition to SoC Hub's Headsail-DLA other organization have developed their own ASIC based accelerator's for DL workloads.
 DianNao is one of the first ASIC based accelerators targeting convolutional deep neural networks~\cite{chen_diannao_2014}. It's based on a pipelined NFU, where the multiply and accumulation operations are implemented as a pipeline alongside bias and sigmoid activations. This is unlike more modern designs where the main computational element is a computational array.
@@ -942,7 +947,7 @@ DianNao is one of the first ASIC based accelerators targeting convolutional deep
 Eyeriss~\cite{chen_eyeriss_2017} is an early example of a MAC array based DLA for accelerating convolution networks, focused on high energy efficiency and performance, by minimizing the amount of data transfers. Eyeriss implements convolution 2d operation with bias and ReLU, and it uses 16-bit floating points. Convolutions are executed in a 12 x 14 PE-array, where each PE performs the multiply-accumulate operation for one input feature element at a time. Eyeriss loads current layers parameters from the off-chip dram into it's 108KB global buffer, from which the operation parameter are scattered for the PE-array. PEs heavily utilize scratch pads to improve data access times, by enabling data reuse of the kernels.
 
 \chapter{Methodology}
-This section goes over the technologies used to complete this project in detail. First we discuss the hardware used in the SoC Hub's Headsail SoC and the parts affecting the decisions made in the software design in detail. After this we present the used software stack necessary to run neural networks on the described hardware. We will also discuss the virtual prototype on which the majority of the software development took place on, and how it differs from the hardware.
+This section goes over the technologies used to complete this project in detail. First we discuss the hardware used in the SoC Hub's Headsail SoC and the parts affecting the decisions made in the software design in detail. After this we present the used software stack necessary to run neural networks on the described hardware. We will also discuss the virtual prototype on which the majority of the software development took place on, and how it differs from the hardware. Finally we will describe the MLPerf Tiny benchmark, which is our use-case for the DLA.
 \label{ch:methodology}
 
 \section{Headsail}
@@ -957,13 +962,13 @@ Bias and ReLU can be skipped in the case neither of them is needed in the given 
 The particular operations are configured from the register interface of the DLA.
 DLA has a simple 32 bit RISC-V based controller CPU, that can be used to drive the DLA parallel to normal HPC execution, but it's also possible to control the DLA directly from the main CPUs. Which is what we have opted to for this project.
 
-The input and weights are feed to the MAC array from the 16, 32 kilobytes sized memory banks. The input and weights need to be written into separate banks and the data needs to be continuous and in the case the data doesn't fit into a single bank the neighboring bank needs to be used. The bias values for the post-processing step are fetched from the Headsail's SDRAM and can be located in any arbitrary point of memory.
+The input and weights are fed to the MAC array from the sixteen 32 kilobytes sized memory banks. The input and weights need to be written into separate banks and the data needs to be continuous and in the case the data doesn't fit into a single bank the neighboring bank needs to be used. The bias values for the post-processing step are fetched from the Headsail's SDRAM and can be located in any arbitrary point of memory.
 
 \section{TVM}
 TVM is a machine learning compiler framework by Apache. Among other features TVM includes, multiple runtimes, accelerator backends, optimizers, and a machine learning library for building and training models. The variety of features allows for TVM to be used to implement a complete machine learning workflow, or TVM can be used to implement part of the workflow with other tools.
 
 TVM implements its own graph representation for neural network with its Relay IR graphs, which similarly to other graph representation represents network layers as nodes in a abstract syntax tree.
-In the graph data flows is signified by the directional vertices connecting the nodes, in such a way that the output of the node the data travels from acts as the input for the child node at the end of the vertex. The Relay IR support multitude of different transformations to manipulate the operations performed in the network. This enables developers to write transformation passes to modify certain nodes of patterns of nodes to ensure that the graph is compatible with different hardware configurations.
+In the graph, data flow is signified by the directional vertices connecting the nodes, in such a way that the output of the node the data travels from acts as the input for the child node at the end of the vertex. The Relay IR support multitude of different transformations to manipulate the operations performed in the network. This enables developers to write transformation passes to modify certain nodes of patterns of nodes to ensure that the graph is compatible with different hardware configurations.
 
 TVM can be extended to support additional hardware accelerators by implementing a custom code generation module for the target hardware. In principle the developer defines external C symbols that provide the operation implementations which TVM then injects into the Relay IR models. During runtime TVM then calls these external symbols instead of the default operations provided by the TVM Relay library.
 
@@ -1021,16 +1026,16 @@ The main difference between the runtimes is that graph executor is more dynamic.
 \subsection{Graph Transformations}
 To assign calculations for an accelerator the Relay graph of a network needs to be transformed, in such a way that the resulting graph is compatible with the device. In addition to conversion from a different framework to relay, the relay graph needs to be legalized for a specific target and acceleratable patterns needs to be assigned for suitable hardware.
 
-In TVM the first transformation pass is the legalization, where the graph is traversed, and certain parameters are recalculated to fit the target. For example when executing a unsigned 8-bit quantized network most models use a zero-point of $-128$ to mimic signed behaviour. If this network is run on an accelerator with support for signed integers, this zero point needs to be changed to 0, since there is no need for the adjustment. If this network is run on an accelerator with support for signed integers, this zero point needs to be changed to 0, since there is no need for the adjustment. This can be done in the legalization pass.
+In TVM the first transformation pass is the legalization, where the graph is traversed, and certain parameters are recalculated to fit the target. For example when executing a unsigned 8-bit quantized network most models use a zero point of $-128$ to mimic signed behaviour. If this network is run on an accelerator with support for signed integers, this zero point needs to be changed to 0, since there is no need for the adjustment. If this network is run on an accelerator with support for signed integers, this zero point needs to be changed to 0, since there is no need for the adjustment. This can be done in the legalization pass.
 
-The other transformation pass is the graph annotation. By default, all the operation are assigned to the CPU. With graph annotation certain patterns of nodes can be annotated as to be executed with additional accelerators. The patterns are similar to regexes, where a sequence of nodes, for example Conv2D followed by a bias node can be fused together into single composite node.
+The other transformation pass is the graph annotation. By default, all the operation are assigned to the CPU. With graph annotation certain patterns of nodes can be annotated to be executed with additional accelerators. The patterns are similar to regexes, where a sequence of nodes, for example Conv2D followed by a bias node can be fused together into single composite node.
 
-During code generation with the AOT runtime, TVM traverses the graph and generates code to execute each node. If the node or composite node is annotated to be executed for an accelerator TVM refers to the corresponding code generation backend to produce code for executing the operation. This exposes the way for developers for integrating new accelerators for TVM.
+During code generation with the AOT runtime, TVM traverses the graph and generates code to execute each node. If the node or composite node is annotated to be executed on an accelerator TVM refers to the corresponding code generation backend to produce code for executing the operation. This exposes a way for developers for integrating new accelerators for TVM.
 
 \subsection{BYOC}
 ``Bring your own codegen'' or BYOC, is one of the possible APIs for integrating new devices into TVM.
 With BYOC, developers define target specific relay backend to generate C code for executing the annotated patterns in the model graph.
-The backend is created by defining \texttt{CallNode} operators that are called when the backend traverses a network graph.
+The backend is created by defining \texttt{CallNode} operators that are called when the backend traverses a network graph during code generation.
 These operators extract the needed information of the nodes for use with the target's deep learning API.
 Target backend is defined as a C++ module in TVM relay backend and can output either C code or object code when supplied with TVM's LLVM integration.
 
@@ -1093,23 +1098,25 @@ TVM also provides a tool to run TVM models on bare-metal platforms called microT
 
 MicroTVM works by generating platform independent C-source code from Relay IR-models, which can then be integrated with the microTVM AOT runtime to produce executable binaries to run the network.
 
-The DNN operation implementation are provided by TVM contrib library.
+The DNN operation implementation are provided by TVM Relay library.
 With custom code generation it's also possible to define bare-metal compatible accelerator nodes, which the TVM runtime is able to assign layers for during the C source code generation.~\parencite{TVM}
 
 \subsection{TVM quantization}
-TVM implements quantization with its own QNN-dialect~\cite{jain_efficient_2020}. The QNN-dialect separates quantized and non-quantized operations from each other by categorizing the quantized operations under the \texttt{qnn.op} class. QNN operations have additional arguments to indicate scaling factor and zero-point for inputs and outputs that are not present in floating point operations.
-Where zero-points describe the value in the transformed domain that corresponds with the value zero in the origin domain. In addition to having quantized version of the DL operations the QNN dialect introduces operators for moving data across from non-quantized domain to quantized and back. This is done with the \texttt{qnn.quantize}, \texttt{qnn.dequantize} and \texttt{qnn.requantize} operators. \texttt{qnn.quantize} performs affine quantization to a floating point tensor to produce a corresponding quantized integer tensor, whereas \texttt{qnn.dequantize} reverse the affine quantization. \texttt{qnn.requantize} converts a quantized tensor to another quantized tensor corresponding with a different scale than the original.
+TVM implements quantization with its own QNN-dialect~\cite{jain_efficient_2020}. The QNN-dialect separates quantized and non-quantized operations from each other by categorizing the quantized operations under the \texttt{qnn.op} class. QNN operations have additional arguments to indicate scaling factor and zero point for inputs and outputs that are not present in floating point operations.
+Where zero points describe the value in the transformed domain that corresponds with the value zero in the origin domain.
+
+In addition to having quantized version of the DL operations the QNN dialect introduces operators for moving data across from non-quantized domain to quantized and back. This is done with the \texttt{qnn.quantize}, \texttt{qnn.dequantize} and \texttt{qnn.requantize} operators. \texttt{qnn.quantize} performs affine quantization to a floating point tensor to produce a corresponding quantized integer tensor, whereas \texttt{qnn.dequantize} reverses the affine quantization. \texttt{qnn.requantize} converts a quantized tensor to another quantized tensor corresponding with a different scale than the original.
 
 TVM enables compatibility of quantized networks with other major DNN frameworks like tensorflow with QNN-dialect aware graph parsing. When model from another framework is parsed into Relay graph, the framework specific quantization operations get converted to QNN nodes. The resulting graph is then passed through canonicalization and legalization passes to produce relay graph that can be annotated for a target.
 Canonicalization pass converts the QNN nodes into relay operations. For example \texttt{qnn.Conv2d} gets broken into, dequantization, floating point convolution, bias, requantization to integer values and clipping operations.
-In legalization pass the canonicalized relay graph is transformed into relay graph that is compatible with the target hardware. For example this might include rewriting zero-points in requantization nodes, or recasting inputs to fit the target device.
+In legalization pass the canonicalized relay graph is transformed into relay graph that is compatible with the target hardware. For example this might include rewriting zero points in requantization nodes, or recasting inputs to fit the target device.
 After legalization the graph can be annotated and acceleratable patterns can be assigned for the targets.
 
 \section{Renode}
 \label{sec:renode}
-Renode is a high-level full system emulator, which enable developers to rapidly develop hardware dependent software. In essence Renode allows the user to specify exactly which kind of hardware they want to target, down to the implementation of specific peripherals and memory addresses. This streamlines the process of HW/SW integration, since hardware and software can be developed in parallel, which in return reduces the total production time for products.
+Renode is a high-level full system emulator, which enables developers to rapidly develop hardware dependent software. In essence Renode allows the user to specify exactly which kind of hardware they want to target, down to the implementation of specific peripherals and memory addresses. This streamlines the process of HW/SW integration, since hardware and software can be developed in parallel, which in return reduces the total production time for products.
 
-Renode models a wide variety of different processors and peripherals, but it is also expandable with custom components that are either baked directly into the binary (source code extensions in C\#) or with dynamically loaded Python peripherals. Python peripherals are more limited when compared to the C\# peripherals, since they can't be connected to the clock domain of the system and can only change state when their memory region is accessed. Renode's Python peripherals are also executed in a separate IronPython container that this moment, only support modules from Python standard library.
+Renode models a wide variety of different processors and peripherals, but it is also expandable with custom components that are either baked directly into the binary (source code extensions in C\#) or with dynamically loaded Python peripherals. Python peripherals are more limited when compared to the C\# peripherals, since they can't be connected to the clock domain of the system and can only change state when their memory region is accessed. Renode's Python peripherals are also executed in a separate IronPython~\cite{ironpython} container that at this moment, only support modules from Python standard library.
 
 While Renode is an operation accurate emulator, the Python API isn't. When Renode makes a request to the Python API, it counts as one clock cycle even when realistically the Python API's corresponding hardware implementation would take more than one cycle. The consequence of this that we cannot accurately benchmark DLA in Renode. The benefit of the Python API is in rapid development of emulated hardware components.
 
@@ -1137,7 +1144,7 @@ MLPerf Tiny consists of four benchmarks meant to target different use cases show
 \end{adjustbox}
 \label{tab:tinyperf}
 \end{table}
-Each of the four tasks uses a different model, dataset and problem definition, to ensure testing of wide amount of workloads. Each of the tasks has a minimum quality requirement to be considered acceptable for the benchmark. For the three multi-class classifiers the used metric is top-1 and for anomaly detection the metric is AUC.
+Each of the four tasks uses a different model, dataset and problem definition, to ensure testing of wide amount of workloads. Each of the tasks has a minimum quality requirement to be considered acceptable for the benchmark to be officially submitted. For the three multi-class classifiers the used metric is top-1 and for anomaly detection the metric is AUC.
 
 Since MLPerf Tiny aims to suit most kinds of targets, they give the users lot of freedom in the implementation of the models. In the benchmarks the only performance metric is the actual inference times, as long as the quality requirement is fulfilled. This allows for devices with limited IO capabilities a fair comparison against more capable devices. There is no limitation on the model's data type so MLPerf Tiny can be used to compare between signed and unsigned integer accelerators, as well as with FP8 and FP32 accelerators.
 In this project we used the pretrained reference models offered by MLPerf for the benchmark, but the specification also allows for training of new models as long as the architecture is preserved.
@@ -1147,8 +1154,7 @@ In this project we used the pretrained reference models offered by MLPerf for th
 The image classification task aims to classify images from the CIFAR-10 dataset~\cite{Cifar10Krizhevsky09learningmultiple}. CIFAR-10 popular dataset that includes 32x32 RGB color images, each belonging to one class. The 10 classes of CIFAR-10 are labeled as, airplane, automobile, bird, cat, deer, dog, frog, horse, ship and truck.
 
 To do this classification MLPerf Tiny uses Resnet~\cite{he2015deepresiduallearningimage}. Resnet is an implementation of ImageNet~\cite{krizhevsky_imagenet_2012}, where between every pair of layers there is a residual connection added from the pair preceding the previous pair.
-The backbone architecture introduced in ImageNet uses multiple consecutive layers of 3x3 kernel size 2D convolutions
-Backbone of the network is built from multiple consecutive 3x3 convolution layers which are in addition to simple feed forward connections.
+The backbone architecture introduced in ImageNet uses multiple consecutive layers of 3x3 kernel size 2D convolutions, to which ResNet introduces residual connections.
 Resnet architectures vary by the depth of the network, i.e. number of layers. For example Resnet-50 has 50 layers and Resnet-34 has 34. The image classification task uses custom ResNet-9, which lacks the downsampling pooling layers to compensate for the low resolution of CIFAR-10 dataset.
 
 \subsection{Visual Wake Words}
@@ -1174,10 +1180,10 @@ Originally proposed by~\cite{rumelhart_learning_1987}, AutoEncoder consists of t
 
 \chapter{Implementation}
 \label{ch:implementation}
-This section covers the actual implementation of the used software stack in detail and the specific use cases developed on top of the stack. As well as the MLPerf Tiny benchmark used to evaluate the performance of the DLA.
+This section covers the actual implementation of the used software stack in detail and the specific use cases developed on top of the stack. We first discuss the implementation of the SoCs virtual prototype, and some of its issues. We then cover the implementation of the software stack in great detail. Finally, we present the benchmarking approach with the complete software architecture
 
 \section{headsail-vp}
-To enable software development for Headsail before the arrival of the ASICs, we modeled the hardware as a Renode virtual platform, which we call headsail-vp. With headsail-vp we aimed to replicate the complete memory map of Headsail, with both processors and some of the peripherals.
+To enable software development for Headsail before the arrival of the ASICs, we modeled the SoC as a Renode virtual platform, which we call headsail-vp. With headsail-vp we aimed to replicate the complete memory map of Headsail, with both processors and some of the peripherals.
 The aim with the virtual platform was to kick-start software development for the ASIC and to give developers a more streamlined development environment.
 We hoped that headsail-vp would enable faster software development, by removing some friction associated to working on the ASIC, as well as giving use the possibility of modifying the design in the case of hardware bugs.
 Additionally, this knowledge in developing virtual prototypes of chip could allow us to better define the hardware specs based on the software demonstrators we develop in for the future chips.
@@ -1198,7 +1204,7 @@ The DLA-vp supports all the same operations as the ASIC implementation, with ide
 
 DLA-vp implements the register interface as a list of same length. Since numbers in Python can be infinite in length we had to carefully sanitize all the transactions to the registers, so that no accesses over 8-bit values were possible. This same sanitation logic also applied to writing results to the output buffer, since on ASIC all output buffer entries are signed 8-bit values.
 
-Since Renode Python peripherals don't have a clock, the state of the peripheral can only be changed when a CPU reads or writes to an address that is registered for the peripheral. DLA-vp is designed to run a processing loop after each write to its memory region, that checks if the state of DLA-vp is ready for operation execution and if yes performs the operation per configuration. Read accesses don't change the internal state of the device, so the processing loop isn't executed on them. After the executing write call, the result of the operation can be read on the next clock cycle from the peripheral's memory region.
+Since Renode Python peripherals don't have a clock, the state of the peripheral can only be changed when a CPU reads or writes to an address that is registered for the peripheral. DLA-vp is designed to run a processing loop after each write to its memory region, that checks if the state of DLA-vp is ready for operation execution and if yes, performs the operation per configuration. Read accesses don't change the internal state of the device, so the processing loop isn't executed on them. After executing the processing loop after a write call, the result of the operation can be read on the next clock cycle from the peripheral's memory region.
 
 To verify that the DLA-vp functionally behaved like the hardware implementation of the DLA, we implemented some of the same verification tests done by the hardware team with our software stack. Using the same inputs as the RTL tests with DLA-vp we expect the results to be identical. We implemented the same tests for the low-level driver as well as the high-level driver to ensure that the DLA-vp, as well as the complementing software stack, matches the behaviour of the hardware implementation. This included reimplementing the bugs and design oversights that reduce the accuracy and possibly performance. We integrated these same verification tests to our CI/CD to ensure changes that would break the functional correctness of the DLA would not get merged.
 
@@ -1278,7 +1284,7 @@ To verify that the DLA-vp functionally behaved like the hardware implementation 
 
 
 \label{sec:result-width-problem}
-A major limitation of the DLA's design is its limited bit width of the output elements. A single element in the output tensor is represented with a signed byte and thus has the value in the range from $-128$ to $127$. This can be seen from the figure~\ref{fig:dla_internal} where the bit-width of data is reduced in half after the MAC clip and PP clip blocks. This inevitably has the consequence that we will lose some accuracy of results when we move data back to the CPU. The amount of inaccuracy depends on the amount of clipping we perform in the clipping step. DLA has the ability to clip any sequence of 8-bits from the 16-bit sequence that is each result tensor element.
+A major limitation of the DLA's design in respect to accelerating abritrary models, is its limited bit width of the output elements. A single element in the output tensor is represented with a signed byte and thus has the value in the range from $-128$ to $127$. This can be seen from the figure~\ref{fig:dla_internal} where the bit-width of data is reduced in half after the MAC clip and PP clip blocks. This inevitably has the consequence that we will lose some accuracy of results when we move data back to the CPU. The amount of inaccuracy depends on the amount of clipping we perform in the clipping step. DLA has the ability to clip any sequence of 8-bits from the 16-bit sequence that is each result tensor element.
 
 Figure~\ref{fig:clip-matrix} shows and example of the clipping behaviour for two different clipping value for two different clipping values. In the figure the Result matrix is some arbitrary convolution result from the MAC array, which gets applied clipping values of $0$ which means that we don't clip the result, giving us the 8 least significant bits as the read result. The second clipping amount is $6$. In the driver we perform right shifting to reverse the effect of the clipping giving as results in the correct magnitude. By taking the difference between the original values and the right shifted values we can get the element-wise and average amounts of error in for both clipping values.
 
@@ -1292,17 +1298,17 @@ This behaviour is the most significant cause on incompatibility between the DLA 
   \label{fig:clipping}
 \end{figure}
 
-A secondary problem cause by the limited bit-width of the DLA relates the bias. Some DNN model rely on bias values close to the maximum value of a signed 32-bit value. This is a problem for the DLA since, it only supports bias values up to 16-bits. This causes some results channels to lose their relative values to equalized due to bias values getting saturated, when the bias values are larger than the maximum 16-bit values.
+A secondary problem cause by the limited bit-width of the DLA relates the bias. Some DNN models rely on bias values close to the maximum value of a signed 32-bit value. This is a problem for the DLA since, it only supports bias values up to 16-bits. This causes some results channels to lose their relative values to equalized due to bias values getting saturated, when the bias values are larger than the maximum 16-bit values.
 
 \section{Board Support Package}
 \label{sec:software_support}
-We started the actual software development by writing a simple BSP for Headsail. Doing this simultaneously with the refining virtual prototype helped us better understand the complete structure of the SoC.
+We started the actual software development by writing a simple BSP for Headsail. Doing this simultaneously with refining the virtual prototype helped us better understand the complete structure of the SoC.
 
 The BSP is written in \texttt{no\_std} Rust, since it is familiar to the team and has been found effective for rapid collaborative firmware development. Rust has a healthy embedded software ecosystem, with libraries supporting \texttt{no\_std} environments, like our target hardware. Most importantly a community crate called \textsc{riscv-rt}~\cite{riscv_rt}, which is a library that provides startup code and interrupt functionality for bare-metal RISC-V devices.
 
 The Headsail-BSP implements some basic drivers to interact with the hardware's I/O functionality with peripheral UART and CPUs internal timers. BSP also enables interrupts for both CPUs with the CLINT and PLIC peripherals. We also implement basic test bench definitions to enable consistent automated testing setup for CI/CD.
 
-Rust features allow us to host both HPC and SysCtrl specific code in one code base with minimal effort. This allows us to use same peripheral drivers with CPU specific memory maps, reducing the amount of duplicated code. Conditional compilation with Rust feature flags enables us to choose between HPC or SysCtrl builds, to target a specific CPU. Similarly, we can isolate VP and ASIC specific behind their own feature flags.
+Rust features allow us to host both HPC and SysCtrl specific code in one code base with minimal effort. This allows us to use same peripheral drivers with CPU specific memory maps, reducing the amount of duplicated code. Conditional compilation with Rust feature flags enables us to choose between HPC or SysCtrl builds, to target a specific CPU. Similarly, we can isolate VP and ASIC specific implementations behind their own feature flags.
 
 \subsection{HPC initialization}
 Before we can execute binaries on HPC we need to turn it on and initialize it from SysCtrl. For this purpose we run a small \texttt{HPC-init} binary on startup. The initialization program enables the interconnect between the CPUs and turns on the cores of HPC. In addition to turning on HPC it enables and configures most of the peripherals, such as the SDRAM, DLA and clocks.
@@ -1317,9 +1323,9 @@ Since we support two different programming languages, we had to have solution fo
 \subsection{Memory Map and RISC-V code models}
 The CPUs in Headsail--SysCtrl and HPC--work on a semi-unified memory map trough two interconnects. One 32-bit interconnect and one 64-bit interconnect, which allows both of the CPUs to reach external memory regions. The semi-unified comes from the fact that even though the CPUs can both access the same memory regions with same addresses, HPC accesses need to be appended with an extra bit to signify external memory access. This extra bit has the unfortunate effect that it makes every external memory access 64-bits. This mandates that the C-compiler needs to support \texttt{medany} code model~\cite{sifive_riscv_code_models}, which not all instances of riscv-gcc support.
 
-The code model dictates which memory addresses the binary can be mapped to. On RISC-V the standard code model if \texttt{medlow} which enable the code to be linked in a 2 gigabyte long region starting from address $0x0$. Since all external accesses from HPC start with 33rd bit set as one, it would impossible to link any HPC program to memory outside of it's bootram. Thus, we need to use \texttt{medany} code model which enables using any 2 gigabyte continuous region of memory.
+The code model dictates which memory addresses the binary can be mapped to. On RISC-V the standard code model is \texttt{medlow} which enables the code to be linked in a 2 gigabyte long region starting from address $0x0$. Since all external accesses from HPC start with 33rd bit set as one, it would be impossible to link any HPC program to memory outside of it's bootram. Thus, we need to use \texttt{medany} code model which enables using any 2 gigabyte continuous region of memory.
 
-The disadvantage that comes from using \texttt{medany} code model is that it prevents certain linker relaxation to be performed, which in turn negatively affects the performance of the system. In our testing we observed up to a 5 percentage drop in performance when switching from binary linked with \texttt{medlow} to \texttt{medany} when targeting HPC's bootram.
+The disadvantage that comes from using \texttt{medany} code model is that it prevents certain linker relaxations from being performed, which in turn negatively affects the performance of the system. In our testing we observed up to a 5 percentage drop in performance when switching from binary linked with \texttt{medlow} to \texttt{medany} when targeting HPC's bootram.
 
 \section{DLA Driver}
 To make interfacing with the DLA possible we wrote a driver for the accelerator as a part of the Headsail-BSP, which we simply call the DLA driver.
@@ -1354,7 +1360,7 @@ Program~\ref{lst:layerstruct} shows the design of the struct. The first three fi
 
 The \texttt{pp\_enabled}, \texttt{relu\_enabled}, \texttt{bias\_enabled} fields control the use of the post-processing unit. The first enables the unit, and the following ones choose which of the two post-processing operations are executed for the layer. For example when calculating basic Resnet layer with both operations all the three fields need to be enabled.
 
-The \texttt{input\_size}, \texttt{kernel\_size}, \texttt{padding} and \texttt{stride} fields control the dimensions of the 2D convolution. \texttt{input\_size} and \texttt{kernel\_size}, define the height and width of the inputs and weights as well as the channels counts. Number of input channels for input and number of output channels for the kernel. \texttt{padding} fields allows for settings the amount of padding for all directions separately as well as the values used as the padding. \texttt{stride} tells the amount of space between samples in the input in vertical and horizontal direction separately. The default stride of 1 means that every input element is sampled, whereas stride of 2 means that after a sample, we move two spaces to the particular direction etc.
+The \texttt{input\_size}, \texttt{kernel\_size}, \texttt{padding} and \texttt{stride} fields control the dimensions of the 2D convolution. \texttt{input\_size} and \texttt{kernel\_size}, define the height and width of the inputs and weights as well as the channels counts. Number of input channels for input and number of output channels for the kernel. \texttt{padding} fields allows for specifying the amount of padding for all directions separately as well as the values used as the padding. \texttt{stride} tells the amount of space between samples in the input in vertical and horizontal direction separately. The default stride of 1 means that every input element is sampled, whereas stride of 2 means that after a sample, we move two spaces to the particular direction etc. The \texttt{mac\_clip} and \texttt{pp\_clip} fields specify the amount of clipping per operations stage. And finally \texttt{simd\_mode} specifies the use of SIMD operations.
 
 % \begin{figure}
 % \centering
@@ -1404,7 +1410,7 @@ The \texttt{input\_size}, \texttt{kernel\_size}, \texttt{padding} and \texttt{st
 % \end{figure}
 
 \subsection{Reading Layer Results}
-To get output from the DLA we first need to define it's output address. This address can be any memory address visible to the control processors, but in the driver we have limited the number of possible output addresses only to the DLA's internal memory banks. For setting the output bank for the given layer the driver writes to \texttt{DLA\_PP\_AXI\_WRITE\_ADDRESS} register the wanted output address.
+To get output from the DLA we first need to define the output address. This address can be any memory address visible to the control processors, but in the driver we have a limited the number of possible output addresses only to the DLA's internal memory banks. For setting the output bank for the given layer the driver writes to \texttt{DLA\_PP\_AXI\_WRITE\_ADDRESS} register the wanted output address.
 
 To read the output from the DLA we need to know how many elements the output has for any given operation. This information can be derived from the following equation
 
@@ -1420,9 +1426,9 @@ H_{\text{out}} = \frac{H_{\text{in}} + P_{\text{top}} + P_{\text{bottom}} - K_y 
 where $W$ is width, $H$ is height, $P$ is padding to either left, right, bottom or top, $K$ is the shape of the kernel and $S$ is the stride in horizontal or vertical direction.
 Multiplying the shape of a single output channel with the total number of output channels gives use the total amount of output elements. Since DLA can only output 8-bit values we know that the number of bites to read per layer is equal to the amount of output elements.
 
-As explained in section~\ref{sec:result-width-problem} the output of the DLA is limited to the signed 8 bit range (from $-128$ to $127$) but the convolution is calculated in signed 16-bit range (from $-32768$ to $32767$) the DLA needs to clip half of the bits away. Using the \texttt{mac\_clip} and \texttt{pp\_clip} fields we can control which of the consecutive 8-bits we want to use as the result. By default, DLA stores the 8 most significant bits, but by increasing the clipping values we can move the extraction window towards the less significant bits. By moving towards LSB we essentially gain granularity between the values at the cost of losing range in the high values. This is desired when the absolute maximum value of a layer is small. In most cases the optimal extraction window is somewhere between MSB and LSB, thus making it difficult to predict which exact clipping value to use. When the results of a layer are read from the DLA the driver shifts the read values back by the same amount as they were clipped in the accelerator to match the magnitude of the calculations.
+As explained in section~\ref{sec:result-width-problem} the output of the DLA is limited to the signed 8 bit range (from $-128$ to $127$) but the convolution is calculated in signed 16-bit range (from $-32768$ to $32767$) the DLA needs to clip half of the bits away. Using the \texttt{mac\_clip} and \texttt{pp\_clip} fields we can control which of the consecutive 8-bits we want to use as the result. By default, DLA stores the 8 least significant bits, but by increasing the clipping values we can move the extraction window towards the more significant bits. By moving towards LSB we essentially gain granularity between the values at the cost of losing range in the high values. This is desired when the absolute maximum value of a layer is small. In most cases the optimal extraction window is somewhere between MSB and LSB, thus making it difficult to predict which exact clipping value to use. When the results of a layer are read from the DLA the driver shifts the read values back by the same amount as they were clipped in the accelerator to match the magnitude of the calculations.
 
-To find an optimal clipping amount for each layer, we proposed a bias maximum value based heuristic
+To find an optimal clipping amount for each layer, we propose a bias maximum value based heuristic
 \begin{align}
 P & = \max \left( \log_{2} \left( \frac{\max \left( \mathopen| \max(\hat{b}) \mathclose|, \; \mathopen| \min(\hat{b}) \mathclose| \right)}{127} \right), \; 127 \right) + 1 \\
   & \text{Bits clipped} =
@@ -1438,7 +1444,7 @@ We limit the number of clipped bits to high of 8 since, the bit width of the con
 \subsection{C-Interface}
 To enable TVM BYOC to call the DLA drivers high-level interface we needed to create C-wrappers for the function calls. This was done by implementing a Foreign Function Interface (FFI) for the Rust function calls with the Cbindgen library~\cite{cbindgen}. Cbindgen generates C headers from the Rust code that enables C programs to call Rust functions when linked with the proper static library. For the static library we build the headsail-bsp that implements the high-level operation calls which the FFI interface uses.
 
-In the FFI we also define a entry point specifically for the TVM. As previously mentioned we always allocate qnn.conv2d + add pattern for the DLA to execute. The code generation backend extract all the necessary information from the Relay nodes of this pattern and generates a function call to call \texttt{dla\_tvm\_qnn\_conv2d\_bias} function from the FFI. In addition to just calling the wanted Conv2D + bias operation from the BSP, the FFI function slices the data buffers to Rust slices and performs certain value conversions, like clipping the 32-bit bias values to 16-bit values. After the operation has been done and the result rest the FFI implementations shifts the values left by the same amount as was clipped in the DLA. These values are then copied to the buffer defined by the TVM codegen.
+In the FFI we also define a entry point specifically for the TVM. As previously mentioned we always allocate \texttt{qnn.conv2d} + \texttt{add} pattern for the DLA to execute. The code generation backend extract all the necessary information from the Relay nodes of this pattern and generates a function call to call \texttt{dla\_tvm\_qnn\_conv2d\_bias} function from the FFI. In addition to just calling the wanted Conv2D + bias operation from the BSP, the FFI function slices the data buffers to Rust slices and performs certain value conversions, like clipping the 32-bit bias values to 16-bit values. After the operation has been done and the result rest the FFI implementations shifts the values left by the same amount as was clipped in the DLA. These values are then copied to the buffer defined by the TVM codegen.
 
 \section{Porting Newlib}
 \label{sec:newlib}
@@ -1468,7 +1474,7 @@ In the FFI we also define a entry point specifically for the TVM. As previously 
 \caption{Newlib Syscalls and Implementation Status}
 \label{tab:newlib_syscalls}
 \end{table}
-We wanted to use TVM's AOT runtime to execute inference in the benchmark we had to provide it with a C standard library implementation. For this purpose we chose to port Newlib for Headsail, since it's known to be relatively easy to adapt for new platforms.
+Since we wanted to use TVM's AOT runtime to execute inference in the benchmark we had to provide it with a C standard library implementation. For this purpose we chose to port Newlib for Headsail, since it's known to be relatively easy to adapt for new platforms.
 
 Newlib is an implementation of the C standard library meant for use in embedded devices~\parencite{newlib}. It is separated into two different parts. First is the Newlib core which implements the actual standard library for different CPU ISA's. Since Newlib already has support for RISC-V we didn't need to modify Newlib core in any way. Second part of Newlib is called Libgloss, which implements the platform dependent features. For this port we decided to only implement the minimum required functionalities of Libgloss.
 
@@ -1482,7 +1488,7 @@ int _fork() {
 
 Porting Libgloss involves implementing 16 system calls, crt0 and a linker script. From the 16 system calls only some are mandatory for us to implement, because we are targeting only bare-metal applications without a filesystem. The table~\ref{tab:newlib_syscalls} shows all the Libgloss system calls with column 3 displaying if we implemented the call. The unimplemented calls still need to be defined in the Libgloss source for linking purposes, but they don't need to do anything except return an error. Program~\ref{lst:newlib-stump}, shows and example of a minimal implementation for the fork system call in Headsail's Newlib port. The purpose of the Fork system calls is to  duplicate a process, but since we don't support multithreading or any other form of process concurrency it will never be called, thus having it return error is correct behaviour. We use this same approach in the rest of the system call that we didn't implement.
 
-The system calls can be implemented either in non-reentrant or reentrant way. Re-entrant system calls are thread safe but require an additional argument--the reentrancy structure--to be passed. Reentrancy structure holds local values specific for that instance of the function call, whereas the non-reentrant version of the function refers to shared global variables. For single threaded applications on headsail implementing the non-reentrant systems calls was enough.~\parencite{bennett2010porting}
+The system calls can be implemented either in non-reentrant or reentrant way. Re-entrant system calls are thread safe but require an additional argument--the reentrancy structure--to be passed. Reentrancy structure holds local values specific for that instance of the function call, whereas the non-reentrant version of the function refers to shared global variables. For single threaded applications on Headsail implementing the non-reentrant systems calls was enough.~\parencite{bennett2010porting}
 
 In addition to the system calls Libgloss needs to have a crt0, which is a small program that includes a \texttt{\_start} symbol, a call to the \texttt{main} function, some global definitions, and optionally hardware initializations. The \texttt{\_start} symbol signifies the beginning of a C program and is used by the linker to place the program to start from the correct memory address. After declaring the \texttt{\_start} symbol, our crt0 clears the bss segment, registers the \texttt{exit} function, initializes the UART and finally calls the \texttt{main} function.
 
@@ -1515,18 +1521,18 @@ In addition to the system calls Libgloss needs to have a crt0, which is a small 
 \label{fig:sdram-memory-layout}
 \end{figure}
 
-The linker script is the final component needed by the Libgloss. It tells the linker how to link the object files produced by the compiler. Our linker script maps the whole SDRAM on headsail as it's total available memory region, which it then splits into the text section, data and read-only data sections and various different initialization sections. Additionally, the linker reserves space for the stack and heap data structures according to the linker script definitions. Figure~\ref{fig:sdram-memory-layout} shows an example of how a binary is placed in to the Headsail's SDRAM according to the defined linker script. We always place the \texttt{\_start} start symbol at the beginning of the SDRAM, followed by data sections. By default, the linker allocates 4 megabytes to the stack and rest is allocated to the heap. The allocations are controlled by specific flags defined in the linker script, that are visible to program.
+The linker script is the final component needed by the Libgloss. It tells the linker how to link the object files produced by the compiler. Our linker script maps the whole SDRAM on Headsail as it's total available memory region, which it then splits into the text section, data and read-only data sections and various different initialization sections. Additionally, the linker reserves space for the stack and heap data structures according to the linker script definitions. Figure~\ref{fig:sdram-memory-layout} shows an example of how a binary is placed in to the Headsail's SDRAM according to the defined linker script. We always place the \texttt{\_start} start symbol at the beginning of the SDRAM, followed by data sections. By default, the linker allocates 4 megabytes to the stack and rest is allocated to the heap. The allocations are controlled by specific flags defined in the linker script, that are visible to program.
 
 
 \section{TVM transformation scheme and code generation}
-After trial and error we settled on a TVM graph transformation behaviour that provided us with the most stable results in all the tested models.
+After trial and error we settled on a TVM graph transformation behaviour that provided us with the most stable results in all the tested models. With the implemented graph transformations we were able to assign any Conv2D + bias pattern using INT8 parameters to be executed on the DLA.
 
-We implemented our own QNN legalization pass for TVM in which, we look for a TVM canonicalized version of a TFlite quantized conv2d fusion layer. In TVM relay representation this pattern is composed of 4 nodes: \texttt{qnn.conv2d}, \texttt{nn.bias\_add}, \texttt{qnn.requantize}, and \texttt{clip}. We also capture an optional pair of nodes at the end of main block. If the fusion layer is followed by \texttt{qnn.add} and \texttt{clip} we capture those nodes as well. This combination is seen in ResNet architecture as the operations to concatenate main branch and the skip branch.
+We implemented our own QNN legalization pass for TVM, in which we look for a TVM canonicalized version of a TFlite quantized conv2d fusion layer. In TVM Relay representation this pattern is composed of 4 nodes: \texttt{qnn.conv2d}, \texttt{nn.bias\_add}, \texttt{qnn.requantize}, and \texttt{clip}. We also capture an optional pair of nodes at the end of main block. If the fusion layer is followed by \texttt{qnn.add} and \texttt{clip} we capture those nodes as well. This combination is seen in ResNet architecture as the operations to concatenate main branch and the skip branch.
 
-From the found pattern we remove all the zero point correction from the \texttt{qnn.conv2d} and \texttt{qnn.requantize} nodes, if they are present. We learned that the TFlite models offered by MLPerf Tiny tended to use affine quantization with zero point being close to $128$. Value this high doesn't work for Headsail DLA, since all base values over $0$ would get clipped.
-We also remove the zero-point from the optional skip connection concatenation node if it was captured, even if the operation is not assigned to the accelerator.
+From the found pattern we remove all the zero point corrections from the \texttt{qnn.conv2d} and \texttt{qnn.requantize} nodes, if they are present. We learned that the TFlite models offered by MLPerf Tiny tended to use affine quantization with zero point being close to $128$. Value this high doesn't work for Headsail DLA, since all base values over $0$ would get clipped.
+We also remove the zero point from the optional skip connection concatenation node if it was captured, even if the operation is not assigned to the accelerator.
 
-After legalization we do pattern matching for two patterns. First is the standard 2D convolution followed by bias and second is grouped convolution followed by a bias. These patterns are assigned to be executed on the DLA using the high-level API symbols from the FFI.
+After legalization we do pattern matching for two patterns. First is the standard 2D convolution followed by bias and second is grouped convolution followed by a bias. These patterns are assigned to be executed on the DLA using the high-level API symbols from the FFI. Since TVM doesn't separate between grouped and non-grouped convolutions we use the \texttt{groups} parameter in the \texttt{qnn.conv2d} as a metric to distinguish the two. If the number of groups is more than $1$, we annotate the pattern as grouped convolution.
 
 In the code generation backend we traverse the legalized graph and operate on all the patterns that have been assigned for execution on the DLA.
 From each pattern we extract the embedded operation parameters to produce valid C code to call the high-level API operations. We also generate code to dynamically allocate memory for the intermediary results.
@@ -1539,8 +1545,8 @@ Next we have the actual API call which gets as its parameters all the necessary 
 \section{Benchmarking}
 For the DLA there are two things we can benchmark. First is to look at the amount of convolution operations we can execute per time unit. This kind of throughput benchmarking is fine but doesn't tell us much about the real-life CNN performance, since it doesn't take into an account what proportion of the CNN workloads is actually Conv2d and the proceeding Bias and ReLU operations.
 
-The second option is to model real-life use-cases of CNNs and benchmark the inference of the models. For this purpose we chose to use MLPerf Tiny Benchmark from MLCommons, which we describe in detail in section~\ref{sec:tinyperf}.
-From these benchmarks the Anomaly Detection is unacceleratable with the Headsail DLA since it uses FC-AutoEncoder network, which is based on fully connected layers and thus has no operations which our accelerator can execute.
+The second option is to model real-life use-cases of CNNs and benchmark the inference latency of the models. For this purpose we chose to use MLPerf Tiny Benchmark~\cite{tinyperf} from MLCommons, which we describe in detail in section~\ref{sec:tinyperf}.
+From these benchmarks the anomaly Detection is unacceleratable with the Headsail DLA since it uses FC-AutoEncoder network, which is based on fully connected layers and thus has no operations which our accelerator can execute.
 
 \begin{figure}[h]
 \centering
@@ -1568,9 +1574,9 @@ The figure~\ref{fig:architecture} presents the software architecture of TVM anno
 
 The first part of the build process is the TVM code generation. We read the targeted TFlite model with a Python build script and import it to TVM Relay graph.
 TVM then performs QNN-legalization pass for the graph defined in the Headsail's Python API and assign the defined patterns for execution on the DLA, producing a DLA compatible relay graph.
-This graph is then compiled to C source code with the TVM dynamic runtime which has been compiled with support for Headsail BYOC backend, which uses the symbols from DLA-driver's C-interface to execute the CNN operations. The DLA directives are embedded into the AOT graph to produce complete pipeline for executing inference on the specific model. This source code is then linked with our standard library implementation, the runner application and DLA-driver using riscv64-unknown-none-elf-gcc compiler stack to produce an executable binary that can be run on HPC.
+This graph is then compiled to C source code with the TVM dynamic runtime which has been compiled with support for Headsail BYOC backend, which uses the symbols from DLA-driver's C-interface to execute the CNN operations. The DLA directives are embedded into the AOT graph to produce complete pipeline for executing inference on the specific model. This source code is then linked with our standard library implementation, the runner application and DLA-driver using riscv64-unknown-none-elf compiler stack to produce an executable binary that can be run on HPC.
 
-Both of the CPUs in the Headsail are equipped with JTAG connector which we can connect to with OpenOCD~\cite{openocd2023}. We configure OpenOCD to provide us with a GDB~\cite{gdb2023} interface, which we use to flash the executables. First we run HPC's initialization code on SysCtrl to turn on HPC and all the necessary peripherals, after which we can flash the benchmark executable onto HPC and begin the benchmark.
+Both of the CPUs in the Headsail are equipped with JTAG connectors which we can connect to with OpenOCD~\cite{openocd2023}. We configure OpenOCD to provide us with a GDB~\cite{gdb2023} interface, which we use to flash the executables. First we run HPC's initialization code on SysCtrl to turn on HPC and all the necessary peripherals, after which we can flash the benchmark executable onto HPC and begin the benchmark.
 
 Running the benchmark is done with simple Python script which reads one input from the targeted benchmark task at a time and writes them to Headsail over UART for inference.
 The script then waits for the runner program on Headsail to respond with the result vector of the inference, from which it finds the top-1 classification and updates the precision score for the benchmark, before sending the next input.
@@ -1581,7 +1587,7 @@ Even though Headsail is the third SoC Hub Soc, it had little existing software s
 
 \chapter{Results}
 \label{ch:results}
-After finishing development of the software stack described in the chapter~\ref{ch:implementation} we ran the MLPerf Tiny benchmark for two configurations. First being on the headsail-vp with only single HPC core, and second on headsail-vp with single HPC core and the DLA-vp working in tandem. Unfortunately due to problems with the ASIC, we were not able to include any results from the Hardware and thus this benchmark only serves the purpose of validating the ability of the Headsail to execute the reference models.
+After finishing development of the software stack described in the chapter~\ref{ch:implementation} we ran the MLPerf Tiny benchmark for two configurations. First being on the headsail-vp with only single HPC core, and second on headsail-vp with single HPC core and the DLA-vp working in tandem. Unfortunately due to problems with the ASIC, we were not able to include any results from the hardware and thus this benchmark only serves the purpose of validating the ability of Headsail to execute the reference models.
 \begin{table}[h]
 \centering
 \begin{tabular}{|l|l|c|c|c|c|}
@@ -1598,7 +1604,7 @@ After finishing development of the software stack described in the chapter~\ref{
                                   & \textbf{HPC} & 0.83               & 0.83        & 0.84    & \scalecheck                          \\ \cline{2-6}
                                   & \textbf{HPC+DLA} & 0.50               & 0.50   & 0.50          &                            \\ \hline
 \multirow{2}{*}{\shortstack[l]{\textbf{Anomaly}\\ \textbf{Detection (AD)}}}
-                                  & \textbf{HPC } & \multicolumn{3}{c|}{AUC = 0.68}     &   \\ \cline{2-6}
+                                  & \textbf{HPC } & \multicolumn{3}{c|}{\textbf{AUC} = 0.68}     &   \\ \cline{2-6}
                                   & \textbf{HPC+DLA} & \multicolumn{3}{c|}{-}      &                            \\ \hline
 
 \end{tabular}
@@ -1606,13 +1612,12 @@ After finishing development of the software stack described in the chapter~\ref{
 \label{tab:benchmark-results}
 \end{table}
 
-The table~\ref{tab:benchmark-results} presents the results of the MLPerf Tiny benchmarks, for HPC standalone and HPC with 2D convolutions assigned to the DLA. As noted previously the Anomaly Detection task is unacceleratable due to the lack of convolutions, and thus it has equal performance between the runs.
+The table~\ref{tab:benchmark-results} presents the results of the MLPerf Tiny benchmark, for HPC standalone and HPC with two-dimensional convolutions assigned to the DLA. As noted previously the anomaly detection task is unacceleratable due to the lack of convolutions, and thus we have results for HPC only run.
 
-When run without the DLA, just with HPC, Headsail passes the accuracy requirements for all the tasks as can be seen from the last column of the table. However, this was not the case for runs using the DLA. Except for the keyword spotting task all the task failed to pass their required accuracy threshold. Since anomaly detection is not a CNN we couldn't accelerate it on the DLA.
+When run without the DLA, just with HPC, Headsail passes the accuracy requirements for all the tasks, except anomaly detection, as can be seen from the last column of the table.
+For the runs with DLA performing the convolution operations, only keyword spotting task passed the required accuracy threshold.
 
 As mentioned previously Renode isn't fitting for performance evaluation, and thus it isn't feasible to benchmark DLA-vp with MLPerf Tiny. We can however run the MLPerf Tiny tasks to see if the DLA reaches the required accuracy requirements of the benchmark. This essentially verifies the complete software stack and was especially useful during the development of DLA graph legalization pass.
-
-Next sections go over the results from each of the tasks in more detail.
 
 \section{Image classification}
 \begin{figure}[h]
@@ -1636,8 +1641,8 @@ required accuracy threshold of $85\%$ for submitting the IC benchmark scores. Th
 
 Figure~\ref{fig:ic-results} shows the results for the MLPerf Tiny image classification benchmark. From the result we can see that there is a major difference classification accuracy between classes. Classes $1$, $3$ and $6$ have higher recall than the minimum asked by MLPerf Tiny, but entries in classes $0$, $2$, $4$, $5$ and $7$ are misidentified almost half of the time. With total accuracy of $0.69$ Headsail-DLA doesn't reach the accuracy threshold of the task.
 
-When compared to the runs with DLA we can see that there are some similarities in which classes get confused with which classes, but the error seems to get exaggerated with the DLA.
-This discrepancy is almost completely explained by the clipping behaviour, since when DLA-vp is modified to output the complete result, this difference between the runs disappears and DLA performs similarly as the HPC only run.
+When compared to the runs without the DLA, we can see that there are some similarities in which classes get confused with which classes, but the error seems to get exaggerated with the DLA.
+This discrepancy is almost completely explained by the clipping behaviour, since when DLA-vp is modified to output the complete result, this difference between the runs disappears and DLA performs similarly as the HPC only run. Giving us confidence that our approach in the graph transformations is correct and rest of the stack is working correctly.
 
 \section{Keyword spotting}
 
@@ -1655,32 +1660,53 @@ This discrepancy is almost completely explained by the clipping behaviour, since
 \end{figure}
 
 
-Figure~\ref{fig:kws-results} shows the results for the MLPerf Tiny keyword spotting benchmark ran on headsail-vp with the DLA as a class confusion matrix. Similarly, as with the image classification task the evaluation metric was Top-1 accuracy. For the keyword spotting the DLA performed well, exactly hitting the required $90\%$ minimum accuracy requirement.
+\noindent Figure~\ref{fig:kws-results-no-acc} shows the results for the MLPerf Tiny keyword spotting benchmark ran on HPC only. Similarly, as with the image classification task the evaluation metric was Top-1 accuracy. The CPU only run of the benchmark performed as expected, reaching the required accuracy of $90\%$, as we expected from the reference model.
 
-The CPU only run of the benchmark performed as expected, reaching the required accuracy. From the confusion matrix shown in figure~\ref{fig:kws-results-no-acc} we can see that the CPU only run performed more evenly in regard to which classes it could correctly classify, than the DLA run which had more classes it struggled with as well as more classes which it could perfectly classify.
+Figure~\ref{fig:kws-results} shows the results for the DLA accelerated run. For the keyword spotting the DLA performed well, exactly hitting the $90\%$ minimum accuracy requirement.
+Unlike the rest of the benchmark, in this task the DLA performed as well as the unaccelerated run did.
+
+By comparing the two results, we can see that the CPU only run performed more evenly in regard to which classes it could correctly classify, than the DLA run which had more classes it struggled with as well as more classes which it could perfectly classify.
 
 \section{Visual Wake Words}
+% \begin{figure}
+% \centering
+% \begin{minipage}{.45\textwidth}
+%   \centering
+%   \includegraphics[width=\linewidth]{img/vww_200_no_acc.eps}
+%   \caption{VWW task on headsail-vp without DLA}
+%   \label{fig:vww-no-acc}
+% \end{minipage}
+% \begin{minipage}{.45\textwidth}
+%   \centering
+%   \includegraphics[width=\linewidth]{img/vww_200_acc.eps}
+%   \caption{VWW task on headsail-vp with DLA}
+%   \label{fig:vww-dla}
+% \end{minipage}%
+% \caption{Visual wake word task results on Headsail}
+% \label{fig:vww-results}
+% \end{figure}
+
 \begin{figure}
-\centering
-\begin{minipage}{.45\textwidth}
   \centering
-  \includegraphics[width=\linewidth]{img/vww_200_no_acc.eps}
-  \caption{VWW task on headsail-vp without DLA}
-  \label{fig:vww-no-acc}
-\end{minipage}
-\begin{minipage}{.45\textwidth}
-  \centering
-  \includegraphics[width=\linewidth]{img/vww_200_acc.eps}
-  \caption{VWW task on headsail-vp with DLA}
-  \label{fig:vww-dla}
-\end{minipage}%
-\caption{Visual wake word task results on Headsail}
-\label{fig:vww-results}
+  \begin{subfigure}[t]{0.5\textwidth}
+    \includegraphics[width=\linewidth]{img/vww_200_no_acc.eps}
+    \caption{VWW task on headsail-vp without DLA}
+    \label{fig:vww-no-acc}
+  \end{subfigure}%
+  ~
+  \begin{subfigure}[t]{0.5\textwidth}
+    \includegraphics[width=\linewidth]{img/vww_200_acc.eps}
+    \caption{VWW task on headsail-vp with DLA}
+    \label{fig:vww-dla}
+  \end{subfigure}%
+  \caption{Visual wake word task results on Headsail}
+  \label{fig:vww-results}
 \end{figure}
 
-Figure~\ref{fig:vww-results} shows the results of the MLPerf Tiny visual wake word task for headsail-vp. Subfigure~\ref{fig:vww-no-acc} shows the results of the benchmark for the CPU only run. This run exceeds the required $80\%$ accuracy threshold with an accuracy of $83\%$. From the confusion matrix we can see that the reference model has a bias towards false predictions. This effect can be seen exaggerated in the benchmark run on DLA in figure~\ref{fig:vww-dla}. From the results of the DLA run we can conclude that the MLPerf Tiny reference model is not compatible with the DLA at this point, since accuracy of $0.5$ for a binary classifier implies a random results.
 
-At this moment it's unclear why this task performed so poorly on the DLA, but what we are seeing from the results is that the inherent weight and biases of the particular model. This is supported by the results of the HPC only run where the predictions steered noticeably towards False predictions. One possible issued we noticed is that the VWW reference model has very high bias values in its last convolution layer. As discussed earlier in section~\ref{sec:software_support} might result in channel saturation issues when the bit-width of the bias is limited.
+Figure~\ref{fig:vww-results} shows the results of the MLPerf Tiny visual wake word task for headsail-vp. Subfigure~\ref{fig:vww-no-acc} shows the results of the benchmark for the CPU only run. This run exceeds the required $80\%$ accuracy threshold with an accuracy of $83\%$. From the confusion matrix we can see that the reference model has a bias towards false predictions. This effect can be seen exaggerated in the benchmark run with the DLA in figure~\ref{fig:vww-dla}. From the results of the DLA run we can conclude that the MLPerf Tiny reference model is not compatible with the DLA at this point, since accuracy of $0.5$ for a binary classifier implies a random results.
+
+At this moment it's unclear why this task performed so poorly with the DLA, but what we are seeing from the results is that with DLA it's impossible to make a true prediction with this setup. This is supported by the results of the HPC only run where the predictions steered noticeably towards false predictions. One possible issued we noticed is that the VWW reference model has very high bias values in its last convolution layer. As discussed earlier in section~\ref{sec:software_support} might result in channel saturation issues when the bit-width of the bias is limited.
 
 \section{Anomaly Detection}
 The FC-AutoEncoder model used in the anomaly detection task isn't acceleratable on Headsail DLA, and thus we have results only for the HPC only run. With an AUC score of 0.69, we didn't reach the required threshold of $0.85$. This was surprising since the other benchmarks did easily reach their required accuracies, when ran with only HPC. We suspect that this discrepancy is due to some issue with the input data quantization in our preprocessing setup, but we didn't have time to investigate further.
@@ -1696,31 +1722,30 @@ The FC-AutoEncoder model used in the anomaly detection task isn't acceleratable 
 % \end{enumerate}
 % It's safe to say that we accomplished all these goals.
 
-During this Master's Thesis we were able to develop a virtual replica of a large ASIC subsystem in DLA-vp, that based on verification testing functions identically to its hardware counterpart. This gives us confidence in the claim that the Python Peripheral API in Renode can be successfully used to prototype more complex hardware components. Which in turn can be used to develop driver and application space software, before hardware is taped out.
+During this Master's Thesis we were able to develop a virtual replica of a large ASIC subsystem in DLA-vp, that based on verification testing functions identically to its hardware counterpart. This gives us confidence in the claim that the Python Peripheral API in Renode can be successfully used to prototype more complex hardware components. Which in turn can be used to develop drivers and application space software, before hardware is taped out.
 This might enable software developers to take greater part in hardware design than before using more familiar tools.
 
-We were also to develop a software stack to capable of deploying, executing and accelerating inference for CNNs on the Headsail with the custom Deep Learning Accelerator.
+We were also able to develop a software stack capable of deploying, executing and accelerating inference for CNNs on the Headsail with the custom deep learning accelerator.
 The stack consisted of a driver for the accelerator integrated in to the SoC's board support package, with a easy-to-use API for scheduling convolution operations.
 We also developed a TVM backend for the accelerator to generate C-source code with the TVM BYOC API, which allowed us to easily deploy models for the device.
 With Newlib we provided a C standard library implementation compatible with Headsail, making it possible to build more complex C programs for the platform.
 
 With MLPerf Tiny benchmark we were able to evaluate the accuracy of the DLA-vp when executing pretrained quantized convolutional neural networks. The result of which was that the DLA can handle some models. We were not yet able to run the benchmark on the actual ASIC, due to hardware issue, but we did in some limited manner observe that binaries for the headsail-vp were compatible with the ASIC.
 
-In the end we consider this project mostly successful, except for the MLPerf Accuracy thresholds not being met in all the task, we achieved all the goals set in the beginning. We were able to lay down a one possible solution for implementing a software stack for neural inference workloads on a custom SoC.
+In the end we consider this project mostly successful, except for the MLPerf Accuracy thresholds not being met in all the task, we achieved all the goals set in the beginning. We were able to lay down a one possible solution for implementing a software stack for accelerating neural inference workloads on a custom SoC.
 
 \section{Future Work}
-As the accuracy results show there is space for improving the inference accuracy with the software stack. Different graph transformations should be considered to counteract the resolution limitations caused by the result clipping in the DLA. We also know that the driver is less the optimal when it comes down to moving data through the different software layers, and this should be addressed by carefully examining the driver implementation and the TVM facing interface.
+As the accuracy results show there is space for improving the inference accuracy with the software stack. Different graph transformations should be considered to counteract the resolution limitations caused by the result clipping in the DLA. We also know that the driver is less then optimal when it comes down to moving data through the different software layers, and this should be addressed by carefully examining the driver implementation and the TVM facing interface.
 
-As we have seen from other deep learning accelerators, the main bottleneck in these devices is generally the data transferring. Reducing or parallelizing data transfers can provide us with noticeable performance increases. One way to introduce parallellity would to introduce preemptive weight buffering to the driver. By writing the weights of the next layer while the previous layers is still being processed should improve inference throughput.
+As we have seen from other deep learning accelerators, the main bottleneck in these devices is generally the data transfers. Reducing or parallelizing data transfers can provide us with noticeable performance increases. One way to increase parallellity would be to introduce preemptive weight buffering to the driver. By writing the weights of the next layer while the previous layers is still being processed should improve inference throughput, since some of the CPU downtime can be spent on setting up the next layer.
 
-From hardware point of view this project has highlighted many limitations regarding the DLA when considering actual use-cases for it. To enable the use of better data locality principles the next iteration of the Headsail could include a FIFO-based scaler unit in between Bias and ReLU steps. This would allow allocating the \text{qnn.requantize} operations to the accelerator, which would reduce the amount data transfers between the TVM runtime and the driver, possible improving performance while also fixing the issue caused by result clipping the original design, while keeping the output width as 8-bits. This would give better compatibility with pretrained models.
+From hardware point of view this project has highlighted many limitations regarding the DLA, when considering actual use-cases for it. To enable the use of better data locality principles the next iteration of the Headsail could include a FIFO-based scaler unit in between Bias and ReLU steps. This would allow allocating the \text{qnn.requantize} operations to the accelerator, which would reduce the amount data transfers between the TVM runtime and the driver, possibly improving performance while also fixing the issue caused by result clipping on the original design, while keeping the output width as 8-bits. This would give better compatibility with pretrained models.
 
-To improve DL support on Headsail, there is a need for DLA specific training flow to be implemented with one of the major DL frameworks. This would enable the creation of models with full compatibility with the DLA. Since development and training of models takes a lot of time and computing resource it wasn't included in this work but should be pursued with more time.
+To improve DL support on Headsail, there is a need for DLA specific training flow to be implemented with one of the major DL frameworks. This would enable the creation of models with full compatibility with the DLA. Since development and training of models takes a lot of time and computing resource it wasn't included in this work but should be pursued in the future.
 
 As discussed earlier in this work, fully connected layers are still widely used as major component in auto-encoders and classifiers layers in many networks, and thus accelerating them can introduce significant performance increases for some networks. To enable accelerating all the tasks in MLPerf Tiny we should consider if the next iteration of the MAC array could be modified to support fully connected layer without greatly increasing the area in the chip.
 
 In addition to deep learning applications the DLA could be used in other workloads. Kernel based image processing applications can benefit from similar acceleration as the DNN applications we have showcased in this work. For example Gaussian filters for blurring and edge detection can be implemented with similar windowing approach as two-dimensional convolution is implemented in the accelerator.
-
 
 
 %
