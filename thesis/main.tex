@@ -1175,7 +1175,7 @@ Similarly to MobileNet, DS-CNN has a average pooling layer followed by a FC-laye
 \subsection{Anomaly Detection}
 The dataset for this task is the DCASE2020 dataset~\cite{koizumi_description_2020}. DCASE2020 consists of sound samples from the following labels: slide rails, fans, pumps, valves, toy-cars, toy-conveyors, from which the AD task only detects anomalies from the toy-cars.
 
-For the model AD task uses a custom FC-AutoEncoder~\cite{banbury_mlperf_2021}.
+For the model AD task uses a custom FC-AutoEncoder~\cite{tinyperf}.
 Originally proposed by~\cite{rumelhart_learning_1987}, AutoEncoder consists of three parts. First is the encoder which encoder the input and downsamples it to latent space. Second part is the latent space which holds the useful high-level features of the input. Last is the decoder which decodes the latent features and upsamples these features back to original dimensionality of the input.~\cite{chen_auto-encoders_2023} The used FC-AutoEncoder model consists of 10 FC-layers with ReLU activations, from which the first 4 make up the encoder, fifth forms the latent space, the four after latent space make up the decoder and last layer performs the classification.
 
 \chapter{Implementation}
