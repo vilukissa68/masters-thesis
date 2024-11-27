@@ -58,8 +58,8 @@ maxbibnames=5
 \usepackage{multirow}
 \usepackage{calc}
 
-\addbibresource{thesis_refs.bib} %Imports bibliography file
-\addbibresource{zotero.bib} %Imports bibliography file
+\addbibresource{../thesis/thesis_refs.bib} %Imports bibliography file
+\addbibresource{../thesis/zotero.bib} %Imports bibliography file
 
 % Table caption on top
 \floatstyle{plaintop}
@@ -114,7 +114,7 @@ maxbibnames=5
 \begin{figure}
     \vspace{-1.3cm}
     \advance\leftskip-2.5cm
-    \noindent\includegraphics{img/tunilogo.png}
+    \noindent\includegraphics{../thesis/img/tunilogo.png}
 \end{figure}
  
 \vspace{2.5cm}
@@ -146,30 +146,30 @@ maxbibnames=5
 % Turn off page numbering for the first pages
 \pagenumbering{gobble}
 
-\chapter*{Abstract}
+% \chapter*{Abstract}
 
-\begin{spacing}{1.0}
-\noindent \@author: \@title\\
-\@thesistype\\
-Tampere University\\
-Master’s Degree Programme in Signal Processing and Machine Learning\\
-December 2024
-\end{spacing}
-\noindent\rule{12cm}{0.4pt}
+% \begin{spacing}{1.0}
+% \noindent \@author: \@title\\
+% \@thesistype\\
+% Tampere University\\
+% Master’s Degree Programme in Signal Processing and Machine Learning\\
+% December 2024
+% \end{spacing}
+% \noindent\rule{12cm}{0.4pt}
 
-\vspace{0.5cm}
+% \vspace{0.5cm}
 
-% ---------------------------------------
-% Abstract and keywords
-% ---------------------------------------
+% % ---------------------------------------
+% % Abstract and keywords
+% % ---------------------------------------
 
-\noindent Lorem ipsum~
+% \noindent Lorem ipsum~
 
-\noindent\textbf{Keywords:} DLA, Deep-Learning, SoC, Virtual Prototype.
+% \noindent\textbf{Keywords:} DLA, Deep-Learning, SoC, Virtual Prototype.
 
-~
+% ~
 
-\noindent The originality of this thesis has been checked using the Turnitin Originality Check service.
+% \noindent The originality of this thesis has been checked using the Turnitin Originality Check service.
 
 
 \clearpage
@@ -208,12 +208,48 @@ December 2024
 \setcounter{page}{1} % Start numbering from zero because command
                      % 'chapter*' does page break
 
-In recent years neural network based application have become more and more prominent in our everyday-life. The large driver for this has been the adoption of efficient accelerators in mobile device, that have enabled running neural network applications of mobile devices, such as smartphones.
+Järjestelmäpiirit ovat heterogeenisen laskennan muoto, jossa yhdelle piirille sijoitetaan useita itsenäisiä komponentteja, jotka yhdessä muodostavat integroidun funktionaalisen järjestelmän.
+Järjestelmäpiiri voi esimerkiksi sisältää prosessoreita, kiihdyttimiä, muistia sekä tulo- ja lähtörajapintoja.
 
-This interest in neural networks has coincided with the industry's move to heterogeneous System-on-chip solutions being used in consumer and professional devices, to improve computational performance.
-More often these companies integrate their accelerators into SoCs, which include CPUs, GPUs, memory and other accelerators and peripherals in one package. Apple and Qualcomm have proved with their SoCs that they can attain desktop like performance in a smaller package than was previously possible. The industry moving towards SoCs has generated new interest in developing open-source SoCs.
+Tässä työssä pyrittiin suunnittelemaan ja toteuttamaan ohjelmistopino konvoluutionaalisten neuroverkkojen päätelaskennan kiihdyttämiseksi Tampereen yliopiston SoC Hub -tutkimusryhmän~\cite{keelhaul} Headsail-järjestelmäpiirin sy\-vä\-op\-pi\-mis\-kiih\-dy\-tti\-me\-llä.
+Tavoitteena oli kehittää ohjelmistopino, joka pystyy muuntamaan koulutetun neuroverkon Headsaililla suoritettavaan muotoon ja allokoimaan verkon konvoluutio-operaatiot suoritettaviksi syväoppimiskiihdyttimellä.
 
-The goal of this project was to build software support for the Deep-Learning Accelerator in the upcoming Headsail SoC from SoC Hub using a Renode based virtual prototype as the development platform. The goal was to use this concurrent development approach to have software support ready before the chip had been manufactured.
+Työn toinen tavoite oli mallintaa Headsail-järjestelmäpiiri, erityisesti sen sy\-vä\-op\-pi\-mis\-kiih\-dy\-tin, virtuaalisesti Renode-järjestelmäemulaattorilla~\cite{renode}.
+Tämä mahdollisti ohjelmistokehityksen aloittamisen ennen Headsail-piirien valmistumista, nopeuttaen piirien käyt\-töön\-ot\-to\-a.
+Koska syväoppimiskiihdytin on SoC Hubin kehittämä, sen virtuaalista vastinetta ei löydy valmiina Renoden komponenttikirjastosta, joten se kehitettiin tämän työn aikana hyödyntäen Renoden Python-oheislaiterajapintaa.
+
+Lopullinen ohjelmistopino koostui seuraavista komponenteista: Rust-pohjaisesta alustatukipaketista, joka tarjoaa rajapinnan Headsailin ja sen oheislaitteiden ohjelmointiin; tukipakettiin sisällytettävästä ajurista syväoppimiskiihdyttimen ohjaamiseen; TVM-koneoppimiskääntäjästä~\cite{TVM}, johon integroitiin Headsail-koo\-di\-kään\-nös\-tu\-ki; sekä Headsail-yhteensopivasta C-standaardikirjaston toteutuksesta.
+Kuvassa~\ref{fig:architecture} on esitetty syväoppimiskiihdyttimen käyttöön kehitetty ohjelmistopino kokonaisuudessaan.
+
+\begin{figure}
+\centering
+\includegraphics[width=\linewidth]{../thesis/img/dla-architecture-new.pdf}
+\caption{Headsailin syvöoppimiskiihdyttimen käyttöön kehitetty ohjelmistoarkkitehtuuri.}
+\label{fig:architecture}
+\end{figure}
+
+Kiihdyttimen ja sen ohjelmistopinon käyttötapaukseksi valittiin MLPerf Tiny-suorituskykytesti~\cite{banbury_mlperf_2021}, joka on päätelaskennan latenssin testaamiseen sulautetuilla alustoilla tarkoitettu avoin testikehys.
+MLPerf Tiny sisältää neljä erillistä testitapausta, jotka mallintavat kiihdyttimen tosielämän käyttötapauksia tunnetuilla neuroverkkoarkkitehtuureilla.
+Näistä tapauksista kolme perustuu konvoluutionaalisiin verkkoihin, siispä ne sopivat hyvin Headsailin syväoppimiskiihdyttimen testaamiseen.
+
+Ensimmäinen käyttötapaus on avainsanojen tunnistaminen, jossa ääninäytteen logaritmisesta mel-spektrogrammista pyritään tunnistamaan yksi kahdestatoista mahdollisesta avainsanasta.
+Toinen käyttötapaus on visuaalisen herätteen havaitseminen, jossa binääriluokittelevaa konvoluutionaalista verkkoa hyödyntämällä pyritään tunnistamaan, esiintyykö syötteenä annetussa kuvassa ihminen vai ei.
+Viimeinen käyttötapaus on kuvan luokittelu, jossa ResNet~\cite{he_deep_2015} -neuroverkkoa hyödyntämällä pyritään luokittelemaan CIFAR-10-tietokannan kuvia oikeisiin luokkiin.
+
+Neuroverkon kääntäminen Headsailille perustuu TVM:n kykyyn tuottaa ilman käyttöjärjestelmää suoritettavaa C-lähdekoodia, johon voidaan sisällyttää korkeantason syväoppimiskirjastoilla koulutettuja neuroverkkoja. Laajentamalla TVM:ää Headsail-yhteensopivalla koodigeneraatiomoduulilla voitiin lisätä toiminnallisuus, joka mahdollistaa C-koodin tuottamisen siten, että konvoluutiokerrokset allokoidaan suoritettavaksi syväoppimiskiihdyttimellä.
+
+Jotta koodigeneraatio voidaan suorittaa, korkeantason neuroverkon esitys on ensin muunnettava TVM Relay -esitysmuotoon.
+Relayssä neuroverkko esitetään graafina, jossa jokainen laskuoperaatio vastaa yhtä solmua ja graafin kaaret kuvaavat datan liikkumista operaatioiden välillä.
+Tälle graafiesitykselle voidaan suorittaa muunnoksia, joilla neuroverkko sovitetaan kohdealustalle.
+Tämän jälkeen koodigeneraatiomoduuli etsii graafista määritellyt solmukuviot, jotka on ennalta määritelty kiihdyttimellä suoritettaviksi, ja tuottaa näille C-koodia, joka käyttää alustatukipaketin konvoluutiokomentoja päätelaskennan aikana.
+
+Valmiin ohjelmistopinon avulla suoritettiin edellä kuvatut MLPerf Tiny -suo\-ri\-tus\-ky\-ky\-tes\-tin kolme konvoluutiopohjaista käyttötapausta Headsailin virtuaalimallissa.
+Teknisten ongelmien takia, testikehystä ei pystytty suorittamaan oikealla jär\-jes\-tel\-mä\-pii\-ri\-llä, eikä latenssimittausta saatu siten suoritettua. Virtuaalimallin testaaminen kuitenkin todistaa ohjelmistopinon toimivuuden ja sy\-vä\-op\-pi\-mis\-kiih\-dy\-tti\-men yhteensopivuusasteen testikehyksen referenssimallien kanssa.
+Testitulosten perusteella Headsailin sy\-vä\-op\-pi\-mis\-kiih\-dy\-tin pystyi vaihtelevasti kiihdyttämään yleistapauksellisia neuroverkkoja säilyttäen referenssimallin tarkkuuden.
+Vaihtelevuuden pääsyyksi havaittiin kiihdyttimen rajoitettu ulostuloleveys, joka osoittautui liian kapeaksi monille neuroverkoille.
+Jotta syväoppimiskiihdyttimellä voitaisiin suorittaa neuroverkkoja paremmalla tarkkuudella, tulisi verkot kouluttaa rajoitettu ulostuloleveys erityisesti huomioonottaen.
+
+
 
 
 %
@@ -221,7 +257,7 @@ The goal of this project was to build software support for the Deep-Learning Acc
 %
 \newpage
 
-\printbibliography[title=References]
+\printbibliography[title=Lähteet]
 \addcontentsline{toc}{chapter}{Lähteet}
 
 

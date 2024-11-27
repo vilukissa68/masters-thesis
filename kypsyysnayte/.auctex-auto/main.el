@@ -47,10 +47,11 @@
     "checkmark"
     "scalecheck")
    (LaTeX-add-labels
-    "ch:introduction")
+    "ch:introduction"
+    "fig:architecture")
    (LaTeX-add-bibliographies
-    "thesis_refs"
-    "zotero")
+    "../thesis/thesis_refs"
+    "../thesis/zotero")
    (LaTeX-add-listings-lstdefinestyles
     "customc"
     "customasm")

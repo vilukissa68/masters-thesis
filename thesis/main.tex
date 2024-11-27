@@ -508,7 +508,7 @@ Conv2D(i, j) = (K \star I)(i,j) = \sum_{m}\sum_{n}I(i-m,j-n)K(m, n)
 \end{align}
 where $I$ is the input and $K$ is one kernel, $m$ is the width of the kernel and $n$ is the height.
 
-In high-level deep learning frameworks convolution is often implemented as cross-correlation but still called convolution~\cite{DeepLearningBook,paszke_pytorch_2019,tensorflow2015-whitepaper}. This is also what we have done in our implementation
+In high-level deep learning frameworks convolution is often implemented as cross-correlation but still called convolution~\cite{DeepLearningBook,pytorch,tensorflow2015-whitepaper}. This is also what we have done in our implementation
 \begin{align}
 Conv2D(i,j) = CrossCorrelation(I, K) = (K \star I)(i,j) = \sum_{m}\sum_{n}I(i+m,j+n)K(m, n)
 \end{align}
@@ -835,7 +835,7 @@ b_{k} = b_{K} - \eta \frac{\partial L}{\partial b_{K}}.
 
 Model training is computationally expensive process and in the case of some of the largest models can take months to train. For this reason it's common to have separate hardware for training and for inference. Training is generally done on GPUs or NNAs with some high-level training network. Whereas inference can be done on different kinds of hardware configurations from server farms to microcontrollers, since the inference is less computationally expensive.
 
-Most training frameworks use 32-bit floating point values to represent rational numbers.~\cite{paszke_pytorch_2019}\cite{tensorflow2015-whitepaper}. This allows for the best accuracy in the training. After training the weights and biases can be moved to the target device for inference. Even in the cases where the target model is to be quantized, the network is first trained with high accuracy floating points and quantized afterwards, to represent the rational values with integers to ensure high model accuracy.
+Most training frameworks use 32-bit floating point values to represent rational numbers.~\cite{pytorch}\cite{tensorflow2015-whitepaper}. This allows for the best accuracy in the training. After training the weights and biases can be moved to the target device for inference. Even in the cases where the target model is to be quantized, the network is first trained with high accuracy floating points and quantized afterwards, to represent the rational values with integers to ensure high model accuracy.
 
 \section{Quantization}
 When training DNN models with high-level tools like Pytorch, models are built to use floating point values. In recent years quantization has become a well proven optimization technique for improving inference throughput, and reducing the size of models~\cite{wu_integer_2020}. Often there are significant performance gains available by reducing the granularity of the parameters without a major loss in model accuracy as shown~\cite{krishnamoorthi_quantizing_2018,draghici_capabilities_2002}. Standard floating point value has a width of 32-bits, whereas INT8 which is a common integer type in DNNs has just the 8 bits. Thus, when less granularity is acceptable similarly performing integer based accelerator can do 4 times the calculations when compared to a floating point accelerator.
@@ -912,7 +912,7 @@ where $N$ is the total number of inputs in the evaluation, $\delta$ is the Krone
 \subsection{AUC}
 Area under the curve (AUC) is a metric for evaluating binary classifiers. It compares the relative amount true positive predictions to false positive predictions.
 The main benefit of AUC over simple accuracy is that it balances uneven datasets. For binary anomaly detection it's common that the amount of non-anomalous samples is magnitude larger than the amount of anomalous samples.
-Most ML libraries approximate the AUC with a discrete AUC using the Trapezoidal Rule~\cite{paszke_pytorch_2019}
+Most ML libraries approximate the AUC with a discrete AUC using the Trapezoidal Rule~\cite{pytorch}
 \begin{align}
 \text{AUC} & = \int_{\text{FPR}=0}^{\text{FPR}=1} \text{TPR}(\text{FPR}) \, d(\text{FPR}) \\
 & \approx \sum_{i=1}^{n-1} \frac{(\text{FPR}_{i+1} - \text{FPR}_i) \cdot (\text{TPR}_{i+1} + \text{TPR}_i)}{2},
@@ -1114,7 +1114,7 @@ After legalization the graph can be annotated and acceleratable patterns can be 
 
 \section{Renode}
 \label{sec:renode}
-Renode is a high-level full system emulator, which enables developers to rapidly develop hardware dependent software. In essence Renode allows the user to specify exactly which kind of hardware they want to target, down to the implementation of specific peripherals and memory addresses. This streamlines the process of HW/SW integration, since hardware and software can be developed in parallel, which in return reduces the total production time for products.
+Renode is a high-level full system emulator, which enables developers to rapidly develop hardware dependent software~\cite{renode}. In essence Renode allows the user to specify exactly which kind of hardware they want to target, down to the implementation of specific peripherals and memory addresses. This streamlines the process of HW/SW integration, since hardware and software can be developed in parallel, which in return reduces the total production time for products.
 
 Renode models a wide variety of different processors and peripherals, but it is also expandable with custom components that are either baked directly into the binary (source code extensions in C\#) or with dynamically loaded Python peripherals. Python peripherals are more limited when compared to the C\# peripherals, since they can't be connected to the clock domain of the system and can only change state when their memory region is accessed. Renode's Python peripherals are also executed in a separate IronPython~\cite{ironpython} container that at this moment, only support modules from Python standard library.
 
@@ -1183,7 +1183,7 @@ Originally proposed by~\cite{rumelhart_learning_1987}, AutoEncoder consists of t
 This section covers the actual implementation of the used software stack in detail and the specific use cases developed on top of the stack. We first discuss the implementation of the SoCs virtual prototype, and some of its issues. We then cover the implementation of the software stack in great detail. Finally, we present the benchmarking approach with the complete software architecture
 
 \section{headsail-vp}
-To enable software development for Headsail before the arrival of the ASICs, we modeled the SoC as a Renode virtual platform, which we call headsail-vp. With headsail-vp we aimed to replicate the complete memory map of Headsail, with both processors and some of the peripherals.
+To enable software development for Headsail before the arrival of the ASICs, we modeled the SoC as a Renode virtual platform~\cite{renode}, which we call headsail-vp. With headsail-vp we aimed to replicate the complete memory map of Headsail, with both processors and some of the peripherals.
 The aim with the virtual platform was to kick-start software development for the ASIC and to give developers a more streamlined development environment.
 We hoped that headsail-vp would enable faster software development, by removing some friction associated to working on the ASIC, as well as giving use the possibility of modifying the design in the case of hardware bugs.
 Additionally, this knowledge in developing virtual prototypes of chip could allow us to better define the hardware specs based on the software demonstrators we develop in for the future chips.

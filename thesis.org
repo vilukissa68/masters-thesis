@@ -1,20 +1,21 @@
 #+title: Thesis
 * TODOS :thesis:
-** Diplomityö [6/7]
+** Diplomityö [7/9]
 *** DONE Get and report Anomaly Detection result for the HPC
 **** DONE Figure out the ToyAdmos dataset
 *** DONE Write abstract [2/2]
 **** DONE Englanninkielinen tiviistelmä
 **** DONE Suomenkielinen tiviistelmä
-*** TODO Final grammar and spelling check
+*** DONE Final grammar and spelling check
 *** DONE Add TUNI AI clause
 *** DONE Improve introdocution
 *** DONE Preface
 *** DONE Write about depthwise conv2d
-** TODO Byrokaratia [0/3]
-*** TODO Kypsyysnäyte
-**** TODO 400-500 sanainen tiivistelmä
 *** TODO Tekstin alkuperäisyyden tarkistus
+*** TODO Palaute Henriltä ja Timolta
+** TODO Byrokaratia [0/3]
+*** DOING Kypsyysnäyte
+400-500 sanainen tiivistelmä
 *** DOING Teesien Työkalut [2/5]
 **** DONE Hyvä tieteellinen käytäntö
 **** DOING Opinnäytetyöseminaari [1/3]
@@ -23,9 +24,9 @@
 ***** TODO Seminaariesitys
 **** DROPPED Urasuunnittelu
 **** TODO Ohjaussuunnitelma
-**** DOING Tutkimusmenetelmät 3/4
+**** DOING Tutkimusmenetelmät [3/4]
 ***** DONE Yhteinen osio
-***** DOING Määrälliset tutkimukset
+***** WAITING Määrälliset tutkimukset
 ***** DROPPED Laadulliset tutkimukset
 ***** DONE Soveltava tutkimus
 
