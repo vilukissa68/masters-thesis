@@ -1,6 +1,7 @@
 #+title: Thesis
 * TODOS :thesis:
-** Diplomityö [7/9]
+** TODO Hae valmistumista
+** TODO Diplomityö [7/9]
 *** DONE Get and report Anomaly Detection result for the HPC
 **** DONE Figure out the ToyAdmos dataset
 *** DONE Write abstract [2/2]
@@ -12,23 +13,35 @@
 *** DONE Preface
 *** DONE Write about depthwise conv2d
 *** TODO Tekstin alkuperäisyyden tarkistus
+Testi tarkistuksesta 12% -> kaikki ok. Odota lupaa tehdä lopullinen palautus.
 *** TODO Palaute Henriltä ja Timolta
 ** TODO Byrokaratia [0/3]
 *** DOING Kypsyysnäyte
-400-500 sanainen tiivistelmä
-*** DOING Teesien Työkalut [2/5]
-**** DONE Hyvä tieteellinen käytäntö
+400-500 sanainen tiivistelmä.
+**** DONE Kirjoita
+**** TODO Palauta
+Ohjaaja arvioi diplomityön yhteydessä
+*** DOING Teesien Työkalut [3/5]
 **** DOING Opinnäytetyöseminaari [1/3]
 ***** DONE Seminaariin osallistuminen x3
 ***** DOING Seminaaridiat
 ***** TODO Seminaariesitys
-**** DROPPED Urasuunnittelu
-**** TODO Ohjaussuunnitelma
-**** DOING Tutkimusmenetelmät [3/4]
+SCHEDULED: <2024-12-09 Mon 12:15>
+Ei tarvita vielä syyslukukaudella
+**** DOING Ohjaussuunnitelma
+[[https://moodle.tuni.fi/course/view.php?id=45196][Kurssi]]
+***** DONE Täytä
+***** TODO Odota ohjaajan hyväksyntää (Timo)
+**** DONE Hyvä tieteellinen käytäntö
+**** DONE Tutkimusmenetelmät [4/4]
+[[https://moodle.tuni.fi/course/view.php?id=44837][Kurssi]]
 ***** DONE Yhteinen osio
-***** WAITING Määrälliset tutkimukset
-***** DROPPED Laadulliset tutkimukset
+***** DROPPED Määrälliset tutkimukset
+Odottaa arviointia
+***** DONE Laadulliset tutkimukset
 ***** DONE Soveltava tutkimus
+
+**** DROPPED Urasuunnittelu
 
 * DOING Propose a topic for master's thesis
 ** Implementing Software Stack for Deep Learning Accelerator in RISCV SoC
