@@ -219,7 +219,7 @@ Tämä mahdollisti ohjelmistokehityksen aloittamisen ennen Headsail-piirien valm
 Koska syväoppimiskiihdytin on SoC Hubin kehittämä, sen virtuaalista vastinetta ei löydy valmiina Renoden komponenttikirjastosta, joten se kehitettiin tämän työn aikana hyödyntäen Renoden Python-oheislaiterajapintaa.
 
 Lopullinen ohjelmistopino koostui seuraavista komponenteista: Rust-pohjaisesta alustatukipaketista, joka tarjoaa rajapinnan Headsailin ja sen oheislaitteiden ohjelmointiin; tukipakettiin sisällytettävästä ajurista syväoppimiskiihdyttimen ohjaamiseen; TVM-koneoppimiskääntäjästä~\cite{TVM}, johon integroitiin Headsail-koo\-di\-kään\-nös\-tu\-ki; sekä Headsail-yhteensopivasta C-standaardikirjaston toteutuksesta.
-Kiihdyttimen ja sen ohjelmistopinon käyttötapaukseksi valittiin MLPerf Tiny-suorituskykytesti~\cite{banbury_mlperf_2021}, joka on päätelaskennan latenssin testaamiseen sulautetuilla alustoilla tarkoitettu avoin testikehys.
+Kiihdyttimen ja sen ohjelmistopinon käyttötapaukseksi valittiin MLPerf Tiny-suo\-ri\-tus\-ky\-ky\-tes\-ti~\cite{banbury_mlperf_2021}, joka on päätelaskennan latenssin testaamiseen sulautetuilla alustoilla tarkoitettu avoin testikehys.
 MLPerf Tiny sisältää neljä erillistä testitapausta, jotka mallintavat kiihdyttimen tosielämän käyttötapauksia tunnetuilla neuroverkkoarkkitehtuureilla.
 Näistä tapauksista kolme perustuu konvoluutionaalisiin verkkoihin, siispä ne sopivat hyvin Headsailin syväoppimiskiihdyttimen testaamiseen.
 
