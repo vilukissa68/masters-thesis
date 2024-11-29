@@ -201,7 +201,7 @@ Marraskuu 2024
 \noindent \foreignlanguage{finnish}{Arkielämässämme kohtaamiemme konvolutioverkkoja hyödyntävien sovellusten mää\-rä on lisääntynyt, samanaikaisesti kiinnostuksen kasvaessa heterogeenisiä jär\-jes\-tel\-mä\-pii\-re\-jä kohtaan. Yksi esimerkki tällaisesta järjestelmäpiiristä on Tampereen yliopiston SoC Hub -tutkimusryhmässä kehitetty Headsail. Headsailissä on avoimeen RISC-V -suoritinarkkitehtuuriin pohjautuva moniydinsuoritin, joka sisältää useita
 oheislaitteita, joista yksi on syväoppimiskiihdytin.}
 
-\foreignlanguage{finnish}{Työn tarkoituksena oli suunnitella ohjelmistopino jolla syväoppimiskiihdytintä voitaisiin käyttää päätelmien laskemiseen.
+\foreignlanguage{finnish}{Työn tarkoituksena oli suunnitella ohjelmistopino jolla sy\-vä\-op\-pi\-mis\-kiih\-dy\-tin\-tä voi\-tai\-siin käyttää päätelmien laskemiseen.
 Projektin alkaessa Headsail oli vielä kehityksessä, joten rakensimme sitä vastaanvan virtuaaliprototyypin, jossa oli mukana myös syväoppimiskiihdytin. Virtuaaliprototyyppi rakennettiin Renode-alustaa ja sen Python-oheislaiterajapintaa hyödyntäen. Tavoitteena oli suorittaa sellainen suorituskykytesti, joka mukailisi neuroverkkojen todellisia käyttötapauksia, siten että ohjelmistopinon soveltuvuus voitaisiin varmistaa. Lopuksi sama testi suoritettaisiin myös lopullisella piirillä. Tähän tarkoitukseen kehitimme ainakin seuraavat komponentit: ajurin syväoppimiskiihdyttimen käyttöä varten, alustakohtaisen tukipaketin ja version C-standardikirjastosta, TVM koneoppimiskääntäjän kanssa yhteensopivan integraation ja lopuksi menetelmän ohjelmistopinon  ja kiihdyttimen arvioimiseksi.}
 
 \foreignlanguage{finnish}{Lopulta saimme valmiiksi syväoppimiskiihdyttimen käytön mahdollistavan ohjelmistopinon. Integraatio TVM-koneoppimiskääntäjän kanssa, mahdollisti sellaisten ohjelmistojen kehittämisen, joissa hyödynnettiin korkeantason alustoilla kehitettyjä kvantisoituja konvoluutioneuroverkkoja. MLPerf Tiny -suorituskykytestin avulla pystyimme arvioimaan ohjelmistopinoa hyödyntävien ohjelmistojen ennustustarkkuuden ja osoittamaan että Headsailin syväoppimiskiihdytintä voidaan käyttää kiihdyttmään joitain neuroverkkoja, siten että tarkkuus säilyy hyväksyttävänä. Aikarajoitteiden vuoksi emme kuitenkaan pystyneet suorittamaan samaa testiä lopullisella piirillä.}
@@ -218,7 +218,7 @@ Projektin alkaessa Headsail oli vielä kehityksessä, joten rakensimme sitä vas
 
 \input{use-of-ai.tex}
 
-\preface{preface.tex}{Tampere, 24th November 2024}
+\preface{preface.tex}{Tampere, 29th November 2024}
 
 % TOC
 \setcounter{tocdepth}{3}              % How many header level are included
@@ -699,7 +699,7 @@ For clarity this combination of 2D convolution, bias and ReLU is usually fused i
 
 The simplest kind of relation is a feedforward relationship where the output of layer A is the input of layer B as shown in the figure~\ref{fig:network-simple}. In a simple feedforward connection one instance of a layer output is always exactly input for one layer, without recursion or branching.
 
-Connection can also branch, and the same layer output can be used as input for multiple nodes. Resnet~\cite{he2015deepresiduallearningimage} heavily utilizes what are called residual connections. With residual connection an input of a layer is used in multiple parts of a feed forward network. Figure~\ref{fig:network-residual} shows and example of a residual connection, where input of layer A is used again after concatenation as part of input for layer C.
+Connection can also branch, and the same layer output can be used as input for multiple nodes. Resnet~\cite{he2015deepresiduallearningimage} heavily utilizes what are called residual connections. With residual connection an input of a layer is used in multiple parts of a feed forward network. Figure~\ref{fig:network-residual} shows an example of a residual connection, where input of layer A is used again after concatenation as part of input for layer C.
 
 % In recursive networks an output of a layer can be an input to a layer preceding it, or it's input during the next pass. This kind of structure shown in figure~\ref{fig:recurrent-network} is able to encode time series information, which is heavily used in audio processing and language modeling tasks.
 
@@ -875,6 +875,7 @@ x_{float} = x_{Q}\Delta.
 Some integer accelerators might support performing the quatizations in hardware, but generally it's done in software.
 
 \section{Validation and DNN inference evaluation metrics}
+\label{sec:metrics}
 Model validation is a practice of evaluating the quality of predictions of a neural network. Validation can be done during model training, as well as after training has finished. The purpose of training validation is to detect overfitting, by testing the so far trained model between training loops with data it has not been trained on. The idea is to simulate inference, so that it performs equally well for unseen data as it does with training data.
 
 Post training validation ensures that the trained model still performs in a new platform or environment. For example after a model has been trained on a high-level framework and moved on to a different run time on an another platform, it should be validated to confirm that the new stack works as expected. Different runtime have different implementations of operation and thus the conversion between models, might need additional work from the developer to ensure compatibility.
@@ -886,12 +887,15 @@ A single prediction from a binary classifier can have four possible results. Pre
 Different problem definitions need to be evaluated with different measures to account for the differing balances between classes. The most common measures are Accuracy, Recall--sometimes called true positive rate (TPR)--and Precision, which are defined as such
 
 \begin{equation}
+  \label{eq:accuracy}
 \text{Accuracy} =  \frac{\text{TP} + \text{TN}}{\text{TP} + \text{TN} + \text{FP} + \text{FN}}
 \end{equation}
 \begin{equation}
+  \label{eq:recall}
 \text{Recall} = TPR = \frac{\text{TP}}{\text{TP} + \text{FN}}
 \end{equation}
 \begin{equation}
+  \label{eq:precision}
 \text{Precision} =  \frac{\text{TP}}{\text{TP} + \text{FP}}.
 \end{equation}
 
@@ -1529,7 +1533,7 @@ After trial and error we settled on a TVM graph transformation behaviour that pr
 
 We implemented our own QNN legalization pass for TVM, in which we look for a TVM canonicalized version of a TFlite quantized conv2d fusion layer. In TVM Relay representation this pattern is composed of 4 nodes: \texttt{qnn.conv2d}, \texttt{nn.bias\_add}, \texttt{qnn.requantize}, and \texttt{clip}. We also capture an optional pair of nodes at the end of main block. If the fusion layer is followed by \texttt{qnn.add} and \texttt{clip} we capture those nodes as well. This combination is seen in ResNet architecture as the operations to concatenate main branch and the skip branch.
 
-From the found pattern we remove all the zero point corrections from the \texttt{qnn.conv2d} and \texttt{qnn.requantize} nodes, if they are present. We learned that the TFlite models offered by MLPerf Tiny tended to use affine quantization with zero point being close to $128$. Value this high doesn't work for Headsail DLA, since all base values over $0$ would get clipped.
+From the found pattern we remove all the zero point corrections from \texttt{qnn.conv2d} and \texttt{qnn.requantize} nodes, if they are present. We learned that the TFlite models offered by MLPerf Tiny tended to use affine quantization with zero point being close to $128$. Value this high doesn't work for Headsail DLA, since all base values over $0$ would get clipped.
 We also remove the zero point from the optional skip connection concatenation node if it was captured, even if the operation is not assigned to the accelerator.
 
 After legalization we do pattern matching for two patterns. First is the standard 2D convolution followed by bias and second is grouped convolution followed by a bias. These patterns are assigned to be executed on the DLA using the high-level API symbols from the FFI. Since TVM doesn't separate between grouped and non-grouped convolutions we use the \texttt{groups} parameter in the \texttt{qnn.conv2d} as a metric to distinguish the two. If the number of groups is more than $1$, we annotate the pattern as grouped convolution.
@@ -1581,18 +1585,18 @@ Both of the CPUs in the Headsail are equipped with JTAG connectors which we can 
 Running the benchmark is done with simple Python script which reads one input from the targeted benchmark task at a time and writes them to Headsail over UART for inference.
 The script then waits for the runner program on Headsail to respond with the result vector of the inference, from which it finds the top-1 classification and updates the precision score for the benchmark, before sending the next input.
 
-Even though Headsail is the third SoC Hub Soc, it had little existing software support for C that could utilize the SoC specific features like UART. So a major part of this project involved setting up a Headsail compatible C-toolchain. Since Headsail has RISC-V CPUs we could use an already existing riscv-gnu-toolchain for the compiler, but we still had to set up a C standard library for the chip with custom version of Newlib Libgloss. Also, due to specific memory addressing decisions in the hardware, we needed to use \texttt{medany} code model compatible compiler and standard library when targeting the 64-bit processor.
+Even though Headsail is the third SoC Hub SoC, it had little existing software support for C that could utilize the SoC specific features like UART. So a major part of this project involved setting up a Headsail compatible C-toolchain. Since Headsail has RISC-V CPUs we could use an already existing riscv-gnu-toolchain for the compiler, but we still had to set up a C standard library for the chip with custom version of Newlib Libgloss. Also, due to specific memory addressing decisions in the hardware, we needed to use \texttt{medany} code model compatible compiler and standard library when targeting the 64-bit processor.
 
 
 
 \chapter{Results}
 \label{ch:results}
-After finishing development of the software stack described in the chapter~\ref{ch:implementation} we ran the MLPerf Tiny benchmark for two configurations. First being on the headsail-vp with only single HPC core, and second on headsail-vp with single HPC core and the DLA-vp working in tandem. Unfortunately due to problems with the ASIC, we were not able to include any results from the hardware and thus this benchmark only serves the purpose of validating the ability of Headsail to execute the reference models.
+After finishing development of the software stack described in the chapter~\ref{ch:implementation} we ran the MLPerf Tiny benchmark for two configurations. First being on the headsail-vp with only single HPC core, and second on headsail-vp with single HPC core and the DLA-vp working in tandem. Unfortunately due to problems with the ASIC, we were not able to include any results from the hardware and thus this benchmark only serves the purpose of validating the ability of headsail-vp to execute the reference models.
 \begin{table}[h]
 \centering
 \begin{tabular}{|l|l|c|c|c|c|}
 \hline
-  \multirow{2}{*}{\textbf{Task}}  & \multirow{2}{*}{\textbf{Target}}  & \multirow{2}{*}{\textbf{Accuracy}} & \multirow{2}{*}{\textbf{Precision}} & \multirow{2}{*}{\textbf{Recall}} & \multirow{2}{*}{\shortstack[c]{\textbf{Passes}\\ \textbf{MLPerf Tiny}}} \\
+  \multirow{2}{*}{\textbf{Task}}  & \multirow{2}{*}{\textbf{Target}}  & \multirow{2}{*}{\shortstack[c]{\textbf{Accuracy}\\ eq.~\ref{eq:accuracy}}} & \multirow{2}{*}{\shortstack[c]{\textbf{Precision}\\ eq.~\ref{eq:precision}}} & \multirow{2}{*}{\shortstack[c]{\textbf{Recall} \\eq.~\ref{eq:recall}}} & \multirow{2}{*}{\shortstack[c]{\textbf{Passes}\\ \textbf{MLPerf Tiny}}} \\
   & & & & & \\\hline
 \multirow{2}{*}{\shortstack[l]{\textbf{Keyword}\\ \textbf{Spotting (KWS)}}}
                                   & \textbf{HPC} & 0.90               & 0.92       & 0.90     & \scalecheck                          \\ \cline{2-6}
@@ -1612,7 +1616,7 @@ After finishing development of the software stack described in the chapter~\ref{
 \label{tab:benchmark-results}
 \end{table}
 
-The table~\ref{tab:benchmark-results} presents the results of the MLPerf Tiny benchmark, for HPC standalone and HPC with two-dimensional convolutions assigned to the DLA. As noted previously the anomaly detection task is unacceleratable due to the lack of convolutions, and thus we have results for HPC only run.
+The table~\ref{tab:benchmark-results} presents the results of the MLPerf Tiny benchmark, for HPC standalone and HPC with two-dimensional convolutions assigned to the DLA. As noted previously the anomaly detection task is unacceleratable due to the lack of two-dimensional convolution layers suitable for execution on the DLA, and thus we have results for HPC only run.
 
 When run without the DLA, just with HPC, Headsail passes the accuracy requirements for all the tasks, except anomaly detection, as can be seen from the last column of the table.
 For the runs with DLA performing the convolution operations, only keyword spotting task passed the required accuracy threshold.
@@ -1639,7 +1643,7 @@ As mentioned previously Renode isn't fitting for performance evaluation, and thu
 Figure~\ref{fig:ic-results-no-acc} shows the results for running the IC task without the DLA as a class confusion matrix. With accuracy of $0.88$ it easily passes the
 required accuracy threshold of $85\%$ for submitting the IC benchmark scores. This result is inline with reference model, and as mentioned in section~\ref{sec:tinyperf-ic} the evaluation metric for the IC task is Top-1, and thus we are only interested if the inference identified the correct class, no matter what was its confidence on that answer.
 
-Figure~\ref{fig:ic-results} shows the results for the MLPerf Tiny image classification benchmark. From the result we can see that there is a major difference classification accuracy between classes. Classes $1$, $3$ and $6$ have higher recall than the minimum asked by MLPerf Tiny, but entries in classes $0$, $2$, $4$, $5$ and $7$ are misidentified almost half of the time. With total accuracy of $0.69$ Headsail-DLA doesn't reach the accuracy threshold of the task.
+Figure~\ref{fig:ic-results} shows the results for the MLPerf Tiny image classification benchmark. From the result we can see that there is a major difference in classification accuracy between classes. Classes $1$, $3$ and $6$ have higher recall than the minimum asked by MLPerf Tiny, but entries in classes $0$, $2$, $4$, $5$ and $7$ are misidentified almost half of the time. With total accuracy of $0.69$ Headsail-DLA doesn't reach the accuracy threshold of the task.
 
 When compared to the runs without the DLA, we can see that there are some similarities in which classes get confused with which classes, but the error seems to get exaggerated with the DLA.
 This discrepancy is almost completely explained by the clipping behaviour, since when DLA-vp is modified to output the complete result, this difference between the runs disappears and DLA performs similarly as the HPC only run. Giving us confidence that our approach in the graph transformations is correct and rest of the stack is working correctly.
@@ -1730,9 +1734,11 @@ The stack consisted of a driver for the accelerator integrated in to the SoC's b
 We also developed a TVM backend for the accelerator to generate C-source code with the TVM BYOC API, which allowed us to easily deploy models for the device.
 With Newlib we provided a C standard library implementation compatible with Headsail, making it possible to build more complex C programs for the platform.
 
-With MLPerf Tiny benchmark we were able to evaluate the accuracy of the DLA-vp when executing pretrained quantized convolutional neural networks. The result of which was that the DLA can handle some models. We were not yet able to run the benchmark on the actual ASIC, due to hardware issue, but we did in some limited manner observe that binaries for the headsail-vp were compatible with the ASIC.
+With MLPerf Tiny benchmark we were able to evaluate the accuracy of the DLA-vp when executing pretrained quantized convolutional neural networks.
+From the 3 acceleratable benchmarks, the keyword spotting task was the only one successful in reaching the benchmark's accuracy requirement of $0.90$. The image classification showed some compatibility with DLA, but with an accuracy of $0.69$ it didn't reach the required $0.85$. The final benchmark--visual wake words--was completely incompatible with the DLA getting an accuracy score of just $0.5$, when the threshold was $0.8$ for the binary classifier.
+With these results we can conclude that the DLA can handle inference on some models. We were not yet able to run the benchmark on the actual ASIC, due to hardware issue, but we did in some limited manner observe that binaries for the headsail-vp were compatible with the ASIC.
 
-In the end we consider this project mostly successful, except for the MLPerf Accuracy thresholds not being met in all the task, we achieved all the goals set in the beginning. We were able to lay down a one possible solution for implementing a software stack for accelerating neural inference workloads on a custom SoC.
+In the end we consider this project mostly successful, except for the MLPerf Tiny accuracy thresholds not being met in all the task, we achieved all the goals set in the beginning. We were able to lay down one possible solution for implementing a software stack for accelerating neural inference workloads on a custom SoC. We were also able to develop a virtual version of the Headsail SoC, and it's DLA.
 
 \section{Future Work}
 As the accuracy results show there is space for improving the inference accuracy with the software stack. Different graph transformations should be considered to counteract the resolution limitations caused by the result clipping in the DLA. We also know that the driver is less then optimal when it comes down to moving data through the different software layers, and this should be addressed by carefully examining the driver implementation and the TVM facing interface.
@@ -1745,7 +1751,7 @@ To improve DL support on Headsail, there is a need for DLA specific training flo
 
 As discussed earlier in this work, fully connected layers are still widely used as major component in auto-encoders and classifiers layers in many networks, and thus accelerating them can introduce significant performance increases for some networks. To enable accelerating all the tasks in MLPerf Tiny we should consider if the next iteration of the MAC array could be modified to support fully connected layer without greatly increasing the area in the chip.
 
-In addition to deep learning applications the DLA could be used in other workloads. Kernel based image processing applications can benefit from similar acceleration as the DNN applications we have showcased in this work. For example Gaussian filters for blurring and edge detection can be implemented with similar windowing approach as two-dimensional convolution is implemented in the accelerator.
+In addition to deep learning applications the DLA could be used in other workloads. Kernel based image processing applications can benefit from similar acceleration as the DNN applications we have showcased in this work.
 
 
 %
