@@ -1,3 +1,11 @@
+\pdfminorversion=7
+% \begin{filecontents*}[overwrite]{main.xmpdata}
+%     \Title{Zero to DLA: Building a Software Stack for Accelerating Deep Neural Networks on Custom RISC-V SoC}
+%     \Author{Väinö-Waltteri Granat}
+%     \Language{en}
+%     \Subject{Dokumentin lyhyt kuvaus tai tiivistelmä.}
+%     \Keywords{deep learning\sep system-on-chip\sep RISC-V\sep TVM\sep Renode\sep MLPerf Tiny}
+% \end{filecontents*}
 \documentclass[12pt,a4paper,english
 % ,twoside,openright
 ]{tunithesis}
@@ -20,7 +28,7 @@
 
 % More information about Latex basics:
 % [Tobias Oetiker, Hubert Partl, Irene Hyna, Elisabeth Schlegl, The
-% Not So Short Introduction to LATEX2e, Version 5.03, April 2014, 171
+% Not So Short Introduction to LATEX2e, Version 5.03, Apil 2014, 171
 % pages.  Availbale: http://tobi.oetiker.ch/lshort/lshort.pdf]
 
 \author{Väinö-Waltteri Granat}
@@ -31,8 +39,14 @@
 
 % Put your thesis' main language last
 % http://mirrors.ctan.org/macros/latex/required/babel/base/babel.pdf
-\usepackage{lastpage}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[a-3b,mathxmp]{pdfx}[2018/12/22]
+\usepackage{colorprofiles}
+\usepackage{hyperref}
 \usepackage[english]{babel}
+\usepackage{lastpage}
 \usepackage[
 backend=biber,
 style=numeric-comp,
@@ -46,13 +60,24 @@ maxbibnames=5
 \usepackage{subcaption}
 \usepackage{caption}
 \usepackage{svg}
-\usepackage[withpage]{acronym}
+\usepackage[nohyperlinks]{acronym}
 \usepackage{tikz}
 \usetikzlibrary{arrows.meta, arrows}
 \usetikzlibrary{matrix, positioning}
+\tikzset{
+    opacity=1.0 % Ensure no transparency
+}
 \usepackage{xcolor}
 \usepackage{amsfonts}
 \usepackage{listings, listings-rust}
+\lstset{% setup parameters for listings:
+  columns=fullflexible,  % avoids addition of extra spaces in unexpected positions
+  keepspaces,            % causes alignment-by-spaces to be preserved in output
+  basicstyle=\ttfamily,  % With fullflexible and keepspaces, using a non-monospaced
+                         % font causes incorrect alignment of plain-text columns.
+  backgroundcolor=\color{gray!10},
+  keywordstyle=\bfseries\color{black!90},
+  numbers=left, numberstyle=\small\sffamily, stepnumber=5, numbersep=5pt}
 %\usepackage{inconsolata}
 \usepackage{graphicx}
 \usepackage{float}
@@ -105,6 +130,7 @@ maxbibnames=5
 
 \pagenumbering{roman} % was: {Roman}
 \pagestyle{headings}
+\hypersetup{pdfstartview=}
 \begin{document}
 
 % Special trick so that internal macros (denoted with @ in their name)
@@ -133,8 +159,10 @@ maxbibnames=5
 % Last some additional info to the bottom-right corner
 \begin{flushright}  
     \begin{spacing}{1.0}
-      \textsf{Faculty of Information Technology and Communication Sciences (ITC)\\
-      \@thesistype\\
+      \textsf{\@thesistype\\
+      Faculty of Information Technology and Communication Sciences (ITC)\\
+      Examiners: Prof. Timo D. Hämäläinen\\
+      MSc. Henri Lunnikivi\\
       November 2024}
     \end{spacing}
 \end{flushright}
@@ -179,7 +207,7 @@ In the end we were able to design and build a working software stack to facilita
 \noindent The originality of this thesis has been checked using the Turnitin Originality Check service.
 
 
-\clearpage
+%\clearpage
 
 \chapter*{Tiivistelmä}
 
@@ -510,7 +538,10 @@ where $I$ is the input and $K$ is one kernel, $m$ is the width of the kernel and
 
 In high-level deep learning frameworks convolution is often implemented as cross-correlation but still called convolution~\cite{DeepLearningBook,pytorch,tensorflow2015-whitepaper}. This is also what we have done in our implementation
 \begin{align}
-Conv2D(i,j) = CrossCorrelation(I, K) = (K \star I)(i,j) = \sum_{m}\sum_{n}I(i+m,j+n)K(m, n)
+  \begin{split}
+    & Conv2D(i,j) = CrossCorrelation(I, K) = \\
+    &\quad (K \star I)(i,j) = \sum_{m}\sum_{n}I(i+m,j+n)K(m, n)
+  \end{split}
 \end{align}
 To produce output of one layer one needs to calculate $Conv2D$ for all the positions in the resultant output matrix for all the kernels.
 
@@ -580,7 +611,7 @@ Figure~\ref{fig:activation-functions} shows how ReLU and sigmoid non-linearly sc
 
 \begin{figure}[ht]
 \centering
-\begin{minipage}[t]{.45\textwidth}
+\begin{subfigure}[t]{.45\textwidth}
   \centering
   \begin{tikzpicture}
       % Axes
@@ -591,9 +622,10 @@ Figure~\ref{fig:activation-functions} shows how ReLU and sigmoid non-linearly sc
       \draw[line width=2pt,black] (-1.5, 0) -- (0, 0); % f(x) = 0 for x < 0
       \draw[line width=2pt,black] (0, 0) -- (1.5, 1.5); % f(x) = x for x >= 0
   \end{tikzpicture}
-  \captionof{figure}{Rectified linear unit (ReLU)}
-\end{minipage}
-\begin{minipage}[t]{.45\textwidth}
+  \caption{Rectified linear unit (ReLU)}
+\end{subfigure}%
+~
+\begin{subfigure}[t]{.45\textwidth}
   \centering
   \begin{tikzpicture}
       % Axes
@@ -611,12 +643,11 @@ Figure~\ref{fig:activation-functions} shows how ReLU and sigmoid non-linearly sc
       \draw[dashed] (-1.5,1) -- (1.5,1); % y = 1 asymptote
       \draw[dashed] (-1.5,0) -- (1.5,0); % y = 0 asymptote
   \end{tikzpicture}
-  \captionof{figure}{Sigmoid activation}
-\end{minipage}
+  \caption{Sigmoid activation}
+\end{subfigure}%
 \caption{Comparison of ReLU and Sigmoid activation functions}
 \label{fig:activation-functions}
 \end{figure}
-
 
 Combining two-dimensional affine transformation and ReLU gives us the basic Conv2D layer found in most image classification network, like Resnet~\parencite{he2015deepresiduallearningimage} and MobileNet~\parencite{howard2017mobilenetsefficientconvolutionalneural}.
 And as with bias, some DL frameworks fuse activation function with the convolution operation to form one layer. Giving use the common definition of a single two-dimensional layer in
@@ -1197,7 +1228,7 @@ Renode's integration with RobotFramework allowed us to set up a CI/CD pipeline w
 
 \begin{figure}
 \centering
-\includegraphics[width=\linewidth]{img/dla-internal.pdf}
+\includegraphics[width=\linewidth]{img/dla-internal-flat.jpg}
 \caption{Architecture of accelerated DLA flow in Headsail with TVM runtime and a Pytorch model}
 \label{fig:dla_internal}
 \end{figure}
@@ -1340,24 +1371,26 @@ The layer configuration struct is the central component of the DLA driver. It de
 
 \begin{figure}
   \centering
-\begin{lstlisting}[language=Rust, basicstyle=\footnotesize, caption={Example call to DLA high-level API}, label={lst:layerstruct}]
-pub struct LayerConfig {
-  pub input_bank: Option<MemoryBank>,
-  pub kernel_bank: Option<MemoryBank>,
-  pub output_bank: Option<MemoryBank>,
-  pub bias_addr: Option<u32>,
-  pub pp_enabled: bool,
-  pub relu_enabled: bool,
-  pub bias_enabled: bool,
-  pub input_size: Option<InputSize>,
-  pub kernel_size: Option<KernelSize>,
-  pub padding: Option<Padding>,
-  pub stride: Option<Stride>,
-  pub mac_clip: Option<u32>,
-  pub pp_clip: Option<u32>,
-  pub simd_mode: Option<SimdBitMode>,
-}
-\end{lstlisting}
+  \caption{Example call to DLA high-level API}
+  \label{lst:layerstruct}
+    \begin{verbatim}
+    pub struct LayerConfig {
+      pub input_bank: Option<MemoryBank>,
+      pub kernel_bank: Option<MemoryBank>,
+      pub output_bank: Option<MemoryBank>,
+      pub bias_addr: Option<u32>,
+      pub pp_enabled: bool,
+      pub relu_enabled: bool,
+      pub bias_enabled: bool,
+      pub input_size: Option<InputSize>,
+      pub kernel_size: Option<KernelSize>,
+      pub padding: Option<Padding>,
+      pub stride: Option<Stride>,
+      pub mac_clip: Option<u32>,
+      pub pp_clip: Option<u32>,
+      pub simd_mode: Option<SimdBitMode>,
+    }
+    \end{verbatim}
 \end{figure}
 
 Program~\ref{lst:layerstruct} shows the design of the struct. The first three fields control the data locations with the DLA memory banks. It should be noted that the driver nor the DLA don't enforce any kind of overlapping protection for the data, and it's left at the responsibility of the user to make sure these areas don't overlap. To make this easier the driver offers a method to calculate suitable memory bank assignments. Bias is handled differently from the other data locations since DLA view it as FIFO where every channel takes the next element.
@@ -1483,11 +1516,14 @@ Since we wanted to use TVM's AOT runtime to execute inference in the benchmark w
 Newlib is an implementation of the C standard library meant for use in embedded devices~\parencite{newlib}. It is separated into two different parts. First is the Newlib core which implements the actual standard library for different CPU ISA's. Since Newlib already has support for RISC-V we didn't need to modify Newlib core in any way. Second part of Newlib is called Libgloss, which implements the platform dependent features. For this port we decided to only implement the minimum required functionalities of Libgloss.
 
 \begin{figure}
-\begin{lstlisting}[language=C, caption={Minimal implementation of the fork() syscall in Newlib Libgloss}, label={lst:newlib-stump}]
-int _fork() {
-    return -1;
-}
-\end{lstlisting}
+  \centering
+  \caption{Minimal implementation of the fork() syscall in Newlib Libgloss}
+  \label{lst:newlib-stump}
+    \begin{verbatim}
+    int _fork() {
+        return -1;
+    }
+    \end{verbatim}
 \end{figure}
 
 Porting Libgloss involves implementing 16 system calls, crt0 and a linker script. From the 16 system calls only some are mandatory for us to implement, because we are targeting only bare-metal applications without a filesystem. The table~\ref{tab:newlib_syscalls} shows all the Libgloss system calls with column 3 displaying if we implemented the call. The unimplemented calls still need to be defined in the Libgloss source for linking purposes, but they don't need to do anything except return an error. Program~\ref{lst:newlib-stump}, shows and example of a minimal implementation for the fork system call in Headsail's Newlib port. The purpose of the Fork system calls is to  duplicate a process, but since we don't support multithreading or any other form of process concurrency it will never be called, thus having it return error is correct behaviour. We use this same approach in the rest of the system call that we didn't implement.
@@ -1496,7 +1532,7 @@ The system calls can be implemented either in non-reentrant or reentrant way. Re
 
 In addition to the system calls Libgloss needs to have a crt0, which is a small program that includes a \texttt{\_start} symbol, a call to the \texttt{main} function, some global definitions, and optionally hardware initializations. The \texttt{\_start} symbol signifies the beginning of a C program and is used by the linker to place the program to start from the correct memory address. After declaring the \texttt{\_start} symbol, our crt0 clears the bss segment, registers the \texttt{exit} function, initializes the UART and finally calls the \texttt{main} function.
 
-\begin{figure}[h]
+\begin{figure}[ht]
 \centering
 \begin{tikzpicture}[scale=0.5]
 \draw (0, 0) rectangle (5, 3) node[midway] {.text};
@@ -1552,7 +1588,7 @@ For the DLA there are two things we can benchmark. First is to look at the amoun
 The second option is to model real-life use-cases of CNNs and benchmark the inference latency of the models. For this purpose we chose to use MLPerf Tiny Benchmark~\cite{tinyperf} from MLCommons, which we describe in detail in section~\ref{sec:tinyperf}.
 From these benchmarks the anomaly Detection is unacceleratable with the Headsail DLA since it uses FC-AutoEncoder network, which is based on fully connected layers and thus has no operations which our accelerator can execute.
 
-\begin{figure}[h]
+\begin{figure}[ht]
 \centering
 \includegraphics[width=\linewidth]{img/benchmark-sequence.pdf}
 \caption{Sequence diagram for MLPerf Tiny benchmarking on Headsail.}
@@ -1569,7 +1605,7 @@ The second purpose of this benchmark is to actually evaluate the performance of 
 \section{Complete DLA Software Architecture}
 \begin{figure}
 \centering
-\includegraphics[width=\linewidth]{img/dla-architecture-new.pdf}
+\includegraphics[width=\linewidth]{img/dla-architecture-new-flat.jpg}
 \caption{Software architecture of accelerated DLA flow in Headsail with TVM runtime and a TFlite model}
 \label{fig:architecture}
 \end{figure}
@@ -1592,7 +1628,7 @@ Even though Headsail is the third SoC Hub SoC, it had little existing software s
 \chapter{Results}
 \label{ch:results}
 After finishing development of the software stack described in the chapter~\ref{ch:implementation} we ran the MLPerf Tiny benchmark for two configurations. First being on the headsail-vp with only single HPC core, and second on headsail-vp with single HPC core and the DLA-vp working in tandem. Unfortunately due to problems with the ASIC, we were not able to include any results from the hardware and thus this benchmark only serves the purpose of validating the ability of headsail-vp to execute the reference models.
-\begin{table}[h]
+\begin{table}[ht]
 \centering
 \begin{tabular}{|l|l|c|c|c|c|}
 \hline
@@ -1624,17 +1660,17 @@ For the runs with DLA performing the convolution operations, only keyword spotti
 As mentioned previously Renode isn't fitting for performance evaluation, and thus it isn't feasible to benchmark DLA-vp with MLPerf Tiny. We can however run the MLPerf Tiny tasks to see if the DLA reaches the required accuracy requirements of the benchmark. This essentially verifies the complete software stack and was especially useful during the development of DLA graph legalization pass.
 
 \section{Image classification}
-\begin{figure}[h]
+\begin{figure}[ht]
   \centering
-  \includegraphics[width=0.8\textwidth]{img/ic_200_no_acc.eps}
+  \includegraphics[width=0.8\textwidth]{img/ic_200_no_acc-eps-converted-to-flat.pdf}
   \caption{Confusion matrix of image classification task results without DLA (N=200).}
   \label{fig:ic-results-no-acc}
 \end{figure}
 
 
-\begin{figure}[h]
+\begin{figure}[ht]
   \centering
-  \includegraphics[width=0.8\textwidth]{img/ic_200_abs_heuristic.eps}
+  \includegraphics[width=0.8\textwidth]{img/ic_200_abs_heuristic-eps-converted-to-flat.pdf}
   \caption{Confusion matrix of image classification task results when using bias heuristic (N=200).}
   \label{fig:ic-results}
 \end{figure}
@@ -1650,15 +1686,15 @@ This discrepancy is almost completely explained by the clipping behaviour, since
 
 \section{Keyword spotting}
 
-\begin{figure}[h]
+\begin{figure}[ht]
   \centering
-  \includegraphics[width=0.8\textwidth]{img/kws_200_no_acc.eps}
+  \includegraphics[width=0.8\textwidth]{img/kws_200_no_acc-eps-converted-to-flat.pdf}
   \caption{Confusion matrix of keyword spotting task results without DLA (N=200).}
   \label{fig:kws-results-no-acc}
 \end{figure}
-\begin{figure}[h]
+\begin{figure}[ht]
   \centering
-  \includegraphics[width=0.8\textwidth]{img/kws_200_abs_heuristic.eps}
+  \includegraphics[width=0.8\textwidth]{img/kws_200_abs_heuristic-eps-converted-to-flat.pdf}
   \caption{Confusion matrix of keyword spotting task results when using bias heuristic (N=200).}
   \label{fig:kws-results}
 \end{figure}
@@ -1693,13 +1729,13 @@ By comparing the two results, we can see that the CPU only run performed more ev
 \begin{figure}
   \centering
   \begin{subfigure}[t]{0.5\textwidth}
-    \includegraphics[width=\linewidth]{img/vww_200_no_acc.eps}
+    \includegraphics[width=\linewidth]{img/vww_200_no_acc-eps-converted-to-flat.pdf}
     \caption{VWW task on headsail-vp without DLA}
     \label{fig:vww-no-acc}
   \end{subfigure}%
   ~
   \begin{subfigure}[t]{0.5\textwidth}
-    \includegraphics[width=\linewidth]{img/vww_200_acc.eps}
+    \includegraphics[width=\linewidth]{img/vww_200_acc-eps-converted-to-flat.pdf}
     \caption{VWW task on headsail-vp with DLA}
     \label{fig:vww-dla}
   \end{subfigure}%
@@ -1806,8 +1842,10 @@ In addition to deep learning applications the DLA could be used in other workloa
 %               uint32_t mac_clip,
 %               uint32_t pp_clip);
 % \end{lstlisting}
-
-\begin{lstlisting}[style=customc, basicstyle=\footnotesize, caption={Code generated by BYOC backend for Headsail DLA to execute Conv2D with bias pattern.}]
+\begin{figure}[ht]
+  \centering
+  \caption{Code generated by BYOC backend for Headsail DLA to execute Conv2D with bias pattern.}
+\begin{verbatim}
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
@@ -1817,17 +1855,22 @@ In addition to deep learning applications the DLA could be used in other workloa
 #include <dla_driver.h>
 
 //This was generated with headsail codegen
-int tvmgen_default_headsail_main_0(int8_t* headsail_0_i0, int8_t* headsail_0_i1, int* headsail_0_i2, int* out0) {
+int tvmgen_default_headsail_main_0(int8_t* headsail_0_i0,
+  int8_t* headsail_0_i1, int* headsail_0_i2, int* out0) {
+
   int* buf_0 = (int*)malloc(73728);
 
-  dla_tvm_qnn_conv2d_bias(headsail_0_i0, headsail_0_i1, headsail_0_i2, buf_0, 3, 96, 96, "HWC", 8, 3, 3, 3, "HWCK", 8, 0, 1, 0, 1, 0, 2, 2, 0, 5);
+  dla_tvm_qnn_conv2d_bias(headsail_0_i0, headsail_0_i1,
+      headsail_0_i2, buf_0, 3, 96, 96, "HWC", 8, 3, 3, 3,
+      "HWCK", 8, 0, 1, 0, 1, 0,  2, 2, 0, 5);
 
   memcpy(out0, buf_0, 73728);
   free(buf_0);
 
   return 0;
 }
-\end{lstlisting}
+\end{verbatim}
+\end{figure}
 
 
 

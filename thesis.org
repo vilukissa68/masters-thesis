@@ -1,26 +1,24 @@
 #+title: Thesis
-* TODOS :thesis:
+* TODO Valmistuminen[0/3] :thesis:
 ** TODO Hae valmistumista
-** TODO Diplomityö [7/9]
-*** DONE Get and report Anomaly Detection result for the HPC
-**** DONE Figure out the ToyAdmos dataset
+** TODO Diplomityö [5/7]
 *** DONE Write abstract [2/2]
 **** DONE Englanninkielinen tiviistelmä
 **** DONE Suomenkielinen tiviistelmä
 *** DONE Final grammar and spelling check
 *** DONE Add TUNI AI clause
-*** DONE Improve introdocution
 *** DONE Preface
-*** DONE Write about depthwise conv2d
-*** TODO Tekstin alkuperäisyyden tarkistus
+*** DONE Tekstin alkuperäisyyden tarkistus
 Testi tarkistuksesta 12% -> kaikki ok. Odota lupaa tehdä lopullinen palautus.
-*** TODO Palaute Henriltä ja Timolta
-** TODO Byrokaratia [0/3]
-*** DOING Kypsyysnäyte
+*** TODO Trepo palautus
+*** WAITING Palaute Henriltä ja Timolta
+** DOING Byrokaratia [0/3]
+*** DOING Kypsyysnäyte [2/3]
 400-500 sanainen tiivistelmä.
 **** DONE Kirjoita
-**** TODO Palauta
+**** DONE Palauta
 Ohjaaja arvioi diplomityön yhteydessä
+**** WAITING Odota arviota
 *** DOING Teesien Työkalut [3/5]
 **** DOING Opinnäytetyöseminaari [1/3]
 ***** DONE Seminaariin osallistuminen x3
@@ -28,10 +26,10 @@ Ohjaaja arvioi diplomityön yhteydessä
 ***** TODO Seminaariesitys
 SCHEDULED: <2024-12-09 Mon 12:15>
 Ei tarvita vielä syyslukukaudella
-**** DOING Ohjaussuunnitelma
+**** DOING Ohjaussuunnitelma [1/2]
 [[https://moodle.tuni.fi/course/view.php?id=45196][Kurssi]]
 ***** DONE Täytä
-***** TODO Odota ohjaajan hyväksyntää (Timo)
+***** WAITING Odota ohjaajan hyväksyntää (Timo)
 **** DONE Hyvä tieteellinen käytäntö
 **** DONE Tutkimusmenetelmät [4/4]
 [[https://moodle.tuni.fi/course/view.php?id=44837][Kurssi]]
@@ -40,15 +38,4 @@ Ei tarvita vielä syyslukukaudella
 Odottaa arviointia
 ***** DONE Laadulliset tutkimukset
 ***** DONE Soveltava tutkimus
-
 **** DROPPED Urasuunnittelu
-
-* DOING Propose a topic for master's thesis
-** Implementing Software Stack for Deep Learning Accelerator in RISCV SoC
-** Virtual Prototyping of Deep Learning Accelerator Firmware
-** Building a Baremetal Driver for Custom Deep Learning Accelerator
-** Software Development for Multiply-Accumulate based Deep Learning Accelerator on RISCV
-** Integrating End-to-End Deep Learning Stack on RISCV SoC
-** Deploying Hardware Accelerated Neural Networks on RISCV SoC
-** End-to-End Software Support on Accelerated Neural Networks with RISCV
-** Headsail DLA: Building a DNN Stack From Zero

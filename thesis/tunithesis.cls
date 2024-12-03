@@ -17,7 +17,7 @@
 %%
 
 
-\NeedsTeXFormat{LaTeX2e}[1995/12/01]
+%\NeedsTeXFormat{LaTeX2e}[1995/12/01]
 \ProvidesClass{tunithesis}
 
 % Load the basic template 'report.cls'. 
@@ -25,8 +25,8 @@
 
 
 % Specific packages:
-% \RequirePackage[T1]{fontenc} 
-% \RequirePackage[utf8]{inputenc}% includes scandinavian letters
+\RequirePackage[T1]{fontenc}
+\RequirePackage[utf8]{inputenc}% includes scandinavian letters
 \RequirePackage{graphicx}        % for figures
 \RequirePackage{psfrag}          % for editing ps files
 %\RequirePackage{subfigure}       % parallel small figures a,b,c...
@@ -39,7 +39,6 @@
 
 \usepackage[font=small,it, labelsep=space]{caption} % Figure caption text font and size, 
 % Option labelse0=space removes colon, i.e. Figure 1.1 instead of Figure 1.1:
-\usepackage{hyperref}       % pdf links to e.g. figures and citations
 \usepackage{url}            % web links (URL)
 
 % Package documentation
